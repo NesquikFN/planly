@@ -1,2 +1,2 @@
-# my-life
+# planly
 Personal planner, notes and productivity app
