@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: #fafafa;
+  color: #111827;
+  font-family: var(--font-sans);
+}
+
+@keyframes calendar-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes calendar-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.calendar-slide-forward {
+  animation: calendar-slide-in-right 260ms ease-out;
+}
+
+.calendar-slide-backward {
+  animation: calendar-slide-in-left 260ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-slide-forward,
+  .calendar-slide-backward {
+    animation: none;
+  }
+}

@@ -1,0 +1,433 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import type { Task } from "@/types/task";
+import { mockTasks, defaultFocusTaskId } from "@/lib/mock-data";
+import { readStorage, writeStorage } from "@/lib/storage";
+import { matchesFilter, sortTasks, type FilterKey, type SortKey } from "@/lib/filters";
+import { createTaskFromText } from "@/lib/task-parser";
+
+const TASKS_STORAGE_KEY = "planly:tasks";
+const FOCUS_STORAGE_KEY = "planly:focusTaskId";
+
+// Grace period during which a completed task stays in place and can still be
+// un-checked (requirements 1–2).
+const COMPLETE_GRACE_MS = 500;
+// Duration of the collapse/fade-out animation once the grace period ends.
+const EXIT_ANIMATION_MS = 220;
+const TOAST_DURATION_MS = 5000;
+
+export type DashboardView = "dashboard" | "completed";
+
+export interface ToastState {
+  taskId: string;
+  title: string;
+}
+
+export interface TaskEditDraft {
+  title: string;
+  date: string;
+  time: string;
+  important: boolean;
+}
+
+interface TasksStoreValue {
+  tasks: Task[];
+  visibleTasks: Task[];
+  completedTasks: Task[];
+  stats: { overdue: number; important: number; upcoming: number; none: number };
+
+  view: DashboardView;
+  setView: (view: DashboardView) => void;
+
+  activeFilter: FilterKey;
+  setActiveFilter: (filter: FilterKey) => void;
+  toggleStatFilter: (filter: FilterKey) => void;
+
+  sortKey: SortKey;
+  setSortKey: (key: SortKey) => void;
+
+  searchOpen: boolean;
+  setSearchOpen: (open: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+
+  pendingCompleteIds: Set<string>;
+  exitingIds: Set<string>;
+  toggleComplete: (id: string) => void;
+  toast: ToastState | null;
+  undoComplete: () => void;
+  dismissToast: () => void;
+  restoreTask: (id: string) => void;
+
+  focusTaskId: string | null;
+  setFocusTask: (id: string) => void;
+  focusDisplay: { title: string; time: string };
+
+  addTaskFromText: (text: string) => void;
+  deleteTask: (id: string) => void;
+  postponeToTomorrow: (id: string) => void;
+  toggleImportant: (id: string) => void;
+
+  editingTaskId: string | null;
+  startEditing: (id: string) => void;
+  cancelEditing: () => void;
+  saveTaskEdit: (id: string, draft: TaskEditDraft) => void;
+}
+
+const TasksContext = createContext<TasksStoreValue | null>(null);
+
+export function TasksProvider({ children }: { children: ReactNode }) {
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [focusTaskId, setFocusTaskId] = useState<string | null>(defaultFocusTaskId);
+  const [hydrated, setHydrated] = useState(false);
+
+  const [view, setView] = useState<DashboardView>("dashboard");
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Tasks within the 500ms cancellable grace window.
+  const [pendingCompleteIds, setPendingCompleteIds] = useState<Set<string>>(new Set());
+  // Tasks past the grace window, playing the collapse/fade-out animation.
+  const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const graceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const exitTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // Hydrate from localStorage after mount (avoids SSR/client markup mismatch).
+  useEffect(() => {
+    const storedTasks = readStorage<Task[] | null>(TASKS_STORAGE_KEY, null);
+    if (storedTasks && storedTasks.length > 0) setTasks(storedTasks);
+
+    const storedFocusId = readStorage<string | null>(FOCUS_STORAGE_KEY, null);
+    if (storedFocusId) setFocusTaskId(storedFocusId);
+
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) writeStorage(TASKS_STORAGE_KEY, tasks);
+  }, [tasks, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) writeStorage(FOCUS_STORAGE_KEY, focusTaskId);
+  }, [focusTaskId, hydrated]);
+
+  // Clear any in-flight timers on unmount.
+  useEffect(() => {
+    return () => {
+      graceTimers.current.forEach((timer) => clearTimeout(timer));
+      exitTimers.current.forEach((timer) => clearTimeout(timer));
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  const toggleStatFilter = useCallback((filter: FilterKey) => {
+    setActiveFilter((prev) => (prev === filter ? "all" : filter));
+  }, []);
+
+  const completeTask = useCallback(
+    (id: string) => {
+      const target = tasks.find((task) => task.id === id);
+      if (!target || target.completed) return;
+
+      setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: true } : task)));
+      setPendingCompleteIds((prev) => new Set(prev).add(id));
+
+      const graceTimer = setTimeout(() => {
+        graceTimers.current.delete(id);
+        setPendingCompleteIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        setExitingIds((prev) => new Set(prev).add(id));
+
+        const exitTimer = setTimeout(() => {
+          exitTimers.current.delete(id);
+          setExitingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+
+          setToast({ taskId: id, title: target.title });
+          if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+          toastTimerRef.current = setTimeout(() => setToast(null), TOAST_DURATION_MS);
+        }, EXIT_ANIMATION_MS);
+        exitTimers.current.set(id, exitTimer);
+      }, COMPLETE_GRACE_MS);
+      graceTimers.current.set(id, graceTimer);
+    },
+    [tasks],
+  );
+
+  // Cancels completion while still inside the 500ms grace window.
+  const cancelComplete = useCallback((id: string) => {
+    setPendingCompleteIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+
+    const timer = graceTimers.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      graceTimers.current.delete(id);
+    }
+
+    setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: false } : task)));
+  }, []);
+
+  const toggleComplete = useCallback(
+    (id: string) => {
+      const target = tasks.find((task) => task.id === id);
+      if (!target) return;
+
+      if (!target.completed) {
+        completeTask(id);
+      } else if (pendingCompleteIds.has(id)) {
+        cancelComplete(id);
+      }
+      // Already past the grace window (archived/exiting) — checkbox isn't
+      // interactive there, nothing to do.
+    },
+    [tasks, pendingCompleteIds, completeTask, cancelComplete],
+  );
+
+  // Shared restore path for both the undo-toast and the archive's "Вернуть".
+  const restoreTask = useCallback((id: string) => {
+    const graceTimer = graceTimers.current.get(id);
+    if (graceTimer) {
+      clearTimeout(graceTimer);
+      graceTimers.current.delete(id);
+    }
+    const exitTimer = exitTimers.current.get(id);
+    if (exitTimer) {
+      clearTimeout(exitTimer);
+      exitTimers.current.delete(id);
+    }
+
+    setPendingCompleteIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setExitingIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+
+    setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: false } : task)));
+  }, []);
+
+  const undoComplete = useCallback(() => {
+    if (!toast) return;
+    restoreTask(toast.taskId);
+    setToast(null);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+  }, [toast, restoreTask]);
+
+  const dismissToast = useCallback(() => {
+    setToast(null);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+  }, []);
+
+  const setFocusTask = useCallback((id: string) => {
+    setFocusTaskId(id);
+  }, []);
+
+  const addTaskFromText = useCallback((text: string) => {
+    if (!text.trim()) return;
+    const newTask = createTaskFromText(text);
+    setTasks((prev) => [newTask, ...prev]);
+  }, []);
+
+  const deleteTask = useCallback((id: string) => {
+    const graceTimer = graceTimers.current.get(id);
+    if (graceTimer) {
+      clearTimeout(graceTimer);
+      graceTimers.current.delete(id);
+    }
+    const exitTimer = exitTimers.current.get(id);
+    if (exitTimer) {
+      clearTimeout(exitTimer);
+      exitTimers.current.delete(id);
+    }
+
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+    setFocusTaskId((current) => (current === id ? null : current));
+    setPendingCompleteIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setExitingIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const postponeToTomorrow = useCallback((id: string) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === id ? { ...task, dueLabel: "Завтра", priority: "upcoming", date: "Завтра" } : task,
+      ),
+    );
+  }, []);
+
+  const toggleImportant = useCallback((id: string) => {
+    setTasks((prev) =>
+      prev.map((task) => (task.id === id ? { ...task, important: !task.important } : task)),
+    );
+  }, []);
+
+  const startEditing = useCallback((id: string) => {
+    setEditingTaskId(id);
+  }, []);
+
+  const cancelEditing = useCallback(() => {
+    setEditingTaskId(null);
+  }, []);
+
+  const saveTaskEdit = useCallback((id: string, draft: TaskEditDraft) => {
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.id !== id) return task;
+        const dueLabel = [draft.date.trim(), draft.time.trim()].filter(Boolean).join(" ") || "—";
+        return {
+          ...task,
+          title: draft.title.trim() || task.title,
+          date: draft.date.trim(),
+          time: draft.time.trim(),
+          dueLabel,
+          important: draft.important,
+        };
+      }),
+    );
+    setEditingTaskId(null);
+  }, []);
+
+  const visibleTasks = useMemo(() => {
+    let list = tasks.filter(
+      (task) => !task.completed || pendingCompleteIds.has(task.id) || exitingIds.has(task.id),
+    );
+
+    if (activeFilter !== "all") {
+      list = list.filter((task) => matchesFilter(task, activeFilter));
+    }
+
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      list = list.filter((task) => task.title.toLowerCase().includes(query));
+    }
+
+    return sortTasks(list, sortKey);
+  }, [tasks, pendingCompleteIds, exitingIds, activeFilter, searchQuery, sortKey]);
+
+  // Fully archived tasks: completed and past the grace/exit-animation windows.
+  const completedTasks = useMemo(
+    () =>
+      tasks.filter(
+        (task) => task.completed && !pendingCompleteIds.has(task.id) && !exitingIds.has(task.id),
+      ),
+    [tasks, pendingCompleteIds, exitingIds],
+  );
+
+  const stats = useMemo(() => {
+    const active = tasks.filter((task) => !task.completed);
+    return {
+      overdue: active.filter((task) => task.priority === "overdue").length,
+      important: active.filter((task) => task.priority === "important").length,
+      upcoming: active.filter((task) => task.priority === "upcoming").length,
+      none: active.filter((task) => task.priority === "none").length,
+    };
+  }, [tasks]);
+
+  const focusDisplay = useMemo(() => {
+    const focusTask = focusTaskId ? tasks.find((task) => task.id === focusTaskId) : undefined;
+    if (focusTask) return { title: focusTask.title, time: focusTask.dueLabel };
+    return { title: "Выберите задачу для фокуса", time: "—" };
+  }, [tasks, focusTaskId]);
+
+  const value: TasksStoreValue = {
+    tasks,
+    visibleTasks,
+    completedTasks,
+    stats,
+
+    view,
+    setView,
+
+    activeFilter,
+    setActiveFilter,
+    toggleStatFilter,
+
+    sortKey,
+    setSortKey,
+
+    searchOpen,
+    setSearchOpen,
+    searchQuery,
+    setSearchQuery,
+
+    pendingCompleteIds,
+    exitingIds,
+    toggleComplete,
+    toast,
+    undoComplete,
+    dismissToast,
+    restoreTask,
+
+    focusTaskId,
+    setFocusTask,
+    focusDisplay,
+
+    addTaskFromText,
+    deleteTask,
+    postponeToTomorrow,
+    toggleImportant,
+
+    editingTaskId,
+    startEditing,
+    cancelEditing,
+    saveTaskEdit,
+  };
+
+  return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>;
+}
+
+export function useTasksStore(): TasksStoreValue {
+  const ctx = useContext(TasksContext);
+  if (!ctx) throw new Error("useTasksStore must be used within a TasksProvider");
+  return ctx;
+}
