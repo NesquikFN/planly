@@ -21,15 +21,15 @@ export function BottomInput() {
           event.preventDefault();
           handleSubmit();
         }}
-        className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm"
+        className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900"
       >
-        <Sparkles size={18} className="shrink-0 text-gray-300" />
+        <Sparkles size={18} className="shrink-0 text-gray-300 dark:text-gray-600" />
         <input
           type="text"
           value={value}
           onChange={(event) => setValue(event.target.value)}
           placeholder="Напишите цель или мысль, а я превращу её в задачу..."
-          className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
+          className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none dark:text-gray-200 dark:placeholder:text-gray-500"
         />
         <button
           type="submit"

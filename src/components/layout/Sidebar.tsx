@@ -51,8 +51,8 @@ const navItems: NavItem[] = [
 
 const secondaryItems: NavItem[] = [
   { label: "Настройки", icon: Settings, href: "/settings" },
-  { label: "Помощь", icon: HelpCircle },
-  { label: "Архив", icon: Archive },
+  { label: "Помощь", icon: HelpCircle, href: "/help" },
+  { label: "Архив", icon: Archive, href: "/archive" },
 ];
 
 interface NotesExtras {

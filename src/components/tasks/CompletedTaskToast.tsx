@@ -9,8 +9,8 @@ export function CompletedTaskToast() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 sm:bottom-28 lg:left-64">
-      <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-gray-100 bg-white px-4 py-2.5 text-sm shadow-sm">
-        <span className="text-gray-600">Задача выполнена</span>
+      <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-gray-100 bg-white px-4 py-2.5 text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <span className="text-gray-600 dark:text-gray-300">Задача выполнена</span>
         <button
           type="button"
           onClick={undoComplete}

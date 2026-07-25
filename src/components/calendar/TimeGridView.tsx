@@ -92,19 +92,19 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
 
   return (
     <div className="flex flex-col">
-      <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: gridTemplate }}>
+      <div className="grid border-b border-gray-100 dark:border-gray-800" style={{ gridTemplateColumns: gridTemplate }}>
         <div />
         {days.map((day) => {
           const isToday = isSameDay(day, today);
           return (
             <div key={day.toISOString()} className="flex flex-col items-center gap-1 py-3">
               {showWeekdayLabel && (
-                <span className="text-xs font-medium text-gray-400">{formatWeekdayShort(day)}</span>
+                <span className="text-xs font-medium text-gray-400 dark:text-gray-500">{formatWeekdayShort(day)}</span>
               )}
               <span
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold",
-                  isToday ? "bg-blue-600 text-white" : "text-gray-900",
+                  isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-gray-50",
                 )}
               >
                 {day.getDate()}
@@ -114,10 +114,10 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
         })}
       </div>
 
-      <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: gridTemplate }}>
-        <div className="flex items-center justify-end px-2 py-2 text-xs text-gray-400">Весь день</div>
+      <div className="grid border-b border-gray-100 dark:border-gray-800" style={{ gridTemplateColumns: gridTemplate }}>
+        <div className="flex items-center justify-end px-2 py-2 text-xs text-gray-400 dark:text-gray-500">Весь день</div>
         {days.map((day, dayIndex) => (
-          <div key={day.toISOString()} className="flex flex-col gap-1 border-l border-gray-50 p-1">
+          <div key={day.toISOString()} className="flex flex-col gap-1 border-l border-gray-50 p-1 dark:border-gray-800">
             {entriesByDay[dayIndex].allDay.map((entry) => {
               const styles = calendarColorStyles[entry.color];
               return (
@@ -164,7 +164,7 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
             {HOURS.slice(0, -1).map((hour) => (
               <div
                 key={hour}
-                className="relative -top-2.5 pr-2 text-right text-xs text-gray-400"
+                className="relative -top-2.5 pr-2 text-right text-xs text-gray-400 dark:text-gray-500"
                 style={{ height: HOUR_HEIGHT }}
               >
                 {formatHourLabel(hour)}
@@ -185,12 +185,12 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
                 onDoubleClick={(domEvent) => handleColumnDoubleClick(dayIndex, domEvent)}
                 onClick={() => selectEntry(null)}
                 className={cn(
-                  "relative border-l border-gray-50 transition-colors duration-100",
-                  isDropTarget && "bg-gray-100",
+                  "relative border-l border-gray-50 transition-colors duration-100 dark:border-gray-800",
+                  isDropTarget && "bg-gray-100 dark:bg-gray-800",
                 )}
               >
                 {HOURS.slice(0, -1).map((hour) => (
-                  <div key={hour} className="border-b border-gray-50" style={{ height: HOUR_HEIGHT }} />
+                  <div key={hour} className="border-b border-gray-50 dark:border-gray-800" style={{ height: HOUR_HEIGHT }} />
                 ))}
 
                 {isToday && (

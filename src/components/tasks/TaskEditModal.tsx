@@ -31,14 +31,14 @@ export function TaskEditModal() {
         aria-hidden="true"
       />
 
-      <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900">Редактировать задачу</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50">Редактировать задачу</h3>
           <button
             type="button"
             onClick={cancelEditing}
             aria-label="Закрыть"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <X size={18} />
           </button>
@@ -52,18 +52,18 @@ export function TaskEditModal() {
           }}
         >
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-gray-500">Название</span>
+            <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Название</span>
             <input
               type="text"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
             />
           </label>
 
           <div className="flex gap-3">
             <label className="block flex-1">
-              <span className="mb-1 block text-xs font-medium text-gray-500">Дата</span>
+              <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Дата</span>
               <input
                 type="date"
                 value={date}
@@ -71,17 +71,17 @@ export function TaskEditModal() {
                   setDate(event.target.value);
                   if (!event.target.value) setTime("");
                 }}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               />
             </label>
             <label className="block flex-1">
-              <span className="mb-1 block text-xs font-medium text-gray-500">Время</span>
+              <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Время</span>
               <input
                 type="time"
                 value={time}
                 onChange={(event) => setTime(event.target.value)}
                 disabled={!date}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none disabled:opacity-40"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               />
             </label>
           </div>
@@ -91,16 +91,16 @@ export function TaskEditModal() {
               type="checkbox"
               checked={important}
               onChange={(event) => setImportant(event.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-0"
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-0 dark:border-gray-600"
             />
-            <span className="text-sm text-gray-600">Важная задача</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Важная задача</span>
           </label>
 
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={cancelEditing}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
             >
               Отмена
             </button>

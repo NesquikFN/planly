@@ -89,9 +89,9 @@ export function MonthView() {
 
   return (
     <div className="flex flex-col">
-      <div className="grid grid-cols-7 border-b border-gray-100">
+      <div className="grid grid-cols-7 border-b border-gray-100 dark:border-gray-800">
         {WEEKDAY_LABELS.map((label) => (
-          <div key={label} className="py-2 text-center text-xs font-medium text-gray-400">
+          <div key={label} className="py-2 text-center text-xs font-medium text-gray-400 dark:text-gray-500">
             {label}
           </div>
         ))}
@@ -115,15 +115,19 @@ export function MonthView() {
               tabIndex={0}
               onClick={() => goToDayView(day)}
               className={cn(
-                "flex min-h-[104px] cursor-pointer flex-col items-stretch gap-1 border-b border-l border-gray-50 p-1.5 text-left transition-colors hover:bg-gray-50 first:border-l-0 [&:nth-child(7n+1)]:border-l-0",
-                !isCurrentMonth && "bg-gray-50/40",
-                isDropTarget && "bg-gray-100",
+                "flex min-h-[104px] cursor-pointer flex-col items-stretch gap-1 border-b border-l border-gray-50 p-1.5 text-left transition-colors hover:bg-gray-50 first:border-l-0 [&:nth-child(7n+1)]:border-l-0 dark:border-gray-800 dark:hover:bg-gray-800",
+                !isCurrentMonth && "bg-gray-50/40 dark:bg-gray-800/40",
+                isDropTarget && "bg-gray-100 dark:bg-gray-800",
               )}
             >
               <span
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
-                  isToday ? "bg-blue-600 text-white" : isCurrentMonth ? "text-gray-900" : "text-gray-300",
+                  isToday
+                    ? "bg-blue-600 text-white"
+                    : isCurrentMonth
+                      ? "text-gray-900 dark:text-gray-50"
+                      : "text-gray-300 dark:text-gray-600",
                 )}
               >
                 {day.getDate()}
@@ -171,7 +175,7 @@ export function MonthView() {
                       domEvent.stopPropagation();
                       setOverflowDay(iso);
                     }}
-                    className="rounded px-1.5 text-left text-[11px] font-medium text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    className="rounded px-1.5 text-left text-[11px] font-medium text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
                   >
                     Ещё {overflow}
                   </button>
@@ -212,16 +216,16 @@ function DayOverflowList({ date, onClose }: { date: string; onClose: () => void 
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
       <div
-        className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+        className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
         onClick={(domEvent) => domEvent.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">{label}</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">{label}</h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Закрыть"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <X size={16} />
           </button>
@@ -238,7 +242,7 @@ function DayOverflowList({ date, onClose }: { date: string; onClose: () => void 
                     openEntryEditor(entry);
                     onClose();
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-gray-50"
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   {entry.kind === "task" ? (
                     <span
@@ -248,15 +252,15 @@ function DayOverflowList({ date, onClose }: { date: string; onClose: () => void 
                         domEvent.stopPropagation();
                         toggleEntryComplete(entry);
                       }}
-                      className="shrink-0 text-gray-400"
+                      className="shrink-0 text-gray-400 dark:text-gray-500"
                     >
                       {entry.completed ? <CheckSquare size={14} /> : <Square size={14} />}
                     </span>
                   ) : (
                     <span className={cn("h-2 w-2 shrink-0 rounded-full", styles.dot)} />
                   )}
-                  {entry.startTime && <span className="shrink-0 text-xs text-gray-400">{entry.startTime}</span>}
-                  <span className="truncate text-gray-900">{entry.title}</span>
+                  {entry.startTime && <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{entry.startTime}</span>}
+                  <span className="truncate text-gray-900 dark:text-gray-50">{entry.title}</span>
                 </button>
               </li>
             );

@@ -15,18 +15,21 @@
 ## Основные уровни
 
 - **Маршруты (`src/app/*/page.tsx`)** — `/` (Dashboard), `/calendar` (Calendar), `/projects`
-  (Projects). Каждая страница — `"use client"`, сама собирает Sidebar + Header + модульные блоки.
+  (Projects), `/notes` (Notes), `/reminders` (Reminders), `/analytics` (Analytics), `/settings`
+  (Settings). Каждая страница — `"use client"`, сама собирает Sidebar + Header + модульные блоки.
 - **`src/app/layout.tsx`** — корневой layout, монтирует ВСЮ цепочку глобальных провайдеров
   (см. «Потоки данных» ниже). Единственное место, где они монтируются.
 - **Общие компоненты (`src/components/layout/`, `src/components/ui/`)** — `Sidebar.tsx` (общая
   навигация на всех страницах), `ui/DropdownMenu.tsx`, `ui/Avatar.tsx`, `ui/ComingSoonDialog.tsx`
-  (модалка-заглушка для нереализованных разделов).
+  (заглушка-модалка для точечных нереализованных действий внутри Projects/Notes/Reminders/
+  Analytics), `ui/Switch.tsx` (переключатель, используется в Settings).
 - **Модульные компоненты (`src/components/<module>/`)** — `dashboard/`, `tasks/`, `calendar/`,
-  `projects/`, `ai/`. Компонент модуля не должен напрямую импортировать внутренности другого
-  модуля — общее выносится в `ui/` или `lib/`.
+  `projects/`, `notes/`, `reminders/`, `analytics/`, `settings/`, `ai/`. Компонент модуля не
+  должен напрямую импортировать внутренности другого модуля — общее выносится в `ui/` или `lib/`.
 - **Stores (`src/hooks/use*Store.tsx`, `useTheme.tsx`, `useClock.tsx`)** — React Context +
   Provider, у каждого своя зона ответственности.
-- **Types (`src/types/*.ts`)** — `task.ts`, `calendar.ts`, `notification.ts`, `project.ts`.
+- **Types (`src/types/*.ts`)** — `task.ts`, `calendar.ts`, `notification.ts`, `project.ts`,
+  `note.ts`, `reminder.ts`, `analytics.ts`, `settings.ts`.
 - **Utilities (`src/lib/*.ts`)** — чистые функции: даты, парсинг, форматирование, mock-данные,
   фильтры (см. таблицу в MODULES.md для точных файлов по модулю).
 - **Persistence** — `src/lib/storage.ts` + внутри каждого стора; ключи `planly:*` в
@@ -44,14 +47,32 @@
 - **Проекты** — **без общего стора**: `app/projects/page.tsx` держит `useState<Project[]>`,
   инициализированный из `lib/projects-mock-data.ts`. Не пишет в `localStorage`. Это
   сознательно временный UI-скелет (см. MODULES.md → Projects).
+- **Заметки** — **без общего стора**: `app/notes/page.tsx` держит `useState<Note[]>`,
+  инициализированный из `lib/notes-mock-data.ts`. Не пишет в `localStorage`. UI-скелет (см.
+  MODULES.md → Notes).
+- **Напоминания** — **без общего стора**: `app/reminders/page.tsx` держит `useState<Reminder[]>`,
+  инициализированный из `lib/reminders-mock-data.ts` (даты рассчитаны относительно реального
+  `now`). Не пишет в `localStorage`, изолированы от `CalendarEntry`/`useTasksStore` — не
+  отображаются в `/calendar` и не связаны с реальными задачами. UI-скелет (см. MODULES.md →
+  Reminders).
+- **Аналитика** — **без стора и без localStorage**: `app/analytics/page.tsx` использует
+  mock-данные из `lib/analytics-mock-data.ts`, масштабируемые по периоду. UI-скелет (см.
+  MODULES.md → Analytics).
+- **Настройки** — **без общего стора**: `app/settings/page.tsx` держит модель `draft`/`saved` в
+  `useState`, персистит в `localStorage` (`planly:settings`) при нажатии «Сохранить». Полностью
+  рабочий раздел (в отличие от Projects/Notes/Reminders/Analytics), но пока не влияет на
+  поведение других модулей — см. PROJECT_HANDOFF.md §4.
 - **Уведомления** — `useNotificationsStore()` — читает и `useTasksStore()`, и
   `useCalendarStore()` (обязан быть вложен внутри обоих); ждёт `hydrated` от обоих перед первым
   диффом, чтобы не сгенерировать фейковые события при гидратации. Хранит `planly:notifications`.
-- **Тема интерфейса** — `useTheme()` — **не персистится**, только `useState` + класс `dark` на
-  `<html>`, сбрасывается при перезагрузке страницы.
+- **Тема интерфейса** — `useTheme()` — персистится через `planly:settings.appearance.theme`:
+  `themePreference` (`light`/`dark`/`system`) и `setThemePreference` читаются `ThemeProvider` при
+  старте и применяются классом `dark` на `<html>` глобально, переживают перезагрузку. Прежний
+  `toggleTheme` (используется в Sidebar/Header) не менялся.
 - **localStorage** — единственные легитимные ключи: `planly:tasks`, `planly:focus`,
-  `planly:calendars`, `planly:events`, `planly:notifications`. Новый ключ, скорее всего, ошибка
-  дублирования данных — каждый Provider хранит только своё.
+  `planly:calendars`, `planly:events`, `planly:notifications`, `planly:settings`. Новый ключ,
+  скорее всего, ошибка дублирования данных — каждый Provider хранит только своё. Projects, Notes,
+  Reminders, Analytics в `localStorage` намеренно не пишут (см. выше).
 
 Дерево провайдеров в `layout.tsx` (порядок обязателен — каждый следующий физически зависит от
 предыдущих):

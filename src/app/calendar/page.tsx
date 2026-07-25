@@ -27,7 +27,7 @@ function CalendarMain() {
   );
 
   return (
-    <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+    <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <CalendarToolbar />
 
       <div ref={swipeRef} className="overflow-hidden">

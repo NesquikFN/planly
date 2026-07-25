@@ -48,16 +48,16 @@ export function CalendarFormModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/20" onClick={closeCalendarForm} aria-hidden="true" />
 
-      <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+      <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50">
             {calendarFormState.mode === "edit" ? "Изменить календарь" : "Новый календарь"}
           </h3>
           <button
             type="button"
             onClick={closeCalendarForm}
             aria-label="Закрыть"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <X size={18} />
           </button>
@@ -65,19 +65,19 @@ export function CalendarFormModal() {
 
         <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-gray-500">Название</span>
+            <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Название</span>
             <input
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
               autoFocus
               required
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
             />
           </label>
 
           <div>
-            <span className="mb-1 block text-xs font-medium text-gray-500">Цвет</span>
+            <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Цвет</span>
             <div className="flex flex-wrap items-center gap-2">
               {CALENDAR_COLORS.map((option) => (
                 <button
@@ -89,7 +89,7 @@ export function CalendarFormModal() {
                   className={cn(
                     "h-6 w-6 rounded-full transition-shadow",
                     calendarColorStyles[option].dot,
-                    color === option && "ring-2 ring-gray-400 ring-offset-2",
+                    color === option && "ring-2 ring-gray-400 ring-offset-2 dark:ring-gray-500 dark:ring-offset-gray-900",
                   )}
                 />
               ))}
@@ -100,7 +100,7 @@ export function CalendarFormModal() {
             <button
               type="button"
               onClick={closeCalendarForm}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
             >
               Отмена
             </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { ComingSoonDialog } from "@/components/ui/ComingSoonDialog";
@@ -9,44 +10,60 @@ import { ProjectsStatsRow } from "@/components/projects/ProjectsStatsRow";
 import { ProjectsGrid } from "@/components/projects/ProjectsGrid";
 import { ProjectsSidePanel } from "@/components/projects/ProjectsSidePanel";
 import { ProjectsArchiveCard } from "@/components/projects/ProjectsArchiveCard";
-import { mockProjects } from "@/lib/projects-mock-data";
+import { ProjectFormModal } from "@/components/projects/ProjectFormModal";
+import { ProjectDeleteModal } from "@/components/projects/ProjectDeleteModal";
+import { useProjectsStore } from "@/hooks/useProjectsStore";
+import { useClock } from "@/hooks/useClock";
+import { computeOverviewStats, filterProjects, getUniqueTags, sortProjects } from "@/lib/projects";
 import { USER_NAME } from "@/lib/app-constants";
-import type { Project } from "@/types/project";
+import type { Project, ProjectFormValues, ProjectPriority, ProjectStatus } from "@/types/project";
+
+type FormModalState = { mode: "create" } | { mode: "edit"; project: Project };
 
 export default function ProjectsPage() {
+  const router = useRouter();
+  const { today } = useClock();
+  const { projects, createProject, updateProject, deleteProject, duplicateProject, archiveProject, restoreProject, toggleStar } =
+    useProjectsStore();
+
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ProjectsViewMode>("grid");
   const [sortLabel, setSortLabel] = useState("По названию");
+  const [statusFilter, setStatusFilter] = useState<ProjectStatus | null>(null);
+  const [priorityFilter, setPriorityFilter] = useState<ProjectPriority | null>(null);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
+
+  const [formModal, setFormModal] = useState<FormModalState | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
   const [stubDialog, setStubDialog] = useState<{ title: string; message?: string } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const stats = useMemo(
-    () => ({
-      total: projects.length,
-      active: projects.filter((project) => project.status === "active").length,
-      completed: projects.filter((project) => project.status === "completed").length,
-      onHold: projects.filter((project) => project.status === "onHold").length,
-      archived: 0,
-    }),
-    [projects],
-  );
+  const archivedProjects = useMemo(() => projects.filter((project) => project.archived), [projects]);
+  const tags = useMemo(() => getUniqueTags(projects.filter((project) => !project.archived)), [projects]);
+  const stats = useMemo(() => computeOverviewStats(projects, today), [projects, today]);
 
   const visibleProjects = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return projects;
-    return projects.filter((project) => project.name.toLowerCase().includes(query));
-  }, [projects, searchQuery]);
+    const filtered = filterProjects(projects, { search: searchQuery, status: statusFilter, priority: priorityFilter, tag: tagFilter });
+    return sortProjects(filtered, sortLabel);
+  }, [projects, searchQuery, statusFilter, priorityFilter, tagFilter, sortLabel]);
 
-  function toggleStar(id: string) {
-    setProjects((prev) =>
-      prev.map((project) => (project.id === id ? { ...project, starred: !project.starred } : project)),
-    );
+  function handleOpenProject(project: Project) {
+    router.push(`/projects/${project.id}`);
   }
 
-  function handleStubAction(action: string, project: Project) {
-    setStubDialog({ title: "Скоро будет доступно", message: `«${action}» для проекта «${project.name}» появится позже.` });
+  function handleFormSubmit(values: ProjectFormValues) {
+    if (formModal?.mode === "edit") {
+      updateProject(formModal.project.id, values);
+    } else {
+      createProject(values);
+    }
+    setFormModal(null);
+  }
+
+  function handleConfirmDelete(project: Project) {
+    deleteProject(project.id);
+    setDeleteTarget(null);
   }
 
   return (
@@ -70,9 +87,14 @@ export default function ProjectsPage() {
             onViewModeChange={setViewMode}
             sortLabel={sortLabel}
             onSortLabelChange={setSortLabel}
-            onNewProject={() =>
-              setStubDialog({ title: "Скоро будет доступно", message: "Создание новых проектов появится в одном из следующих обновлений." })
-            }
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            priorityFilter={priorityFilter}
+            onPriorityFilterChange={setPriorityFilter}
+            tagFilter={tagFilter}
+            onTagFilterChange={setTagFilter}
+            tags={tags}
+            onNewProject={() => setFormModal({ mode: "create" })}
             searchInputRef={searchInputRef}
           />
 
@@ -82,23 +104,37 @@ export default function ProjectsPage() {
             <ProjectsGrid
               projects={visibleProjects}
               viewMode={viewMode}
+              onOpen={handleOpenProject}
               onToggleStar={toggleStar}
-              onStubAction={handleStubAction}
+              onEdit={(project) => setFormModal({ mode: "edit", project })}
+              onDuplicate={(project) => duplicateProject(project.id)}
+              onArchive={(project) => archiveProject(project.id)}
+              onDeleteRequest={setDeleteTarget}
             />
             <ProjectsSidePanel
-              onQuickAction={(action) =>
-                setStubDialog({ title: "Скоро будет доступно", message: `«${action}» появится в одном из следующих обновлений.` })
-              }
+              onQuickAction={(action) => {
+                if (action === "Новый проект") {
+                  setFormModal({ mode: "create" });
+                  return;
+                }
+                setStubDialog({ title: "Скоро будет доступно", message: `«${action}» появится в одном из следующих обновлений.` });
+              }}
             />
           </div>
 
-          <ProjectsArchiveCard
-            onOpenArchive={() =>
-              setStubDialog({ title: "Архив проектов", message: "Архив пока пуст — завершённые и неактивные проекты будут появляться здесь." })
-            }
-          />
+          <ProjectsArchiveCard archivedProjects={archivedProjects} onRestore={restoreProject} onDeleteRequest={setDeleteTarget} />
         </main>
       </div>
+
+      <ProjectFormModal
+        open={formModal !== null}
+        mode={formModal?.mode ?? "create"}
+        initial={formModal?.mode === "edit" ? formModal.project : null}
+        onClose={() => setFormModal(null)}
+        onSubmit={handleFormSubmit}
+      />
+
+      <ProjectDeleteModal project={deleteTarget} onCancel={() => setDeleteTarget(null)} onConfirm={handleConfirmDelete} />
 
       <ComingSoonDialog
         open={stubDialog !== null}

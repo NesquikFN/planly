@@ -35,7 +35,7 @@ export function CalendarList() {
                 checked={calendar.visible}
                 onChange={() => toggleCalendarVisibility(calendar.id)}
                 aria-label={`Показать календарь «${calendar.name}»`}
-                className={`h-4 w-4 shrink-0 rounded border-gray-300 ${styles.accent} focus:ring-0`}
+                className={`h-4 w-4 shrink-0 rounded border-gray-300 dark:border-gray-600 ${styles.accent} focus:ring-0`}
               />
               <span className="flex-1 truncate text-sm text-gray-600 dark:text-gray-300">{calendar.name}</span>
 

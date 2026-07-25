@@ -76,26 +76,26 @@ export function FilterPanel() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+        <div className="absolute right-0 top-full z-30 mt-1 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-gray-500">По календарям</p>
+            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">По календарям</p>
             <div className="space-y-1">
               {calendars.map((calendar) => (
-                <label key={calendar.id} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50">
+                <label key={calendar.id} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
                   <input
                     type="checkbox"
                     checked={calendar.visible}
                     onChange={() => toggleCalendarVisibility(calendar.id)}
-                    className={`h-3.5 w-3.5 rounded border-gray-300 ${calendarColorStyles[calendar.color].accent} focus:ring-0`}
+                    className={`h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 ${calendarColorStyles[calendar.color].accent} focus:ring-0`}
                   />
-                  <span className="truncate text-gray-600">{calendar.name}</span>
+                  <span className="truncate text-gray-600 dark:text-gray-300">{calendar.name}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div className="mt-3">
-            <p className="mb-1.5 text-xs font-semibold text-gray-500">По цветам</p>
+            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">По цветам</p>
             <div className="flex flex-wrap gap-1.5">
               {CALENDAR_COLORS.map((color) => (
                 <button
@@ -106,7 +106,7 @@ export function FilterPanel() {
                   className={cn(
                     "h-6 w-6 rounded-full transition-shadow",
                     calendarColorStyles[color].dot,
-                    draft.colors.includes(color) && "ring-2 ring-gray-400 ring-offset-2",
+                    draft.colors.includes(color) && "ring-2 ring-gray-400 ring-offset-2 dark:ring-gray-500 dark:ring-offset-gray-900",
                   )}
                 />
               ))}
@@ -115,33 +115,33 @@ export function FilterPanel() {
 
           <div className="mt-3 space-y-1">
             {PRESET_FIELDS.map((field) => (
-              <label key={field.key} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50">
+              <label key={field.key} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
                 <input
                   type="checkbox"
                   checked={Boolean(draft[field.key])}
                   onChange={() => togglePreset(field.key)}
-                  className="h-3.5 w-3.5 rounded border-gray-300 accent-gray-700 focus:ring-0"
+                  className="h-3.5 w-3.5 rounded border-gray-300 accent-gray-700 focus:ring-0 dark:border-gray-600 dark:accent-gray-400"
                 />
-                <span className="text-gray-600">{field.label}</span>
+                <span className="text-gray-600 dark:text-gray-300">{field.label}</span>
               </label>
             ))}
           </div>
 
           <div className="mt-3">
-            <p className="mb-1.5 text-xs font-semibold text-gray-500">Период времени</p>
+            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">Период времени</p>
             <div className="flex items-center gap-2">
               <input
                 type="date"
                 value={draft.dateFrom ?? ""}
                 onChange={(event) => setDraft((prev) => ({ ...prev, dateFrom: event.target.value || null }))}
-                className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs text-gray-700 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               />
-              <span className="text-xs text-gray-400">—</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
               <input
                 type="date"
                 value={draft.dateTo ?? ""}
                 onChange={(event) => setDraft((prev) => ({ ...prev, dateTo: event.target.value || null }))}
-                className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs text-gray-700 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               />
             </div>
           </div>
@@ -150,7 +150,7 @@ export function FilterPanel() {
             <button
               type="button"
               onClick={handleReset}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-100 active:bg-gray-200"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800 dark:active:bg-gray-700"
             >
               Сбросить
             </button>

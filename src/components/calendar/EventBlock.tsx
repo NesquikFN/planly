@@ -204,11 +204,12 @@ export function EventBlock({
         }}
         className={cn(
           "group absolute inset-x-1 cursor-grab select-none overflow-hidden rounded-lg border px-2 py-1 text-left text-xs shadow-sm active:cursor-grabbing",
-          !isDragging && "transition-[top,height,box-shadow,transform] duration-150 ease-out",
+          !isDragging && "transition-[top,height,box-shadow,transform,background-color] duration-150 ease-out",
           styles.block,
+          styles.hoverBlock,
           styles.border,
           styles.text,
-          isSelected && `ring-2 ring-offset-1 ${styles.ring}`,
+          isSelected && `ring-2 ring-offset-1 dark:ring-offset-gray-900 ${styles.ring}`,
           isDragging ? "z-20 scale-[1.02] opacity-40 shadow-lg" : "shadow-sm",
         )}
         style={{ top: topPx, height: heightPx, touchAction: "none" }}

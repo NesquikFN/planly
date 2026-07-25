@@ -37,7 +37,7 @@ export function TaskRow({ task }: TaskRowProps) {
             checked={task.completed}
             onChange={() => toggleComplete(task.id)}
             aria-label={`Отметить задачу «${task.title}» выполненной`}
-            className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-0"
+            className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-0 dark:border-gray-600"
           />
           <span
             role="button"
@@ -51,7 +51,7 @@ export function TaskRow({ task }: TaskRowProps) {
             }}
             title="Выбрать как фокус дня"
             className={`flex-1 truncate text-sm font-medium ${
-              task.completed ? "text-gray-400 line-through" : `cursor-pointer ${styles.title}`
+              task.completed ? "text-gray-400 line-through dark:text-gray-500" : `cursor-pointer ${styles.title}`
             }`}
           >
             {task.title}
@@ -62,17 +62,17 @@ export function TaskRow({ task }: TaskRowProps) {
           <Flag
             size={14}
             fill="currentColor"
-            className={`hidden shrink-0 sm:block ${task.completed ? "text-gray-200" : styles.flag}`}
+            className={`hidden shrink-0 sm:block ${task.completed ? "text-gray-200 dark:text-gray-700" : styles.flag}`}
           />
           <span
-            className={`w-20 shrink-0 text-right text-sm ${task.completed ? "text-gray-300" : styles.due}`}
+            className={`w-20 shrink-0 text-right text-sm ${task.completed ? "text-gray-300 dark:text-gray-600" : styles.due}`}
           >
             {task.dueLabel}
           </span>
 
           <DropdownMenu
             trigger={<MoreVertical size={16} />}
-            triggerClassName="shrink-0 rounded p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500"
+            triggerClassName="shrink-0 rounded p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
             triggerAriaLabel="Действия с задачей"
             items={[
               { key: "edit", label: "Редактировать", onSelect: () => startEditing(task.id) },

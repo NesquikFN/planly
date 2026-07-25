@@ -29,12 +29,12 @@ export function CalendarToolbar() {
   const navLabels = NAV_LABELS[viewMode];
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 sm:p-5">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 dark:border-gray-800 sm:p-5">
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={goToToday}
-          className={cn(calendarButtonBase, calendarButtonIdle, "border-gray-200 px-3 py-1.5")}
+          className={cn(calendarButtonBase, calendarButtonIdle, "border-gray-200 px-3 py-1.5 dark:border-gray-700")}
         >
           Сегодня
         </button>
@@ -48,14 +48,14 @@ export function CalendarToolbar() {
           </button>
         </div>
 
-        <span className="inline-flex items-center gap-1 text-base font-semibold text-gray-900">
+        <span className="inline-flex items-center gap-1 text-base font-semibold text-gray-900 dark:text-gray-50">
           {periodLabel}
-          <ChevronDown size={15} className="text-gray-400" />
+          <ChevronDown size={15} className="text-gray-400 dark:text-gray-500" />
         </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-lg bg-gray-50 p-1 text-sm">
+        <div className="flex items-center rounded-lg bg-gray-50 p-1 text-sm dark:bg-gray-800">
           {VIEW_MODES.map((mode) => (
             <button
               key={mode}
@@ -65,7 +65,7 @@ export function CalendarToolbar() {
               className={cn(
                 calendarButtonBase,
                 "px-3 py-1.5",
-                viewMode === mode ? calendarButtonSelected : "border border-transparent hover:bg-white",
+                viewMode === mode ? calendarButtonSelected : "border border-transparent hover:bg-white dark:hover:bg-gray-900",
               )}
             >
               {VIEW_MODE_LABELS[mode]}
