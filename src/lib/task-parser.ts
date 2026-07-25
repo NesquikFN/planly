@@ -1,4 +1,5 @@
 import type { Task } from "@/types/task";
+import { addDays, toISODate } from "@/lib/date-utils";
 
 function generateId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -8,7 +9,7 @@ function generateId(): string {
 }
 
 // Lightweight heuristic parser standing in for real AI/date recognition.
-export function createTaskFromText(text: string): Task {
+export function createTaskFromText(text: string, today: Date): Task {
   const trimmed = text.trim();
   const lower = trimmed.toLowerCase();
 
@@ -22,5 +23,6 @@ export function createTaskFromText(text: string): Task {
     priority: isTomorrow ? "upcoming" : "none",
     completed: false,
     important: isImportant,
+    date: isTomorrow ? toISODate(addDays(today, 1)) : undefined,
   };
 }

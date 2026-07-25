@@ -51,6 +51,28 @@ const MOCK_EVENT_SEEDS: MockEventSeed[] = [
   { id: "17", title: "Время с семьёй", dayOffset: 5, startTime: "15:00", endTime: "18:00", calendarId: "family", project: "Семья" },
   { id: "18", title: "Тренировка", dayOffset: 5, startTime: "12:00", endTime: "13:00", calendarId: "health", project: "Здоровье" },
   { id: "19", title: "Отдых", dayOffset: 6, startTime: "10:00", endTime: "14:00", calendarId: "health", project: "Здоровье" },
+
+  // Spread across the rest of the month so the Month view isn't empty
+  // outside the "current week" cluster above.
+  { id: "20", title: "Планёрка", dayOffset: -17, startTime: "09:00", endTime: "09:30", calendarId: "work" },
+  { id: "21", title: "Созвон с клиентом", dayOffset: -14, startTime: "11:00", endTime: "11:30", calendarId: "personal" },
+  { id: "22", title: "Лаборатория", dayOffset: -13, startTime: "14:00", endTime: "16:00", calendarId: "lab" },
+  { id: "23", title: "Тренировка", dayOffset: -11, startTime: "18:00", endTime: "19:00", calendarId: "health" },
+  { id: "24", title: "Обед с семьёй", dayOffset: -10, startTime: "13:00", endTime: "14:00", calendarId: "family" },
+  { id: "25", title: "Ревью проекта", dayOffset: -9, startTime: "10:00", endTime: "11:00", calendarId: "work" },
+  { id: "26", title: "Планирование", dayOffset: -6, startTime: "09:00", endTime: "09:30", calendarId: "family" },
+  { id: "27", title: "Лаборатория", dayOffset: -4, startTime: "15:00", endTime: "17:00", calendarId: "lab" },
+  { id: "28", title: "Встреча с партнёрами", dayOffset: -2, startTime: "12:00", endTime: "13:00", calendarId: "personal" },
+  { id: "29", title: "Созвон команды", dayOffset: 8, startTime: "10:00", endTime: "10:30", calendarId: "work" },
+  { id: "30", title: "Лаборатория", dayOffset: 9, startTime: "14:00", endTime: "16:00", calendarId: "lab" },
+  { id: "31", title: "Тренировка", dayOffset: 10, startTime: "18:00", endTime: "19:00", calendarId: "health" },
+  { id: "32", title: "Обед с семьёй", dayOffset: 12, startTime: "13:00", endTime: "14:00", calendarId: "family" },
+  { id: "33", title: "Презентация", dayOffset: 13, startTime: "11:00", endTime: "12:00", calendarId: "work" },
+  { id: "34", title: "Лаборатория", dayOffset: 15, startTime: "15:00", endTime: "17:00", calendarId: "lab" },
+  { id: "35", title: "Врач", dayOffset: 16, startTime: "09:30", endTime: "10:30", calendarId: "health" },
+  { id: "36", title: "Планирование недели", dayOffset: 18, startTime: "09:00", endTime: "09:30", calendarId: "family" },
+  { id: "37", title: "Созвон с клиентом", dayOffset: 20, startTime: "11:00", endTime: "11:30", calendarId: "personal" },
+  { id: "38", title: "Лаборатория", dayOffset: 22, startTime: "14:00", endTime: "16:00", calendarId: "lab" },
 ];
 
 export function createMockEvents(today: Date): CalendarEvent[] {

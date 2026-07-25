@@ -9,4 +9,6 @@ export interface Task {
   important: boolean;
   date?: string;
   time?: string;
+  /** ISO datetime — set the moment the task was marked done, cleared on undo. */
+  completedAt?: string;
 }

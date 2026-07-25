@@ -63,6 +63,68 @@ export function formatMonthLabel(date: Date): string {
   return capitalize(date.toLocaleDateString("ru-RU", { month: "long" }));
 }
 
+export function formatShortDate(date: Date): string {
+  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+}
+
+export function diffInCalendarDays(a: Date, b: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const normalizedA = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const normalizedB = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((normalizedA.getTime() - normalizedB.getTime()) / msPerDay);
+}
+
+// --- Single, unified date/time toolkit -------------------------------------
+// Every part of the app (Header, tasks, calendar, notifications) should go
+// through these instead of rolling its own `new Date()` / string-slicing —
+// that's how the "22 июля" hardcoded-date and UTC-offset bugs crept in.
+
+/** Local calendar-date key "YYYY-MM-DD" — never use toISOString().slice(0,10),
+ * which shifts to UTC and can land on the wrong day near midnight. */
+export const getLocalDateKey = toISODate;
+
+export function startOfLocalDay(date: Date): Date {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+export const startOfWeekMonday = startOfWeek;
+
+export function endOfWeekSunday(date: Date): Date {
+  const end = addDays(startOfWeek(date), 6);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+export function isToday(date: Date): boolean {
+  return diffInCalendarDays(date, new Date()) === 0;
+}
+
+export function isYesterday(date: Date): boolean {
+  return diffInCalendarDays(date, new Date()) === -1;
+}
+
+export function isTomorrow(date: Date): boolean {
+  return diffInCalendarDays(date, new Date()) === 1;
+}
+
+/** "Четверг, 23 июля" — capitalized weekday + day + month, ru-RU. */
+export const formatRussianDate = formatFullDateLabel;
+
+const GREETING_RANGES: { start: number; end: number; text: string }[] = [
+  { start: 5, end: 12, text: "Доброе утро" },
+  { start: 12, end: 18, text: "Добрый день" },
+  { start: 18, end: 23, text: "Добрый вечер" },
+];
+
+/** 05:00–11:59 утро, 12:00–17:59 день, 18:00–22:59 вечер, 23:00–04:59 ночь. */
+export function getGreeting(date: Date): string {
+  const hour = date.getHours();
+  const match = GREETING_RANGES.find((range) => hour >= range.start && hour < range.end);
+  return match ? match.text : "Доброй ночи";
+}
+
 /** 6x7 grid (Monday-first) of the given month, including leading/trailing days from adjacent months. */
 export function getMonthGrid(monthStart: Date): Date[] {
   const gridStart = startOfWeek(monthStart);

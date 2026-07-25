@@ -18,7 +18,7 @@ export function UpcomingEvents() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">Предстоящие</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Предстоящие</h3>
         <button
           type="button"
           onClick={() => openCreateModal()}
@@ -30,7 +30,7 @@ export function UpcomingEvents() {
       </div>
 
       {upcomingEvents.length === 0 ? (
-        <p className="mt-2 text-sm text-gray-400">Нет предстоящих событий</p>
+        <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">Нет предстоящих событий</p>
       ) : (
         <>
           <ul className="mt-2 space-y-3">
@@ -90,8 +90,8 @@ function UpcomingItem({
     <li className="flex items-start gap-2.5">
       <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${calendarColorStyles[resolvedColor].dot}`} />
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-gray-900">{title}</p>
-        <p className="truncate text-xs text-gray-400">{dateLabel}</p>
+        <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{title}</p>
+        <p className="truncate text-xs text-gray-400 dark:text-gray-500">{dateLabel}</p>
       </div>
     </li>
   );

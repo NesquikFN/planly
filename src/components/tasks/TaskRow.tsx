@@ -13,7 +13,7 @@ interface TaskRowProps {
 export function TaskRow({ task }: TaskRowProps) {
   const {
     toggleComplete,
-    setFocusTask,
+    setManualFocus,
     startEditing,
     postponeToTomorrow,
     toggleImportant,
@@ -42,11 +42,11 @@ export function TaskRow({ task }: TaskRowProps) {
           <span
             role="button"
             tabIndex={0}
-            onClick={() => !task.completed && setFocusTask(task.id)}
+            onClick={() => !task.completed && setManualFocus(task.id)}
             onKeyDown={(event) => {
               if (!task.completed && (event.key === "Enter" || event.key === " ")) {
                 event.preventDefault();
-                setFocusTask(task.id);
+                setManualFocus(task.id);
               }
             }}
             title="Выбрать как фокус дня"

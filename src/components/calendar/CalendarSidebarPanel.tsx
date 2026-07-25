@@ -4,12 +4,12 @@ import { UpcomingEvents } from "@/components/calendar/UpcomingEvents";
 
 export function CalendarSidebarPanel() {
   return (
-    <section className="flex flex-col gap-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
+    <section className="flex flex-col gap-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5 dark:border-gray-800 dark:bg-gray-900">
       <MiniCalendar />
-      <div className="border-t border-gray-100 pt-4">
+      <div className="border-t border-gray-100 pt-4 dark:border-gray-800">
         <CalendarList />
       </div>
-      <div className="border-t border-gray-100 pt-4">
+      <div className="border-t border-gray-100 pt-4 dark:border-gray-800">
         <UpcomingEvents />
       </div>
     </section>

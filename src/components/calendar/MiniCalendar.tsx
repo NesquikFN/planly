@@ -20,7 +20,7 @@ export function MiniCalendar() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-900">{formatMonthYear(miniMonth)}</span>
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{formatMonthYear(miniMonth)}</span>
         <div className="flex items-center gap-0.5">
           <button
             type="button"
@@ -57,7 +57,7 @@ export function MiniCalendar() {
         )}
       >
         {WEEKDAY_LABELS.map((label) => (
-          <span key={label} className="text-[11px] font-medium text-gray-400">
+          <span key={label} className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
             {label}
           </span>
         ))}
@@ -78,10 +78,10 @@ export function MiniCalendar() {
                 isToday
                   ? "bg-blue-600 font-semibold text-white"
                   : isSelected
-                    ? "bg-gray-200 font-semibold text-gray-900"
+                    ? "bg-gray-200 font-semibold text-gray-900 dark:bg-gray-700 dark:text-gray-50"
                     : isCurrentMonth
-                      ? "text-gray-700 hover:bg-gray-100 active:bg-gray-200"
-                      : "text-gray-300 hover:bg-gray-100",
+                      ? "text-gray-700 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+                      : "text-gray-300 hover:bg-gray-100 dark:text-gray-600 dark:hover:bg-gray-800",
               )}
             >
               {day.getDate()}

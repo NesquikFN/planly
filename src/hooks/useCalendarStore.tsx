@@ -23,6 +23,9 @@ import { mockCalendars, createMockEvents } from "@/lib/calendar-mock-data";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { createDefaultFilters, matchesEventFilters } from "@/lib/calendar-filters";
 import { UPCOMING_PREVIEW_COUNT } from "@/lib/calendar-constants";
+import { type CalendarEntry, eventToEntry, taskToEntry } from "@/lib/calendar-entries";
+import { useTasksStore } from "@/hooks/useTasksStore";
+import { useClock } from "@/hooks/useClock";
 import {
   addDays,
   addMonths,
@@ -77,6 +80,7 @@ function stepAnchor(viewMode: CalendarViewMode, anchor: Date, direction: 1 | -1)
 interface CalendarStoreValue {
   today: Date;
   nowMinutes: number;
+  hydrated: boolean;
 
   calendars: CalendarDefinition[];
   calendarById: Map<string, CalendarDefinition>;
@@ -84,6 +88,8 @@ interface CalendarStoreValue {
 
   events: CalendarEvent[];
   visibleEvents: CalendarEvent[];
+  visibleEntries: CalendarEntry[];
+  entriesByDate: Map<string, CalendarEntry[]>;
 
   viewMode: CalendarViewMode;
   setViewMode: (mode: CalendarViewMode) => void;
@@ -102,6 +108,7 @@ interface CalendarStoreValue {
   goToNext: () => void;
   goToDate: (date: Date) => void;
   goToDayView: (date: Date) => void;
+  openTodayInDayView: () => void;
 
   miniMonth: Date;
   goToPreviousMiniMonth: () => void;
@@ -116,13 +123,20 @@ interface CalendarStoreValue {
   upcomingExpanded: boolean;
   toggleUpcomingExpanded: () => void;
 
-  selectedEventId: string | null;
-  selectEvent: (id: string | null) => void;
+  selectedEntryId: string | null;
+  selectEntry: (id: string | null) => void;
 
   modalState: CalendarModalState;
   openCreateModal: (defaults?: Partial<CalendarEventDraft>) => void;
   openEditModal: (id: string) => void;
   closeModal: () => void;
+  openEntryEditor: (entry: CalendarEntry) => void;
+  deleteEntry: (entry: CalendarEntry) => void;
+  toggleEntryComplete: (entry: CalendarEntry) => void;
+  rescheduleEntry: (
+    entry: CalendarEntry,
+    changes: { date: string; startTime: string | null; endTime: string | null },
+  ) => void;
 
   createEvent: (draft: CalendarEventDraft) => void;
   updateEvent: (id: string, changes: Partial<CalendarEventDraft>) => void;
@@ -145,15 +159,9 @@ interface CalendarStoreValue {
 const CalendarContext = createContext<CalendarStoreValue | null>(null);
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
-  const [today] = useState<Date>(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-  const [nowMinutes] = useState<number>(() => {
-    const d = new Date();
-    return d.getHours() * 60 + d.getMinutes();
-  });
+  const tasksStore = useTasksStore();
+  const { now, today } = useClock();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const [calendars, setCalendars] = useState<CalendarDefinition[]>(mockCalendars);
   const [events, setEvents] = useState<CalendarEvent[]>(() => createMockEvents(today));
@@ -168,7 +176,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<EventFilters>(() => createDefaultFilters());
   const [upcomingExpanded, setUpcomingExpanded] = useState(false);
 
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [modalState, setModalState] = useState<CalendarModalState>(null);
 
   const [calendarFormState, setCalendarFormState] = useState<CalendarFormState>(null);
@@ -248,6 +256,12 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setViewMode("day");
   }, []);
 
+  const openTodayInDayView = useCallback(() => {
+    setAnchorDate(today);
+    setMiniMonth(startOfMonth(today));
+    setViewMode("day");
+  }, [today]);
+
   const goToPreviousMiniMonth = useCallback(() => {
     setMiniMonth((prev) => addMonths(prev, -1));
   }, []);
@@ -276,6 +290,40 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     });
   }, [events, calendars, calendarById, filters]);
 
+  // Single merged view of real calendar events + date-bearing tasks — the
+  // shared source every grid/month/agenda component renders from.
+  const visibleEntries = useMemo<CalendarEntry[]>(() => {
+    const eventEntries = filters.onlyTasks
+      ? []
+      : visibleEvents.map((event) => eventToEntry(event, calendarById.get(event.calendarId)?.color ?? "blue"));
+
+    const taskEntries = filters.onlyEvents
+      ? []
+      : tasksStore.tasks
+          .filter((task) => !task.completed && task.date)
+          .filter((task) => (filters.onlyImportant ? task.important : true))
+          .map((task) => taskToEntry(task))
+          .filter((entry): entry is CalendarEntry => entry !== null);
+
+    return [...eventEntries, ...taskEntries];
+  }, [visibleEvents, calendarById, filters, tasksStore.tasks]);
+
+  const entriesByDate = useMemo(() => {
+    const map = new Map<string, CalendarEntry[]>();
+    for (const entry of visibleEntries) {
+      const list = map.get(entry.date);
+      if (list) list.push(entry);
+      else map.set(entry.date, [entry]);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => {
+        if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+        return (a.startTime ?? "").localeCompare(b.startTime ?? "");
+      });
+    }
+    return map;
+  }, [visibleEntries]);
+
   const sortedUpcoming = useMemo<UpcomingEntry[]>(() => {
     const todayIso = toISODate(today);
     const tomorrowIso = toISODate(addDays(today, 1));
@@ -296,12 +344,12 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const upcomingEvents = upcomingExpanded ? sortedUpcoming : sortedUpcoming.slice(0, UPCOMING_PREVIEW_COUNT);
 
-  const selectEvent = useCallback((id: string | null) => {
-    setSelectedEventId(id);
+  const selectEntry = useCallback((id: string | null) => {
+    setSelectedEntryId(id);
   }, []);
 
   const openCreateModal = useCallback((defaults: Partial<CalendarEventDraft> = {}) => {
-    setSelectedEventId(null);
+    setSelectedEntryId(null);
     setModalState({ mode: "create", defaults });
   }, []);
 
@@ -313,6 +361,61 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setModalState(null);
   }, []);
 
+  // Single edit entry point per rendered item — routes to the calendar's own
+  // modal for events, and to the task editor for tasks. Never both at once.
+  const openEntryEditor = useCallback(
+    (entry: CalendarEntry) => {
+      if (entry.kind === "event") {
+        setModalState({ mode: "edit", eventId: entry.sourceId });
+      } else {
+        tasksStore.startEditing(entry.sourceId);
+      }
+    },
+    [tasksStore],
+  );
+
+  const deleteEntry = useCallback(
+    (entry: CalendarEntry) => {
+      if (entry.kind === "event") {
+        setEvents((prev) => prev.filter((event) => event.id !== entry.sourceId));
+        setModalState((current) => (current?.mode === "edit" && current.eventId === entry.sourceId ? null : current));
+      } else {
+        tasksStore.deleteTask(entry.sourceId);
+      }
+      setSelectedEntryId((current) => (current === entry.id ? null : current));
+    },
+    [tasksStore],
+  );
+
+  const toggleEntryComplete = useCallback(
+    (entry: CalendarEntry) => {
+      if (entry.kind === "task") tasksStore.toggleComplete(entry.sourceId);
+    },
+    [tasksStore],
+  );
+
+  const rescheduleEntry = useCallback(
+    (entry: CalendarEntry, changes: { date: string; startTime: string | null; endTime: string | null }) => {
+      if (entry.kind === "event") {
+        setEvents((prev) =>
+          prev.map((event) =>
+            event.id === entry.sourceId
+              ? {
+                  ...event,
+                  date: changes.date,
+                  startTime: changes.startTime ?? event.startTime,
+                  endTime: changes.endTime ?? event.endTime,
+                }
+              : event,
+          ),
+        );
+      } else {
+        tasksStore.rescheduleTask(entry.sourceId, changes.date, changes.startTime ?? undefined);
+      }
+    },
+    [tasksStore],
+  );
+
   const createEvent = useCallback((draft: CalendarEventDraft) => {
     setEvents((prev) => [...prev, { id: generateId("event"), ...draft }]);
   }, []);
@@ -323,7 +426,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const deleteEvent = useCallback((id: string) => {
     setEvents((prev) => prev.filter((event) => event.id !== id));
-    setSelectedEventId((current) => (current === id ? null : current));
+    setSelectedEntryId((current) => (current === `event:${id}` ? null : current));
     setModalState((current) => (current?.mode === "edit" && current.eventId === id ? null : current));
   }, []);
 
@@ -385,6 +488,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const value: CalendarStoreValue = {
     today,
     nowMinutes,
+    hydrated,
 
     calendars,
     calendarById,
@@ -392,6 +496,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
     events,
     visibleEvents,
+    visibleEntries,
+    entriesByDate,
 
     viewMode,
     setViewMode,
@@ -410,6 +516,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     goToNext,
     goToDate,
     goToDayView,
+    openTodayInDayView,
 
     miniMonth,
     goToPreviousMiniMonth,
@@ -424,13 +531,17 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     upcomingExpanded,
     toggleUpcomingExpanded,
 
-    selectedEventId,
-    selectEvent,
+    selectedEntryId,
+    selectEntry,
 
     modalState,
     openCreateModal,
     openEditModal,
     closeModal,
+    openEntryEditor,
+    deleteEntry,
+    toggleEntryComplete,
+    rescheduleEntry,
 
     createEvent,
     updateEvent,

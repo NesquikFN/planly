@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
+import { ThemeProvider } from "@/hooks/useTheme";
+import { ClockProvider } from "@/hooks/useClock";
 import { TasksProvider } from "@/hooks/useTasksStore";
+import { CalendarProvider } from "@/hooks/useCalendarStore";
+import { NotificationsProvider } from "@/hooks/useNotificationsStore";
 
 export const metadata: Metadata = {
   title: "Planly — самый простой AI-планировщик",
@@ -11,7 +15,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru">
       <body>
-        <TasksProvider>{children}</TasksProvider>
+        <ThemeProvider>
+          <ClockProvider>
+            <TasksProvider>
+              <CalendarProvider>
+                <NotificationsProvider>{children}</NotificationsProvider>
+              </CalendarProvider>
+            </TasksProvider>
+          </ClockProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

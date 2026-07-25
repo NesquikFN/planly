@@ -53,7 +53,11 @@ export function sortTasks(tasks: Task[], sortKey: SortKey): Task[] {
       return priorityRank[a.priority] - priorityRank[b.priority];
     });
   }
-  // "date" — mock tasks are already authored in chronological order
-  // (overdue → today → upcoming → no date), so original order is kept as-is.
-  return tasks;
+  // "date" — sort by the task's real date/time; undated tasks sort last.
+  return [...tasks].sort((a, b) => {
+    const dateA = a.date ?? "9999-99-99";
+    const dateB = b.date ?? "9999-99-99";
+    if (dateA !== dateB) return dateA.localeCompare(dateB);
+    return (a.time ?? "23:59").localeCompare(b.time ?? "23:59");
+  });
 }

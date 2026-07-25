@@ -11,13 +11,17 @@ import {
   type ReactNode,
 } from "react";
 import type { Task } from "@/types/task";
-import { mockTasks, defaultFocusTaskId } from "@/lib/mock-data";
+import { createMockTasks } from "@/lib/mock-data";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { matchesFilter, sortTasks, type FilterKey, type SortKey } from "@/lib/filters";
 import { createTaskFromText } from "@/lib/task-parser";
+import { formatTaskDueLabel } from "@/lib/task-date";
+import { addDays, getLocalDateKey } from "@/lib/date-utils";
+import { pickAutoFocusTask } from "@/lib/focus";
+import { useClock } from "@/hooks/useClock";
 
 const TASKS_STORAGE_KEY = "planly:tasks";
-const FOCUS_STORAGE_KEY = "planly:focusTaskId";
+const FOCUS_STORAGE_KEY = "planly:focus";
 
 // Grace period during which a completed task stays in place and can still be
 // un-checked (requirements 1–2).
@@ -40,7 +44,22 @@ export interface TaskEditDraft {
   important: boolean;
 }
 
+export type FocusSource = "manual" | "auto";
+
+interface FocusRecord {
+  taskId: string;
+  source: FocusSource;
+  dateKey: string;
+}
+
+export type FocusStatus =
+  | { kind: "empty" }
+  | { kind: "active"; task: Task; source: FocusSource }
+  | { kind: "completed"; task: Task; source: FocusSource };
+
 interface TasksStoreValue {
+  today: Date;
+  hydrated: boolean;
   tasks: Task[];
   visibleTasks: Task[];
   completedTasks: Task[];
@@ -69,14 +88,16 @@ interface TasksStoreValue {
   dismissToast: () => void;
   restoreTask: (id: string) => void;
 
-  focusTaskId: string | null;
-  setFocusTask: (id: string) => void;
-  focusDisplay: { title: string; time: string };
+  focusStatus: FocusStatus;
+  eligibleFocusTasks: Task[];
+  setManualFocus: (id: string) => void;
+  clearFocus: () => void;
 
   addTaskFromText: (text: string) => void;
   deleteTask: (id: string) => void;
   postponeToTomorrow: (id: string) => void;
   toggleImportant: (id: string) => void;
+  rescheduleTask: (id: string, date: string | undefined, time: string | undefined) => void;
 
   editingTaskId: string | null;
   startEditing: (id: string) => void;
@@ -87,8 +108,10 @@ interface TasksStoreValue {
 const TasksContext = createContext<TasksStoreValue | null>(null);
 
 export function TasksProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [focusTaskId, setFocusTaskId] = useState<string | null>(defaultFocusTaskId);
+  const { today, todayKey } = useClock();
+
+  const [tasks, setTasks] = useState<Task[]>(() => createMockTasks(today));
+  const [focusRecord, setFocusRecord] = useState<FocusRecord | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   const [view, setView] = useState<DashboardView>("dashboard");
@@ -114,8 +137,15 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     const storedTasks = readStorage<Task[] | null>(TASKS_STORAGE_KEY, null);
     if (storedTasks && storedTasks.length > 0) setTasks(storedTasks);
 
-    const storedFocusId = readStorage<string | null>(FOCUS_STORAGE_KEY, null);
-    if (storedFocusId) setFocusTaskId(storedFocusId);
+    const storedFocus = readStorage<FocusRecord | null>(FOCUS_STORAGE_KEY, null);
+    if (storedFocus) {
+      // A stale *automatic* focus from a previous day is discarded — it'll be
+      // recomputed fresh for today. A manual pick persists across days until
+      // the user changes or clears it (requirement 8).
+      if (storedFocus.source === "manual" || storedFocus.dateKey === todayKey) {
+        setFocusRecord(storedFocus);
+      }
+    }
 
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,8 +156,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   }, [tasks, hydrated]);
 
   useEffect(() => {
-    if (hydrated) writeStorage(FOCUS_STORAGE_KEY, focusTaskId);
-  }, [focusTaskId, hydrated]);
+    if (hydrated) writeStorage(FOCUS_STORAGE_KEY, focusRecord);
+  }, [focusRecord, hydrated]);
 
   // Clear any in-flight timers on unmount.
   useEffect(() => {
@@ -147,7 +177,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       const target = tasks.find((task) => task.id === id);
       if (!target || target.completed) return;
 
-      setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: true } : task)));
+      const completedAt = new Date().toISOString();
+      setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: true, completedAt } : task)));
       setPendingCompleteIds((prev) => new Set(prev).add(id));
 
       const graceTimer = setTimeout(() => {
@@ -193,7 +224,9 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       graceTimers.current.delete(id);
     }
 
-    setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: false } : task)));
+    setTasks((prev) =>
+      prev.map((task) => (task.id === id ? { ...task, completed: false, completedAt: undefined } : task)),
+    );
   }, []);
 
   const toggleComplete = useCallback(
@@ -238,7 +271,9 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       return next;
     });
 
-    setTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: false } : task)));
+    setTasks((prev) =>
+      prev.map((task) => (task.id === id ? { ...task, completed: false, completedAt: undefined } : task)),
+    );
   }, []);
 
   const undoComplete = useCallback(() => {
@@ -259,15 +294,25 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setFocusTask = useCallback((id: string) => {
-    setFocusTaskId(id);
+  const setManualFocus = useCallback(
+    (id: string) => {
+      setFocusRecord({ taskId: id, source: "manual", dateKey: todayKey });
+    },
+    [todayKey],
+  );
+
+  const clearFocus = useCallback(() => {
+    setFocusRecord(null);
   }, []);
 
-  const addTaskFromText = useCallback((text: string) => {
-    if (!text.trim()) return;
-    const newTask = createTaskFromText(text);
-    setTasks((prev) => [newTask, ...prev]);
-  }, []);
+  const addTaskFromText = useCallback(
+    (text: string) => {
+      if (!text.trim()) return;
+      const newTask = createTaskFromText(text, today);
+      setTasks((prev) => [newTask, ...prev]);
+    },
+    [today],
+  );
 
   const deleteTask = useCallback((id: string) => {
     const graceTimer = graceTimers.current.get(id);
@@ -282,7 +327,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     }
 
     setTasks((prev) => prev.filter((task) => task.id !== id));
-    setFocusTaskId((current) => (current === id ? null : current));
+    setFocusRecord((current) => (current?.taskId === id ? null : current));
     setPendingCompleteIds((prev) => {
       if (!prev.has(id)) return prev;
       const next = new Set(prev);
@@ -297,13 +342,19 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const postponeToTomorrow = useCallback((id: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, dueLabel: "Завтра", priority: "upcoming", date: "Завтра" } : task,
-      ),
-    );
-  }, []);
+  const postponeToTomorrow = useCallback(
+    (id: string) => {
+      const tomorrow = getLocalDateKey(addDays(today, 1));
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === id
+            ? { ...task, dueLabel: "Завтра", priority: "upcoming", date: tomorrow, time: undefined }
+            : task,
+        ),
+      );
+    },
+    [today],
+  );
 
   const toggleImportant = useCallback((id: string) => {
     setTasks((prev) =>
@@ -319,23 +370,40 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     setEditingTaskId(null);
   }, []);
 
-  const saveTaskEdit = useCallback((id: string, draft: TaskEditDraft) => {
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id !== id) return task;
-        const dueLabel = [draft.date.trim(), draft.time.trim()].filter(Boolean).join(" ") || "—";
-        return {
-          ...task,
-          title: draft.title.trim() || task.title,
-          date: draft.date.trim(),
-          time: draft.time.trim(),
-          dueLabel,
-          important: draft.important,
-        };
-      }),
-    );
-    setEditingTaskId(null);
-  }, []);
+  const saveTaskEdit = useCallback(
+    (id: string, draft: TaskEditDraft) => {
+      setTasks((prev) =>
+        prev.map((task) => {
+          if (task.id !== id) return task;
+          const date = draft.date.trim() || undefined;
+          const time = draft.time.trim() || undefined;
+          return {
+            ...task,
+            title: draft.title.trim() || task.title,
+            date,
+            time,
+            dueLabel: formatTaskDueLabel(date, time, today),
+            important: draft.important,
+          };
+        }),
+      );
+      setEditingTaskId(null);
+    },
+    [today],
+  );
+
+  // Used by calendar drag-and-drop: moves a task to a new date/time without
+  // touching its priority bucket.
+  const rescheduleTask = useCallback(
+    (id: string, date: string | undefined, time: string | undefined) => {
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === id ? { ...task, date, time, dueLabel: formatTaskDueLabel(date, time, today) } : task,
+        ),
+      );
+    },
+    [today],
+  );
 
   const visibleTasks = useMemo(() => {
     let list = tasks.filter(
@@ -373,13 +441,45 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     };
   }, [tasks]);
 
-  const focusDisplay = useMemo(() => {
-    const focusTask = focusTaskId ? tasks.find((task) => task.id === focusTaskId) : undefined;
-    if (focusTask) return { title: focusTask.title, time: focusTask.dueLabel };
-    return { title: "Выберите задачу для фокуса", time: "—" };
-  }, [tasks, focusTaskId]);
+  const eligibleFocusTasks = useMemo(() => tasks.filter((task) => !task.completed), [tasks]);
+
+  const focusStatus = useMemo<FocusStatus>(() => {
+    if (focusRecord) {
+      const task = tasks.find((item) => item.id === focusRecord.taskId);
+      if (task) {
+        return task.completed
+          ? { kind: "completed", task, source: focusRecord.source }
+          : { kind: "active", task, source: focusRecord.source };
+      }
+      // Record points at a task that no longer exists — an effect below
+      // will clear it; render as empty in the meantime.
+      return { kind: "empty" };
+    }
+
+    const suggestion = pickAutoFocusTask(tasks, todayKey);
+    if (suggestion) return { kind: "active", task: suggestion, source: "auto" };
+    return { kind: "empty" };
+  }, [tasks, focusRecord, todayKey]);
+
+  // Locks in the first auto-suggestion for the day so it doesn't silently
+  // swap to a different task later in the session (requirement 2.4/4).
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!focusRecord && focusStatus.kind !== "empty" && focusStatus.source === "auto") {
+      setFocusRecord({ taskId: focusStatus.task.id, source: "auto", dateKey: todayKey });
+    }
+  }, [hydrated, focusRecord, focusStatus, todayKey]);
+
+  // A focus record pointing at a deleted task cleans itself up.
+  useEffect(() => {
+    if (focusRecord && !tasks.some((task) => task.id === focusRecord.taskId)) {
+      setFocusRecord(null);
+    }
+  }, [focusRecord, tasks]);
 
   const value: TasksStoreValue = {
+    today,
+    hydrated,
     tasks,
     visibleTasks,
     completedTasks,
@@ -408,14 +508,16 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     dismissToast,
     restoreTask,
 
-    focusTaskId,
-    setFocusTask,
-    focusDisplay,
+    focusStatus,
+    eligibleFocusTasks,
+    setManualFocus,
+    clearFocus,
 
     addTaskFromText,
     deleteTask,
     postponeToTomorrow,
     toggleImportant,
+    rescheduleTask,
 
     editingTaskId,
     startEditing,

@@ -13,7 +13,7 @@ export function CalendarList() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">Мои календари</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Мои календари</h3>
         <button
           type="button"
           onClick={openCreateCalendarForm}
@@ -29,7 +29,7 @@ export function CalendarList() {
           const styles = calendarColorStyles[calendar.color];
 
           return (
-            <li key={calendar.id} className="flex items-center gap-2.5 rounded-lg px-1 py-1.5 hover:bg-gray-50">
+            <li key={calendar.id} className="flex items-center gap-2.5 rounded-lg px-1 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800">
               <input
                 type="checkbox"
                 checked={calendar.visible}
@@ -37,7 +37,7 @@ export function CalendarList() {
                 aria-label={`Показать календарь «${calendar.name}»`}
                 className={`h-4 w-4 shrink-0 rounded border-gray-300 ${styles.accent} focus:ring-0`}
               />
-              <span className="flex-1 truncate text-sm text-gray-600">{calendar.name}</span>
+              <span className="flex-1 truncate text-sm text-gray-600 dark:text-gray-300">{calendar.name}</span>
 
               <DropdownMenu
                 trigger={<MoreVertical size={14} />}

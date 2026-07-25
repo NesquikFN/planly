@@ -14,9 +14,9 @@ import { EventDetailsPanel } from "@/components/calendar/EventDetailsPanel";
 import { EventModal } from "@/components/calendar/EventModal";
 import { CalendarFormModal } from "@/components/calendar/CalendarFormModal";
 import { DeleteCalendarDialog } from "@/components/calendar/DeleteCalendarDialog";
-import { CalendarProvider, useCalendarStore } from "@/hooks/useCalendarStore";
+import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
-import { USER_NAME, TODAY_LABEL } from "@/lib/app-constants";
+import { USER_NAME } from "@/lib/app-constants";
 
 function CalendarMain() {
   const { viewMode, goToPrevious, goToNext } = useCalendarStore();
@@ -48,15 +48,11 @@ function CalendarPageContent() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-950">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex min-h-screen flex-col lg:pl-64">
-        <Header
-          userName={USER_NAME}
-          date={TODAY_LABEL}
-          onMenuClick={() => setSidebarOpen(true)}
-        />
+        <Header userName={USER_NAME} onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="flex-1 px-4 pb-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
@@ -74,9 +70,5 @@ function CalendarPageContent() {
 }
 
 export default function CalendarPage() {
-  return (
-    <CalendarProvider>
-      <CalendarPageContent />
-    </CalendarProvider>
-  );
+  return <CalendarPageContent />;
 }

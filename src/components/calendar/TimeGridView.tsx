@@ -1,12 +1,15 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { EventBlock } from "@/components/calendar/EventBlock";
+import type { CalendarEntry } from "@/lib/calendar-entries";
 import { DAY_START_HOUR, DAY_END_HOUR, HOUR_HEIGHT } from "@/lib/calendar-constants";
 import { formatHourLabel, minutesToOffsetPx, pxToMinutes, snapMinutes, minutesToTime, clamp } from "@/lib/calendar-time";
 import { formatWeekdayShort, isSameDay, toISODate } from "@/lib/date-utils";
+import { calendarColorStyles } from "@/lib/calendar-colors";
 import { cn } from "@/lib/utils";
+import { CheckSquare, Square } from "lucide-react";
 
 const HOURS = Array.from({ length: DAY_END_HOUR - DAY_START_HOUR + 1 }, (_, index) => DAY_START_HOUR + index);
 
@@ -20,26 +23,29 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
   const {
     today,
     nowMinutes,
-    visibleEvents,
-    calendarById,
-    selectedEventId,
-    selectEvent,
-    openEditModal,
-    updateEvent,
+    entriesByDate,
+    selectedEntryId,
+    selectEntry,
+    openEntryEditor,
+    toggleEntryComplete,
+    rescheduleEntry,
     openCreateModal,
   } = useCalendarStore();
 
   const columnRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [hoveredDropDate, setHoveredDropDate] = useState<string | null>(null);
   const gridTemplate = `64px repeat(${days.length}, minmax(0, 1fr))`;
 
-  const eventsByDay = useMemo(() => {
+  const entriesByDay = useMemo(() => {
     return days.map((day) => {
       const iso = toISODate(day);
-      return visibleEvents
-        .filter((event) => event.date === iso)
-        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+      const dayEntries = entriesByDate.get(iso) ?? [];
+      return {
+        allDay: dayEntries.filter((entry) => entry.allDay),
+        timed: dayEntries.filter((entry) => !entry.allDay),
+      };
     });
-  }, [days, visibleEvents]);
+  }, [days, entriesByDate]);
 
   const resolveColumnDate = useCallback(
     (clientX: number): string => {
@@ -59,10 +65,10 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
   );
 
   const handleCommit = useCallback(
-    (id: string, changes: { date: string; startTime: string; endTime: string }) => {
-      updateEvent(id, changes);
+    (entry: CalendarEntry, changes: { date: string; startTime: string; endTime: string }) => {
+      rescheduleEntry(entry, changes);
     },
-    [updateEvent],
+    [rescheduleEntry],
   );
 
   function handleColumnDoubleClick(dayIndex: number, domEvent: React.MouseEvent<HTMLDivElement>) {
@@ -110,8 +116,45 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
 
       <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: gridTemplate }}>
         <div className="flex items-center justify-end px-2 py-2 text-xs text-gray-400">Весь день</div>
-        {days.map((day) => (
-          <div key={day.toISOString()} className="border-l border-gray-50 py-2" />
+        {days.map((day, dayIndex) => (
+          <div key={day.toISOString()} className="flex flex-col gap-1 border-l border-gray-50 p-1">
+            {entriesByDay[dayIndex].allDay.map((entry) => {
+              const styles = calendarColorStyles[entry.color];
+              return (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => {
+                    selectEntry(entry.id);
+                    if (entry.kind === "event") openEntryEditor(entry);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium",
+                    styles.block,
+                    styles.text,
+                    selectedEntryId === entry.id && `ring-1 ${styles.ring}`,
+                  )}
+                >
+                  {entry.kind === "task" ? (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleEntryComplete(entry);
+                      }}
+                      className="shrink-0"
+                    >
+                      {entry.completed ? <CheckSquare size={11} /> : <Square size={11} />}
+                    </span>
+                  ) : (
+                    <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", styles.dot)} />
+                  )}
+                  <span className="truncate">{entry.title}</span>
+                </button>
+              );
+            })}
+          </div>
         ))}
       </div>
 
@@ -131,6 +174,8 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
 
           {days.map((day, dayIndex) => {
             const isToday = isSameDay(day, today);
+            const iso = toISODate(day);
+            const isDropTarget = hoveredDropDate === iso;
             return (
               <div
                 key={day.toISOString()}
@@ -138,8 +183,11 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
                   columnRefs.current[dayIndex] = el;
                 }}
                 onDoubleClick={(domEvent) => handleColumnDoubleClick(dayIndex, domEvent)}
-                onClick={() => selectEvent(null)}
-                className="relative border-l border-gray-50"
+                onClick={() => selectEntry(null)}
+                className={cn(
+                  "relative border-l border-gray-50 transition-colors duration-100",
+                  isDropTarget && "bg-gray-100",
+                )}
               >
                 {HOURS.slice(0, -1).map((hour) => (
                   <div key={hour} className="border-b border-gray-50" style={{ height: HOUR_HEIGHT }} />
@@ -155,16 +203,17 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
                   </div>
                 )}
 
-                {eventsByDay[dayIndex].map((event) => (
+                {entriesByDay[dayIndex].timed.map((entry) => (
                   <EventBlock
-                    key={event.id}
-                    event={event}
-                    color={calendarById.get(event.calendarId)?.color ?? "blue"}
-                    isSelected={selectedEventId === event.id}
-                    onSelect={selectEvent}
-                    onEdit={openEditModal}
+                    key={entry.id}
+                    entry={entry}
+                    isSelected={selectedEntryId === entry.id}
+                    onSelect={selectEntry}
+                    onEdit={openEntryEditor}
+                    onToggleComplete={toggleEntryComplete}
                     onCommit={handleCommit}
                     resolveColumnDate={resolveColumnDate}
+                    onDragHoverChange={setHoveredDropDate}
                   />
                 ))}
               </div>

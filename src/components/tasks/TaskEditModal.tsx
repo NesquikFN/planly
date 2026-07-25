@@ -16,7 +16,7 @@ export function TaskEditModal() {
   useEffect(() => {
     if (!task) return;
     setTitle(task.title);
-    setDate(task.date ?? (task.dueLabel === "—" ? "" : task.dueLabel));
+    setDate(task.date ?? "");
     setTime(task.time ?? "");
     setImportant(task.important);
   }, [task]);
@@ -65,21 +65,23 @@ export function TaskEditModal() {
             <label className="block flex-1">
               <span className="mb-1 block text-xs font-medium text-gray-500">Дата</span>
               <input
-                type="text"
+                type="date"
                 value={date}
-                onChange={(event) => setDate(event.target.value)}
-                placeholder="Завтра / 25 июля"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
+                onChange={(event) => {
+                  setDate(event.target.value);
+                  if (!event.target.value) setTime("");
+                }}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none"
               />
             </label>
             <label className="block flex-1">
               <span className="mb-1 block text-xs font-medium text-gray-500">Время</span>
               <input
-                type="text"
+                type="time"
                 value={time}
                 onChange={(event) => setTime(event.target.value)}
-                placeholder="13:30"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
+                disabled={!date}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none disabled:opacity-40"
               />
             </label>
           </div>
