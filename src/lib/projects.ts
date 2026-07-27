@@ -72,6 +72,26 @@ export interface ProjectsFilters {
   status: ProjectStatus | null;
   priority: ProjectPriority | null;
   tag: string | null;
+  summary: ProjectSummaryFilter;
+  today: Date;
+}
+
+export type ProjectSummaryFilter = "all" | "active" | "completed" | "overdue" | "inProgress";
+
+function matchesSummaryFilter(project: Project, summary: ProjectSummaryFilter, today: Date): boolean {
+  switch (summary) {
+    case "active":
+      return project.status === "active";
+    case "completed":
+      return project.status === "completed";
+    case "overdue":
+      return isProjectOverdue(project, today);
+    case "inProgress":
+      return project.progress > 0 && project.progress < 100;
+    case "all":
+    default:
+      return true;
+  }
 }
 
 export function filterProjects(projects: Project[], filters: ProjectsFilters): Project[] {
@@ -79,6 +99,7 @@ export function filterProjects(projects: Project[], filters: ProjectsFilters): P
 
   return projects.filter((project) => {
     if (project.archived) return false;
+    if (!matchesSummaryFilter(project, filters.summary, filters.today)) return false;
     if (filters.status && project.status !== filters.status) return false;
     if (filters.priority && project.priority !== filters.priority) return false;
     if (filters.tag && !project.tags.includes(filters.tag)) return false;

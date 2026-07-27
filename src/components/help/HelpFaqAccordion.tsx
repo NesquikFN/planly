@@ -76,6 +76,7 @@ export function HelpFaqAccordion({ sections, searchQuery }: HelpFaqAccordionProp
                 type="button"
                 onClick={() => toggleSection(section.key)}
                 aria-expanded={isOpen}
+                aria-controls={`faq-section-${section.key}`}
                 className="flex w-full items-center gap-3 px-5 py-4 text-left"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
@@ -90,7 +91,7 @@ export function HelpFaqAccordion({ sections, searchQuery }: HelpFaqAccordionProp
               </button>
 
               {isOpen && (
-                <div className="divide-y divide-gray-100 border-t border-gray-100 dark:divide-gray-800 dark:border-gray-800">
+                <div id={`faq-section-${section.key}`} className="animate-in fade-in slide-in-from-top-1 divide-y divide-gray-100 border-t border-gray-100 duration-150 dark:divide-gray-800 dark:border-gray-800">
                   {section.items.map((item) => {
                     const itemOpen = openItems.has(item.id) || isSearching;
                     return (
@@ -99,6 +100,7 @@ export function HelpFaqAccordion({ sections, searchQuery }: HelpFaqAccordionProp
                           type="button"
                           onClick={() => toggleItem(item.id)}
                           aria-expanded={itemOpen}
+                          aria-controls={`faq-answer-${item.id}`}
                           className="flex w-full items-center justify-between gap-3 py-3 text-left text-sm text-gray-700 dark:text-gray-200"
                         >
                           {item.question}
@@ -108,7 +110,7 @@ export function HelpFaqAccordion({ sections, searchQuery }: HelpFaqAccordionProp
                           />
                         </button>
                         {itemOpen && (
-                          <p className="pb-3 text-xs leading-relaxed text-gray-400 dark:text-gray-500">{item.answer}</p>
+                          <p id={`faq-answer-${item.id}`} className="animate-in fade-in slide-in-from-top-1 pb-3 text-xs leading-relaxed text-gray-500 duration-150 dark:text-gray-400">{item.answer}</p>
                         )}
                       </div>
                     );

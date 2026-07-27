@@ -1,11 +1,18 @@
 "use client";
 
+import { useRef, useState, type ChangeEvent } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Switch } from "@/components/ui/Switch";
+import { SettingsHeader } from "@/components/settings/SettingsHeader";
+import { getInitials, useProfileStore } from "@/hooks/useProfileStore";
 import { settingsCard, settingsInput, settingsLabel, settingsSectionTitle } from "@/lib/settings-form-styles";
 import { cn } from "@/lib/utils";
-import type { PresenceStatus, ProfileSettings as ProfileSettingsData } from "@/types/settings";
+import type { PresenceStatus } from "@/types/settings";
+
+// Self-contained: reads/writes the dedicated profile store directly instead
+// of going through the page's generic (theme-included) settings draft — that
+// separation is what stops a profile save from ever touching the theme.
 
 const STATUS_OPTIONS: { key: PresenceStatus; label: string; dot: string }[] = [
   { key: "available", label: "Доступен", dot: "bg-emerald-500" },
@@ -15,30 +22,61 @@ const STATUS_OPTIONS: { key: PresenceStatus; label: string; dot: string }[] = [
 ];
 
 const BIO_MAX_LENGTH = 200;
+const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024;
 
-interface ProfileSettingsProps {
-  value: ProfileSettingsData;
-  onChange: (patch: Partial<ProfileSettingsData>) => void;
-  onStub: (message: string) => void;
-}
+export function ProfileSettings() {
+  const { draft, isDirty, isSaving, updateDraft, save, cancel } = useProfileStore();
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-export function ProfileSettings({ value, onChange, onStub }: ProfileSettingsProps) {
+  function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Выберите файл изображения.");
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      setAvatarError("Файл слишком большой. Максимальный размер — 1.5 МБ.");
+      return;
+    }
+
+    setAvatarError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") updateDraft({ avatarDataUrl: reader.result });
+    };
+    reader.readAsDataURL(file);
+  }
+
   return (
     <div className="space-y-6">
+      <SettingsHeader
+        title="Профиль"
+        description="Управляйте личными данными и настройками аккаунта"
+        isDirty={isDirty}
+        isSaving={isSaving}
+        onCancel={cancel}
+        onSave={save}
+      />
+
       <section className={settingsCard}>
         <div className="flex items-center gap-4">
-          <Avatar name={value.displayName} size={64} />
+          <Avatar name={draft.displayName} initials={getInitials(draft)} src={draft.avatarDataUrl} size={64} />
           <div className="min-w-0 flex-1">
-            <p className="text-base font-semibold text-gray-900 dark:text-gray-50">{value.displayName}</p>
-            <p className="truncate text-sm text-gray-400 dark:text-gray-500">{value.email}</p>
+            <p className="text-base font-semibold text-gray-900 dark:text-gray-50">{draft.displayName}</p>
+            <p className="truncate text-sm text-gray-400 dark:text-gray-500">{draft.email}</p>
             <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
               Free Plan
             </span>
           </div>
           <div className="flex shrink-0 gap-2">
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarFileChange} />
             <button
               type="button"
-              onClick={() => onStub("Загрузка фото профиля появится в одном из следующих обновлений.")}
+              onClick={() => fileInputRef.current?.click()}
               className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <Camera size={13} />
@@ -46,47 +84,52 @@ export function ProfileSettings({ value, onChange, onStub }: ProfileSettingsProp
             </button>
             <button
               type="button"
-              onClick={() => onStub("Удаление фото профиля появится в одном из следующих обновлений.")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+              onClick={() => {
+                setAvatarError(null);
+                updateDraft({ avatarDataUrl: null });
+              }}
+              disabled={!draft.avatarDataUrl}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
             >
               <Trash2 size={13} />
               Удалить фото
             </button>
           </div>
         </div>
+        {avatarError && <p className="mt-2 text-xs font-medium text-red-500 dark:text-red-400">{avatarError}</p>}
 
         <div className="mt-5 grid grid-cols-2 gap-4">
           <label className="block">
             <span className={settingsLabel}>Имя</span>
-            <input value={value.firstName} onChange={(e) => onChange({ firstName: e.target.value })} className={settingsInput} />
+            <input value={draft.firstName} onChange={(e) => updateDraft({ firstName: e.target.value })} className={settingsInput} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Фамилия</span>
-            <input value={value.lastName} onChange={(e) => onChange({ lastName: e.target.value })} className={settingsInput} />
+            <input value={draft.lastName} onChange={(e) => updateDraft({ lastName: e.target.value })} className={settingsInput} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Отображаемое имя</span>
-            <input value={value.displayName} onChange={(e) => onChange({ displayName: e.target.value })} className={settingsInput} />
+            <input value={draft.displayName} onChange={(e) => updateDraft({ displayName: e.target.value })} className={settingsInput} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Email</span>
-            <input type="email" value={value.email} onChange={(e) => onChange({ email: e.target.value })} className={settingsInput} />
+            <input type="email" value={draft.email} onChange={(e) => updateDraft({ email: e.target.value })} className={settingsInput} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Телефон</span>
-            <input value={value.phone} onChange={(e) => onChange({ phone: e.target.value })} className={settingsInput} />
+            <input value={draft.phone} onChange={(e) => updateDraft({ phone: e.target.value })} className={settingsInput} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Должность</span>
-            <input value={value.jobTitle} onChange={(e) => onChange({ jobTitle: e.target.value })} className={settingsInput} />
+            <input value={draft.jobTitle} onChange={(e) => updateDraft({ jobTitle: e.target.value })} className={settingsInput} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Компания</span>
-            <input value={value.company} onChange={(e) => onChange({ company: e.target.value })} className={settingsInput} />
+            <input value={draft.company} onChange={(e) => updateDraft({ company: e.target.value })} className={settingsInput} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Часовой пояс</span>
-            <select value={value.timezone} onChange={(e) => onChange({ timezone: e.target.value })} className={settingsInput}>
+            <select value={draft.timezone} onChange={(e) => updateDraft({ timezone: e.target.value })} className={settingsInput}>
               {["GMT+4 (Тбилиси)", "GMT+3 (Москва)", "GMT+1 (Берлин)", "GMT+0 (Лондон)"].map((tz) => (
                 <option key={tz} value={tz}>
                   {tz}
@@ -99,14 +142,14 @@ export function ProfileSettings({ value, onChange, onStub }: ProfileSettingsProp
         <label className="mt-4 block">
           <span className={settingsLabel}>Кратко о себе</span>
           <textarea
-            value={value.bio}
+            value={draft.bio}
             maxLength={BIO_MAX_LENGTH}
-            onChange={(e) => onChange({ bio: e.target.value })}
+            onChange={(e) => updateDraft({ bio: e.target.value })}
             rows={3}
             className={cn(settingsInput, "resize-none")}
           />
           <span className="mt-1 block text-right text-xs text-gray-400 dark:text-gray-500">
-            {value.bio.length} / {BIO_MAX_LENGTH}
+            {draft.bio.length} / {BIO_MAX_LENGTH}
           </span>
         </label>
       </section>
@@ -114,11 +157,11 @@ export function ProfileSettings({ value, onChange, onStub }: ProfileSettingsProp
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Контактные данные</h3>
         <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-          <Switch checked={value.showEmail} onChange={(checked) => onChange({ showEmail: checked })} label="Показывать email в профиле" />
-          <Switch checked={value.showPhone} onChange={(checked) => onChange({ showPhone: checked })} label="Показывать телефон" />
+          <Switch checked={draft.showEmail} onChange={(checked) => updateDraft({ showEmail: checked })} label="Показывать email в профиле" />
+          <Switch checked={draft.showPhone} onChange={(checked) => updateDraft({ showPhone: checked })} label="Показывать телефон" />
           <Switch
-            checked={value.allowProjectInvites}
-            onChange={(checked) => onChange({ allowProjectInvites: checked })}
+            checked={draft.allowProjectInvites}
+            onChange={(checked) => updateDraft({ allowProjectInvites: checked })}
             label="Разрешить приглашения в проекты"
           />
         </div>
@@ -131,11 +174,11 @@ export function ProfileSettings({ value, onChange, onStub }: ProfileSettingsProp
             <button
               key={status.key}
               type="button"
-              onClick={() => onChange({ status: status.key })}
-              aria-pressed={value.status === status.key}
+              onClick={() => updateDraft({ status: status.key })}
+              aria-pressed={draft.status === status.key}
               className={cn(
                 "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
-                value.status === status.key
+                draft.status === status.key
                   ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-400"
                   : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800",
               )}

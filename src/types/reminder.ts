@@ -7,6 +7,7 @@ export interface ReminderLinks {
   project?: string;
   task?: string;
   note?: string;
+  noteLabel?: string;
   event?: string;
 }
 

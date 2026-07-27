@@ -30,7 +30,7 @@ export function TaskRow({ task }: TaskRowProps) {
         isExiting ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
       }`}
     >
-      <div className="overflow-hidden">
+      <div className={isExiting ? "overflow-hidden" : undefined}>
         <div className="flex items-center gap-3 py-3">
           <input
             type="checkbox"

@@ -9,12 +9,17 @@ import { ProjectsToolbar, type ProjectsViewMode } from "@/components/projects/Pr
 import { ProjectsStatsRow } from "@/components/projects/ProjectsStatsRow";
 import { ProjectsGrid } from "@/components/projects/ProjectsGrid";
 import { ProjectsSidePanel } from "@/components/projects/ProjectsSidePanel";
-import { ProjectsArchiveCard } from "@/components/projects/ProjectsArchiveCard";
 import { ProjectFormModal } from "@/components/projects/ProjectFormModal";
 import { ProjectDeleteModal } from "@/components/projects/ProjectDeleteModal";
 import { useProjectsStore } from "@/hooks/useProjectsStore";
 import { useClock } from "@/hooks/useClock";
-import { computeOverviewStats, filterProjects, getUniqueTags, sortProjects } from "@/lib/projects";
+import {
+  computeOverviewStats,
+  filterProjects,
+  getUniqueTags,
+  sortProjects,
+  type ProjectSummaryFilter,
+} from "@/lib/projects";
 import { USER_NAME } from "@/lib/app-constants";
 import type { Project, ProjectFormValues, ProjectPriority, ProjectStatus } from "@/types/project";
 
@@ -23,8 +28,7 @@ type FormModalState = { mode: "create" } | { mode: "edit"; project: Project };
 export default function ProjectsPage() {
   const router = useRouter();
   const { today } = useClock();
-  const { projects, createProject, updateProject, deleteProject, duplicateProject, archiveProject, restoreProject, toggleStar } =
-    useProjectsStore();
+  const { projects, createProject, updateProject, deleteProject, duplicateProject, toggleStar } = useProjectsStore();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,20 +37,27 @@ export default function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<ProjectPriority | null>(null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [summaryFilter, setSummaryFilter] = useState<ProjectSummaryFilter>("all");
 
   const [formModal, setFormModal] = useState<FormModalState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
   const [stubDialog, setStubDialog] = useState<{ title: string; message?: string } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const archivedProjects = useMemo(() => projects.filter((project) => project.archived), [projects]);
   const tags = useMemo(() => getUniqueTags(projects.filter((project) => !project.archived)), [projects]);
   const stats = useMemo(() => computeOverviewStats(projects, today), [projects, today]);
 
   const visibleProjects = useMemo(() => {
-    const filtered = filterProjects(projects, { search: searchQuery, status: statusFilter, priority: priorityFilter, tag: tagFilter });
+    const filtered = filterProjects(projects, {
+      search: searchQuery,
+      status: statusFilter,
+      priority: priorityFilter,
+      tag: tagFilter,
+      summary: summaryFilter,
+      today,
+    });
     return sortProjects(filtered, sortLabel);
-  }, [projects, searchQuery, statusFilter, priorityFilter, tagFilter, sortLabel]);
+  }, [projects, searchQuery, statusFilter, priorityFilter, tagFilter, sortLabel, summaryFilter, today]);
 
   function handleOpenProject(project: Project) {
     router.push(`/projects/${project.id}`);
@@ -98,7 +109,11 @@ export default function ProjectsPage() {
             searchInputRef={searchInputRef}
           />
 
-          <ProjectsStatsRow {...stats} />
+          <ProjectsStatsRow
+            {...stats}
+            activeFilter={summaryFilter}
+            onToggleFilter={(filter) => setSummaryFilter((current) => (current === filter ? "all" : filter))}
+          />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
             <ProjectsGrid
@@ -108,7 +123,6 @@ export default function ProjectsPage() {
               onToggleStar={toggleStar}
               onEdit={(project) => setFormModal({ mode: "edit", project })}
               onDuplicate={(project) => duplicateProject(project.id)}
-              onArchive={(project) => archiveProject(project.id)}
               onDeleteRequest={setDeleteTarget}
             />
             <ProjectsSidePanel
@@ -121,8 +135,6 @@ export default function ProjectsPage() {
               }}
             />
           </div>
-
-          <ProjectsArchiveCard archivedProjects={archivedProjects} onRestore={restoreProject} onDeleteRequest={setDeleteTarget} />
         </main>
       </div>
 

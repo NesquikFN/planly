@@ -44,7 +44,7 @@ export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
                       <p className="text-gray-600 dark:text-gray-300">
                         <span className="font-medium text-gray-900 dark:text-gray-50">{entry.actor}</span> {entry.message}
                       </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{entry.timeLabel}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{entry.createdAt ? new Date(entry.createdAt).toLocaleString("ru-RU") : entry.timeLabel}</p>
                     </div>
                   </li>
                 ))}
@@ -73,7 +73,7 @@ export function ProjectOverviewTab({ project }: ProjectOverviewTabProps) {
           </section>
         </div>
 
-        <ProjectTeamCard members={project.members} />
+        <ProjectTeamCard project={project} />
       </div>
     </div>
   );

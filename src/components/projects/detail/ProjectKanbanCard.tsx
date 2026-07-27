@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEvent } from "react";
+import { Archive, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { PROJECT_TASK_PRIORITY_DOT } from "@/lib/projects";
 import { cn } from "@/lib/utils";
@@ -16,9 +17,12 @@ interface ProjectKanbanCardProps {
   task: ProjectTask;
   assignee?: ProjectMember;
   onDragStart: (event: DragEvent<HTMLDivElement>, taskId: string) => void;
+  onDelete: () => void;
+  onArchive: () => void;
+  editable: boolean;
 }
 
-export function ProjectKanbanCard({ task, assignee, onDragStart }: ProjectKanbanCardProps) {
+export function ProjectKanbanCard({ task, assignee, onDragStart, onDelete, onArchive, editable }: ProjectKanbanCardProps) {
   return (
     <div
       draggable
@@ -41,6 +45,10 @@ export function ProjectKanbanCard({ task, assignee, onDragStart }: ProjectKanban
         )}
         {assignee && <Avatar name={assignee.name} size={20} />}
       </div>
+      {editable && <div className="mt-2 flex justify-end gap-1 border-t border-gray-100 pt-2 dark:border-gray-800">
+        {task.status === "done" && <button type="button" onClick={onArchive} title="Архивировать" className="p-1 text-gray-400 hover:text-blue-500"><Archive size={13}/></button>}
+        <button type="button" onClick={onDelete} title="Удалить" className="p-1 text-gray-400 hover:text-red-500"><Trash2 size={13}/></button>
+      </div>}
     </div>
   );
 }

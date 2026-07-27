@@ -18,9 +18,11 @@ interface ProjectKanbanBoardProps {
   project: Project;
   onMoveTask: (taskId: string, status: ProjectTaskStatus) => void;
   onAddTask: (title: string) => void;
+  onDeleteTask: (taskId: string, archive: boolean) => void;
+  editable: boolean;
 }
 
-export function ProjectKanbanBoard({ project, onMoveTask, onAddTask }: ProjectKanbanBoardProps) {
+export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onDeleteTask, editable }: ProjectKanbanBoardProps) {
   const [dragOverColumn, setDragOverColumn] = useState<ProjectTaskStatus | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const groups = groupTasksByStatus(project.tasks);
@@ -73,6 +75,9 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask }: ProjectKa
                 task={task}
                 assignee={getMemberById(project, task.assigneeId)}
                 onDragStart={handleDragStart}
+                onDelete={() => onDeleteTask(task.id, false)}
+                onArchive={() => onDeleteTask(task.id, true)}
+                editable={editable}
               />
             ))}
             {groups[status].length === 0 && (
@@ -82,7 +87,7 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask }: ProjectKa
             )}
           </div>
 
-          {status === "todo" && (
+          {status === "todo" && editable && (
             <form onSubmit={handleAddTask} className="mt-2 flex items-center gap-1.5">
               <input
                 type="text"

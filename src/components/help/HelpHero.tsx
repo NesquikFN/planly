@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { settingsCard } from "@/lib/settings-form-styles";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +29,13 @@ export const HelpHero = forwardRef<HTMLInputElement, HelpHeroProps>(function Hel
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Поиск по справке..."
-          className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-10 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
         />
+        {searchQuery && (
+          <button type="button" onClick={() => onSearchChange("")} aria-label="Очистить поиск" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:hover:bg-gray-700 dark:hover:text-gray-200">
+            <X size={15} />
+          </button>
+        )}
       </div>
     </section>
   );

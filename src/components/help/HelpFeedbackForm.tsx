@@ -1,30 +1,53 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, Paperclip, X } from "lucide-react";
 import { settingsCard, settingsInput, settingsLabel, settingsSectionTitle } from "@/lib/settings-form-styles";
 import { FEEDBACK_PRIORITY_OPTIONS } from "@/lib/help-mock-data";
 import type { FeedbackPriority } from "@/types/help";
 
-export function HelpFeedbackForm() {
+export type FeedbackType = "Ошибка" | "Предложение" | "Вопрос";
+
+interface HelpFeedbackFormProps {
+  initialType?: FeedbackType;
+}
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+export function HelpFeedbackForm({ initialType = "Вопрос" }: HelpFeedbackFormProps) {
+  const [type, setType] = useState<FeedbackType>(initialType);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<FeedbackPriority>("medium");
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ subject?: string; description?: string; file?: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => setType(initialType), [initialType]);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!subject.trim() || !description.trim()) return;
+    const nextErrors = {
+      subject: subject.trim() ? undefined : "Укажите тему обращения.",
+      description: description.trim() ? undefined : "Опишите обращение подробнее.",
+    };
+    setErrors(nextErrors);
+    if (nextErrors.subject || nextErrors.description) return;
 
-    // Демо-форма: заявка нигде не отправляется, backend отсутствует.
-    setSubmitted(true);
-    setSubject("");
-    setDescription("");
-    setPriority("medium");
-    setAttachedFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setIsSubmitting(true);
+    window.setTimeout(() => {
+      const payload = { type, subject: subject.trim(), description: description.trim(), priority, fileName: attachedFile?.name ?? null, createdAt: new Date().toISOString() };
+      try { window.localStorage.setItem("planly:help-last-feedback", JSON.stringify(payload)); } catch { /* demo state remains in memory */ }
+      setSubmitted(true);
+      setIsSubmitting(false);
+      setSubject("");
+      setDescription("");
+      setPriority("medium");
+      setAttachedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }, 650);
   }
 
   return (
@@ -43,14 +66,23 @@ export function HelpFeedbackForm() {
 
       <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
         <label className="block">
+          <span className={settingsLabel}>Тип обращения</span>
+          <select value={type} onChange={(event) => setType(event.target.value as FeedbackType)} className={settingsInput}>
+            <option>Вопрос</option><option>Ошибка</option><option>Предложение</option>
+          </select>
+        </label>
+
+        <label className="block">
           <span className={settingsLabel}>Тема</span>
           <input
             type="text"
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
             placeholder="Кратко опишите тему обращения"
-            className={settingsInput}
+            aria-invalid={Boolean(errors.subject)} aria-describedby={errors.subject ? "feedback-subject-error" : undefined}
+            className={`${settingsInput} ${errors.subject ? "border-red-400 focus:ring-red-400" : ""}`}
           />
+          {errors.subject && <span id="feedback-subject-error" className="mt-1 block text-xs text-red-500">{errors.subject}</span>}
         </label>
 
         <label className="block">
@@ -60,8 +92,10 @@ export function HelpFeedbackForm() {
             onChange={(event) => setDescription(event.target.value)}
             rows={4}
             placeholder="Опишите проблему или идею подробнее"
-            className={`${settingsInput} resize-none`}
+            aria-invalid={Boolean(errors.description)} aria-describedby={errors.description ? "feedback-description-error" : undefined}
+            className={`${settingsInput} resize-none ${errors.description ? "border-red-400 focus:ring-red-400" : ""}`}
           />
+          {errors.description && <span id="feedback-description-error" className="mt-1 block text-xs text-red-500">{errors.description}</span>}
         </label>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -86,11 +120,15 @@ export function HelpFeedbackForm() {
               ref={fileInputRef}
               type="file"
               className="hidden"
-              onChange={(event) => setAttachedFile(event.target.files?.[0] ?? null)}
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                if (file && file.size > MAX_FILE_SIZE) { setAttachedFile(null); setErrors((current) => ({ ...current, file: "Файл не должен быть больше 5 МБ." })); event.target.value = ""; return; }
+                setAttachedFile(file); setErrors((current) => ({ ...current, file: undefined }));
+              }}
             />
             {attachedFile ? (
               <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                <span className="truncate">{attachedFile.name}</span>
+                <span className="truncate">{attachedFile.name} · {(attachedFile.size / 1024).toFixed(1)} КБ</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -113,15 +151,17 @@ export function HelpFeedbackForm() {
                 Прикрепить файл
               </button>
             )}
+            {errors.file && <span className="mt-1 block text-xs text-red-500">{errors.file}</span>}
           </div>
         </div>
 
         <div className="flex justify-end pt-1">
           <button
             type="submit"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            disabled={isSubmitting}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 active:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-gray-900"
           >
-            Отправить
+            {isSubmitting ? "Отправляем…" : "Отправить"}
           </button>
         </div>
       </form>

@@ -5,6 +5,7 @@ import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Avatar } from "@/components/ui/Avatar";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { PROJECT_PRIORITY_BADGE, PROJECT_PRIORITY_LABELS, PROJECT_STATUS_BADGE, PROJECT_STATUS_LABELS } from "@/lib/projects";
+import { PROJECT_ICON_MAP } from "@/lib/projects-mock-data";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types/project";
 
@@ -15,7 +16,6 @@ interface ProjectCardProps {
   onToggleStar: (id: string) => void;
   onEdit: (project: Project) => void;
   onDuplicate: (project: Project) => void;
-  onArchive: (project: Project) => void;
   onDeleteRequest: (project: Project) => void;
 }
 
@@ -26,17 +26,15 @@ export function ProjectCard({
   onToggleStar,
   onEdit,
   onDuplicate,
-  onArchive,
   onDeleteRequest,
 }: ProjectCardProps) {
-  const Icon = project.icon;
+  const Icon = PROJECT_ICON_MAP[project.iconKey];
   const styles = calendarColorStyles[project.color];
 
   const menuItems = [
     { key: "open", label: "Открыть", onSelect: () => onOpen(project) },
     { key: "rename", label: "Переименовать", onSelect: () => onEdit(project) },
     { key: "duplicate", label: "Дублировать", onSelect: () => onDuplicate(project) },
-    { key: "archive", label: "Архивировать", onSelect: () => onArchive(project) },
     { key: "delete", label: "Удалить", destructive: true, onSelect: () => onDeleteRequest(project) },
   ];
 

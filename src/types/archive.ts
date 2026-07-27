@@ -1,25 +1,33 @@
-import type { LucideIcon } from "lucide-react";
+// Single universal model for anything deleted from any module — the whole
+// point is one shape and one store, never a per-entity ArchiveTask/
+// ArchiveNote/etc. `originalData` is the one full snapshot of the deleted
+// entity; nothing about it is duplicated into other fields on this type.
 
-export type ArchiveItemType = "task" | "project" | "note" | "file" | "event" | "reminder";
+export type ArchiveEntityType = "task" | "projectTask" | "note" | "project" | "event" | "reminder";
 
 export interface ArchiveItem {
   id: string;
-  name: string;
-  type: ArchiveItemType;
-  project: string | null;
-  tags: string[];
-  createdAtLabel: string;
-  archivedAtLabel: string;
-  archivedAtKey: string;
-  sizeKb: number;
-  author: string;
+  entityType: ArchiveEntityType;
+  entityId: string;
+
+  title: string;
+  preview?: string;
+
+  /** ISO datetime — when the entity was deleted (moved into the archive). */
+  deletedAt: string;
+
+  /** Human-readable origin, e.g. "Задачи", "Заметки", "Проекты", "Календарь". */
+  sourceModule: string;
+
+  icon?: string;
+  color?: string;
+
+  /** Full snapshot of the deleted entity, exactly as it lived in its own store — the only thing restore() needs. */
+  originalData: unknown;
 }
 
-export interface ArchiveCategoryInfo {
-  key: ArchiveItemType;
-  label: string;
-  icon: LucideIcon;
-}
+/** What each module hands the ArchiveStore when deleting — everything except id/deletedAt, which the store itself stamps. */
+export type ArchiveItemInput = Omit<ArchiveItem, "id" | "deletedAt">;
 
 export type ArchiveDateFilterKey = "all" | "7d" | "30d" | "90d" | "year";
 
@@ -28,13 +36,6 @@ export interface ArchiveDateFilterOption {
   label: string;
 }
 
-export interface ArchiveStats {
-  lastCleanupLabel: string;
-  freeSpaceLabel: string;
-  freeSpaceUsedPercent: number;
-}
-
 export type ArchivePendingAction =
-  | { kind: "single"; id: string; name: string }
-  | { kind: "selected"; ids: string[] }
-  | { kind: "all" };
+  | { kind: "single"; id: string; title: string }
+  | { kind: "selected"; ids: string[] };

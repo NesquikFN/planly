@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import type { TaskAnalyticsData } from "@/types/analytics";
 
@@ -15,20 +14,24 @@ interface Segment {
   dot: string;
 }
 
-export function TaskAnalytics({ data }: { data: TaskAnalyticsData }) {
-  const router = useRouter();
-  const total = data.completed + data.inProgress + data.overdue + data.cancelled || 1;
+interface TaskAnalyticsProps {
+  data: TaskAnalyticsData;
+  onOpenTasks: () => void;
+}
+
+export function TaskAnalytics({ data, onOpenTasks }: TaskAnalyticsProps) {
+  const total = data.completed + data.pending + data.overdue;
+  const totalForRing = total || 1;
 
   const segments: Segment[] = [
     { key: "completed", label: "Выполнено", value: data.completed, color: "#10b981", dot: "bg-emerald-500" },
-    { key: "inProgress", label: "В работе", value: data.inProgress, color: "#2563eb", dot: "bg-blue-600" },
+    { key: "pending", label: "В работе", value: data.pending, color: "#2563eb", dot: "bg-blue-600" },
     { key: "overdue", label: "Просрочено", value: data.overdue, color: "#ef4444", dot: "bg-red-500" },
-    { key: "cancelled", label: "Отменено", value: data.cancelled, color: "#9ca3af", dot: "bg-gray-400" },
   ];
 
   let cumulative = 0;
   const arcs = segments.map((segment) => {
-    const fraction = segment.value / total;
+    const fraction = segment.value / totalForRing;
     const dashArray = `${fraction * CIRCUMFERENCE} ${CIRCUMFERENCE}`;
     const dashOffset = -cumulative * CIRCUMFERENCE;
     cumulative += fraction;
@@ -40,7 +43,7 @@ export function TaskAnalytics({ data }: { data: TaskAnalyticsData }) {
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Выполнение задач</h2>
         <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
-          Общий процент выполнения — {data.completionPercent}%
+          {data.completionPercent !== null ? `Процент выполнения — ${data.completionPercent}%` : "Нет задач с датой в периоде"}
         </span>
       </div>
 
@@ -48,19 +51,20 @@ export function TaskAnalytics({ data }: { data: TaskAnalyticsData }) {
         <div className="relative flex h-32 w-32 shrink-0 items-center justify-center">
           <svg viewBox="0 0 104 104" className="h-32 w-32 -rotate-90">
             <circle cx="52" cy="52" r={RADIUS} fill="none" strokeWidth="12" className="stroke-gray-100 dark:stroke-gray-800" />
-            {arcs.map((arc) => (
-              <circle
-                key={arc.key}
-                cx="52"
-                cy="52"
-                r={RADIUS}
-                fill="none"
-                stroke={arc.color}
-                strokeWidth="12"
-                strokeDasharray={arc.dashArray}
-                strokeDashoffset={arc.dashOffset}
-              />
-            ))}
+            {total > 0 &&
+              arcs.map((arc) => (
+                <circle
+                  key={arc.key}
+                  cx="52"
+                  cy="52"
+                  r={RADIUS}
+                  fill="none"
+                  stroke={arc.color}
+                  strokeWidth="12"
+                  strokeDasharray={arc.dashArray}
+                  strokeDashoffset={arc.dashOffset}
+                />
+              ))}
           </svg>
           <div className="absolute flex flex-col items-center">
             <span className="text-xl font-semibold text-gray-900 dark:text-gray-50">{total}</span>
@@ -80,15 +84,14 @@ export function TaskAnalytics({ data }: { data: TaskAnalyticsData }) {
       </div>
 
       <div className="mt-5 space-y-3 border-t border-gray-100 pt-4 dark:border-gray-800">
-        {data.categories.map((category) => {
-          const percent = Math.round((category.done / category.total) * 100);
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">По приоритету</p>
+        {data.priorityBreakdown.map((item) => {
+          const percent = data.totalWithDueDate > 0 ? Math.round((item.count / data.totalWithDueDate) * 100) : 0;
           return (
-            <div key={category.label}>
+            <div key={item.key}>
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-gray-600 dark:text-gray-300">{category.label}</span>
-                <span className="text-gray-400 dark:text-gray-500">
-                  {category.done} из {category.total}
-                </span>
+                <span className="font-medium text-gray-600 dark:text-gray-300">{item.label}</span>
+                <span className="text-gray-400 dark:text-gray-500">{item.count}</span>
               </div>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                 <div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
@@ -100,7 +103,7 @@ export function TaskAnalytics({ data }: { data: TaskAnalyticsData }) {
 
       <button
         type="button"
-        onClick={() => router.push("/")}
+        onClick={onOpenTasks}
         className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
       >
         Посмотреть все задачи

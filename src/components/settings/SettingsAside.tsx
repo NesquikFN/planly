@@ -1,10 +1,9 @@
 "use client";
 
 import { CalendarPlus, Download, KeyRound, Sparkles } from "lucide-react";
-import type { SettingsState } from "@/types/settings";
+import { useProfileStore } from "@/hooks/useProfileStore";
 
 interface SettingsAsideProps {
-  settings: SettingsState;
   sessionCount: number;
   onChangePassword: () => void;
   onExportData: () => void;
@@ -12,7 +11,8 @@ interface SettingsAsideProps {
   onUpgradePlan: () => void;
 }
 
-export function SettingsAside({ settings, sessionCount, onChangePassword, onExportData, onConnectCalendar, onUpgradePlan }: SettingsAsideProps) {
+export function SettingsAside({ sessionCount, onChangePassword, onExportData, onConnectCalendar, onUpgradePlan }: SettingsAsideProps) {
+  const { profile } = useProfileStore();
   const quickActions = [
     { key: "password", label: "Изменить пароль", icon: KeyRound, onClick: onChangePassword },
     { key: "export", label: "Экспортировать данные", icon: Download, onClick: onExportData },
@@ -24,9 +24,9 @@ export function SettingsAside({ settings, sessionCount, onChangePassword, onExpo
     <aside className="flex w-full shrink-0 flex-col gap-4 lg:w-72 lg:sticky lg:top-6 lg:self-start">
       <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Аккаунт</h3>
-        <p className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-50">{settings.profile.displayName}</p>
+        <p className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-50">{profile.displayName}</p>
         <p className="text-xs text-gray-400 dark:text-gray-500">Free Plan</p>
-        <p className="mt-1 truncate text-xs text-gray-400 dark:text-gray-500">{settings.profile.email}</p>
+        <p className="mt-1 truncate text-xs text-gray-400 dark:text-gray-500">{profile.email}</p>
         <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           Синхронизировано

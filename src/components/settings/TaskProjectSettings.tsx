@@ -1,5 +1,6 @@
 "use client";
 
+import { PlanlyTimePicker } from "@/components/ui/PlanlyTimePicker";
 import { Switch } from "@/components/ui/Switch";
 import { settingsCard, settingsInput, settingsLabel, settingsSectionTitle } from "@/lib/settings-form-styles";
 import { cn } from "@/lib/utils";
@@ -156,11 +157,11 @@ export function TaskProjectSettings({ value, onChange }: TaskProjectSettingsProp
           </label>
           <label className="block">
             <span className={settingsLabel}>Начало рабочего дня</span>
-            <input type="time" value={value.workHoursStart} onChange={(e) => onChange({ workHoursStart: e.target.value })} className={settingsInput} />
+            <PlanlyTimePicker value={value.workHoursStart} onChange={(next) => onChange({ workHoursStart: next })} required />
           </label>
           <label className="block">
             <span className={settingsLabel}>Конец рабочего дня</span>
-            <input type="time" value={value.workHoursEnd} onChange={(e) => onChange({ workHoursEnd: e.target.value })} className={settingsInput} />
+            <PlanlyTimePicker value={value.workHoursEnd} onChange={(next) => onChange({ workHoursEnd: next })} required />
           </label>
         </div>
 

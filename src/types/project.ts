@@ -1,19 +1,35 @@
-import type { LucideIcon } from "lucide-react";
 import type { CalendarColor } from "@/types/calendar";
 
-// Domain model for the Projects module. Everything here is populated from
-// mock data today (see lib/projects-mock-data.ts) — no store/API calls yet.
-// Kept intentionally close to what a real backend response would look like
-// (stable ids, ISO date keys alongside display labels) so swapping the mock
-// factory for a real fetch later doesn't require touching the components.
+// Domain model for the Projects module — persisted to localStorage via
+// useProjectsStore. `iconKey` is a string (resolved to a component via
+// PROJECT_ICON_MAP in lib/projects-mock-data.ts) rather than a LucideIcon
+// reference, since a component reference can't survive JSON.stringify.
+
+export type ProjectIconKey =
+  | "palette"
+  | "smartphone"
+  | "megaphone"
+  | "search"
+  | "bar-chart"
+  | "globe"
+  | "book-open"
+  | "users"
+  | "rocket"
+  | "folder";
 
 export type ProjectStatus = "active" | "completed" | "onHold";
 export type ProjectPriority = "low" | "medium" | "high" | "urgent";
+export type ProjectRole = "Owner" | "Editor" | "Viewer";
+export type ProjectInvitationStatus = "accepted" | "pending";
 
 export interface ProjectMember {
   id: string;
+  email?: string;
+  displayName?: string;
   name: string;
-  role: string;
+  role: ProjectRole | string;
+  invitationStatus?: ProjectInvitationStatus;
+  addedAt?: string;
   /** 0–100, used for the workload bar in Team. */
   workloadPercent: number;
   isOwner?: boolean;
@@ -29,6 +45,7 @@ export interface ProjectTask {
   priority: ProjectTaskPriority;
   assigneeId: string | null;
   dueLabel: string | null;
+  dueDate?: string | null;
 }
 
 export interface ProjectNote {
@@ -48,20 +65,36 @@ export interface ProjectFile {
 }
 
 export type ProjectActivityType =
-  | "created"
-  | "statusChanged"
-  | "taskCompleted"
-  | "memberAdded"
-  | "fileUploaded"
-  | "commented"
-  | "updated";
+  | "projectCreated" | "projectEdited" | "statusChanged" | "timelineChanged"
+  | "tagAdded" | "tagRemoved" | "tagEdited"
+  | "memberAdded" | "memberRemoved" | "memberRoleChanged"
+  | "taskCreated" | "taskEdited" | "taskCompleted" | "taskDeleted" | "taskArchived" | "taskRestored"
+  | "noteCreated" | "noteEdited" | "noteDeleted"
+  | "eventCreated" | "eventUpdated" | "eventUnlinked"
+  | "created" | "fileUploaded" | "commented" | "updated";
+  
 
 export interface ProjectActivityEntry {
   id: string;
-  type: ProjectActivityType;
+  projectId?: string;
+  actionType?: ProjectActivityType;
+  type?: ProjectActivityType;
   actor: string;
+  actorEmail?: string;
+  actorName?: string;
   message: string;
-  timeLabel: string;
+  entityType?: "project" | "task" | "note" | "event" | "tag" | "member" | "timeline";
+  entityId?: string;
+  createdAt?: string;
+  timeLabel?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export type ProjectTimelinePreset = "week" | "month" | "quarter" | "custom";
+export interface ProjectTimeline {
+  preset: ProjectTimelinePreset;
+  startDate: string;
+  endDate: string;
 }
 
 export type ProjectMilestoneStatus = "done" | "current" | "upcoming";
@@ -77,7 +110,7 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  icon: LucideIcon;
+  iconKey: ProjectIconKey;
   color: CalendarColor;
   status: ProjectStatus;
   priority: ProjectPriority;
@@ -99,6 +132,7 @@ export interface Project {
   files: ProjectFile[];
   activity: ProjectActivityEntry[];
   milestones: ProjectMilestone[];
+  timeline?: ProjectTimeline;
 }
 
 /** Fields the create/edit modal collects — a plain draft, not a full Project. */

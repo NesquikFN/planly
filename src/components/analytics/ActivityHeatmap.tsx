@@ -82,7 +82,7 @@ export function ActivityHeatmap({ data }: { data: ActivityHeatmapData }) {
               {day.inCurrentMonth && (
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-gray-100 bg-white px-2.5 py-1.5 text-[11px] text-gray-600 shadow-sm group-hover:block dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
                   {day.tasksCompleted > 0
-                    ? `${formatShortDate(fromISODate(day.dateKey))} — выполнено ${day.tasksCompleted} задач, ${day.focusMinutesLabel} фокус-времени`
+                    ? `${formatShortDate(fromISODate(day.dateKey))} — выполнено ${day.tasksCompleted} задач`
                     : `${formatShortDate(fromISODate(day.dateKey))} — активности не было`}
                 </div>
               )}

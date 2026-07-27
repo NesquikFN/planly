@@ -47,13 +47,15 @@ const toneStyles: Record<
 interface StatCardProps {
   label: string;
   value: number;
+  valueSuffix?: string;
   icon: LucideIcon;
   tone: StatTone;
   active?: boolean;
   onClick?: () => void;
+  interactive?: boolean;
 }
 
-export function StatCard({ label, value, icon: Icon, tone, active, onClick }: StatCardProps) {
+export function StatCard({ label, value, valueSuffix, icon: Icon, tone, active, onClick, interactive = false }: StatCardProps) {
   const styles = toneStyles[tone];
 
   return (
@@ -61,13 +63,20 @@ export function StatCard({ label, value, icon: Icon, tone, active, onClick }: St
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex w-full items-start justify-between rounded-2xl border bg-white p-5 text-left shadow-sm transition-colors dark:bg-gray-900 ${
-        active ? styles.activeBorder : "border-gray-100 dark:border-gray-800"
+      className={`flex w-full items-start justify-between rounded-2xl border bg-white p-5 text-left shadow-sm transition-[border-color,box-shadow,transform] dark:bg-gray-900 ${
+        active ? `${styles.activeBorder} shadow-md` : "border-gray-100 dark:border-gray-800"
+      } ${
+        interactive
+          ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950"
+          : ""
       }`}
     >
       <div>
         <p className={`text-sm font-medium ${styles.label}`}>{label}</p>
-        <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-gray-50">{value}</p>
+        <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-gray-50">
+          {value}
+          {valueSuffix}
+        </p>
       </div>
       <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${styles.iconWrap}`}>
         <Icon size={18} className={styles.icon} />

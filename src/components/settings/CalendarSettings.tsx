@@ -1,5 +1,6 @@
 "use client";
 
+import { PlanlyTimePicker } from "@/components/ui/PlanlyTimePicker";
 import { Switch } from "@/components/ui/Switch";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { settingsCard, settingsInput, settingsLabel, settingsSectionTitle } from "@/lib/settings-form-styles";
@@ -65,11 +66,11 @@ export function CalendarSettings({ value, onChange }: CalendarSettingsProps) {
           </label>
           <label className="block">
             <span className={settingsLabel}>Начало рабочего дня</span>
-            <input type="time" value={value.workDayStart} onChange={(e) => onChange({ workDayStart: e.target.value })} className={settingsInput} />
+            <PlanlyTimePicker value={value.workDayStart} onChange={(next) => onChange({ workDayStart: next })} required />
           </label>
           <label className="block">
             <span className={settingsLabel}>Конец рабочего дня</span>
-            <input type="time" value={value.workDayEnd} onChange={(e) => onChange({ workDayEnd: e.target.value })} className={settingsInput} />
+            <PlanlyTimePicker value={value.workDayEnd} onChange={(next) => onChange({ workDayEnd: next })} required />
           </label>
         </div>
 

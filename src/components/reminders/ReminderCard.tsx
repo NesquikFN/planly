@@ -1,8 +1,10 @@
 "use client";
 
-import { CalendarDays, CheckCircle2, FolderKanban, ListChecks, Repeat, StickyNote, Star, MoreVertical } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarDays, CheckCircle2, FolderKanban, ListChecks, MoreVertical, Repeat, StickyNote, Star } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { SnoozeMenu } from "@/components/reminders/SnoozeMenu";
+import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { categoryDef, PRIORITY_META, REPEAT_OPTIONS } from "@/lib/reminders-mock-data";
 import { formatOverdueLabel, formatReminderDateLabel, isOverdue, type SnoozeOption } from "@/lib/reminders";
@@ -32,6 +34,8 @@ export function ReminderCard({
   onEdit,
   onDelete,
 }: ReminderCardProps) {
+  const router = useRouter();
+  const { events, openEditModal } = useCalendarStore();
   const category = categoryDef(reminder.category);
   const styles = calendarColorStyles[category.color];
   const Icon = category.icon;
@@ -40,23 +44,35 @@ export function ReminderCard({
   const dateLabel = formatReminderDateLabel(reminder, today);
   const priority = PRIORITY_META[reminder.priority];
   const repeatLabel = REPEAT_OPTIONS.find((option) => option.key === reminder.repeat)?.label;
-
+  const linkedEvent = reminder.links?.event ? events.find((event) => event.id === reminder.links?.event) : undefined;
+  const linkedNoteId = reminder.links?.note;
   const linkEntry = reminder.links
-    ? (Object.entries(reminder.links).find(([, value]) => Boolean(value)) as [string, string] | undefined)
+    ? (Object.entries(reminder.links).find(([key, value]) => key !== "event" && key !== "note" && key !== "noteLabel" && Boolean(value)) as [string, string] | undefined)
     : undefined;
-  const linkIcon = linkEntry?.[0] === "project" ? FolderKanban : linkEntry?.[0] === "task" ? ListChecks : linkEntry?.[0] === "note" ? StickyNote : CalendarDays;
+  const linkIcon = linkEntry?.[0] === "project" ? FolderKanban : linkEntry?.[0] === "task" ? ListChecks : StickyNote;
   const LinkIcon = linkIcon;
+
+  function openLinkedEvent() {
+    if (!linkedEvent) return;
+    openEditModal(linkedEvent.id);
+    router.push("/calendar");
+  }
 
   return (
     <div
       className={cn(
-        "flex items-stretch overflow-hidden rounded-2xl border shadow-sm transition-colors",
+        "flex items-stretch overflow-visible rounded-2xl border shadow-sm transition-colors",
         reminder.completed
           ? "border-gray-100 bg-gray-50/60 opacity-70 dark:border-gray-800 dark:bg-gray-900/40"
           : "border-gray-100 bg-white hover:bg-gray-50/60 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/40",
       )}
     >
-      <div className={cn("w-1 shrink-0", overdue && !reminder.completed ? "bg-red-500" : styles.swatch)} />
+      <div
+        className={cn(
+          "w-1 shrink-0",
+          linkedEvent ? "bg-amber-400 dark:bg-amber-500" : overdue && !reminder.completed ? "bg-red-500" : styles.swatch,
+        )}
+      />
 
       <div className={cn("flex flex-1 items-start gap-3 p-4", compact && "items-center gap-3 p-3")}>
         <button
@@ -111,6 +127,23 @@ export function ReminderCard({
                 {linkEntry[1]}
               </span>
             )}
+            {linkedNoteId && (
+              <button type="button" onClick={() => router.push(`/notes?note=${encodeURIComponent(linkedNoteId)}`)} className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400">
+                <StickyNote size={11} />
+                {reminder.links?.noteLabel ?? "Открыть заметку"}
+              </button>
+            )}
+            {linkedEvent && (
+              <button
+                type="button"
+                onClick={openLinkedEvent}
+                className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 transition-colors hover:bg-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+                aria-label={`Открыть событие «${linkedEvent.title}»`}
+              >
+                <CalendarDays size={11} />
+                Событие
+              </button>
+            )}
             {reminder.completed && reminder.completedLabel && (
               <span className="text-emerald-600 dark:text-emerald-400">Выполнено: {reminder.completedLabel}</span>
             )}
@@ -126,9 +159,7 @@ export function ReminderCard({
         <div className="flex shrink-0 flex-col items-end gap-2">
           <div className="flex items-center gap-1">
             {!reminder.completed && (
-              <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", priority.badge)}>
-                {priority.label}
-              </span>
+              <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", priority.badge)}>{priority.label}</span>
             )}
             <button
               type="button"

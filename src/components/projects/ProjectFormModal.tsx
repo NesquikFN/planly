@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { PlanlyDatePicker } from "@/components/ui/PlanlyDatePicker";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { CALENDAR_COLORS } from "@/lib/calendar-constants";
 import { PROJECT_PRIORITY_LABELS, PROJECT_STATUS_LABELS } from "@/lib/projects";
@@ -154,12 +155,7 @@ export function ProjectFormModal({ open, mode, initial, onClose, onSubmit }: Pro
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className={labelClass}>Дедлайн</span>
-              <input
-                type="date"
-                value={values.deadlineKey}
-                onChange={(event) => update("deadlineKey", event.target.value)}
-                className={inputClass}
-              />
+              <PlanlyDatePicker value={values.deadlineKey} onChange={(next) => update("deadlineKey", next)} />
             </label>
             <label className="block">
               <span className={labelClass}>Теги (через запятую)</span>

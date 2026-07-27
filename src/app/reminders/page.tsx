@@ -1,208 +1,161 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { ComingSoonDialog } from "@/components/ui/ComingSoonDialog";
-import { RemindersToolbar, type RemindersViewMode } from "@/components/reminders/RemindersToolbar";
+import { RemindersToolbar } from "@/components/reminders/RemindersToolbar";
 import { RemindersStatsRow } from "@/components/reminders/RemindersStatsRow";
 import { RemindersGroupedList } from "@/components/reminders/RemindersGroupedList";
 import { RemindersScheduleView } from "@/components/reminders/RemindersScheduleView";
 import { RemindersInfoPanel } from "@/components/reminders/RemindersInfoPanel";
 import { ReminderFormModal, type ReminderFormValues } from "@/components/reminders/ReminderFormModal";
-import { useClock } from "@/hooks/useClock";
-import { createMockReminders, QUICK_FILTERS } from "@/lib/reminders-mock-data";
-import { applySnooze, groupReminders, matchesQuickFilter, type ReminderSortKey, sortReminders } from "@/lib/reminders";
+import { ReminderEventModal, type ReminderEventDefaults } from "@/components/reminders/ReminderEventModal";
+import { useRemindersStore } from "@/hooks/useRemindersStore";
 import { USER_NAME } from "@/lib/app-constants";
-import type { Reminder, ReminderCategory, ReminderRepeat, QuickFilterKey, ReminderPriority } from "@/types/reminder";
+import type { QuickFilterKey, Reminder, ReminderDraft } from "@/types/reminder";
 
-export default function RemindersPage() {
-  const { now, today, todayKey } = useClock();
+interface EventCreatorRequest {
+  defaults: ReminderEventDefaults;
+  onCreated: (eventId: string) => void;
+}
+
+function reminderToDraft(reminder: Reminder, links: NonNullable<Reminder["links"]>): ReminderDraft {
+  return {
+    title: reminder.title,
+    description: reminder.description,
+    date: reminder.date,
+    time: reminder.time,
+    category: reminder.category,
+    priority: reminder.priority,
+    repeat: reminder.repeat,
+    leadTime: reminder.leadTime,
+    links: Object.keys(links).length > 0 ? links : undefined,
+  };
+}
+
+function RemindersPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const {
+    now,
+    today,
+    reminders,
+    visibleReminders,
+    groups,
+    stats,
+    nextReminder,
+    activeQuickFilter,
+    setActiveQuickFilter,
+    selectedDateKey,
+    toggleSelectedDate,
+    searchQuery,
+    setSearchQuery,
+    priorityFilter,
+    setPriorityFilter,
+    sortKey,
+    setSortKey,
+    viewMode,
+    setViewMode,
+    collapsedGroups,
+    toggleCollapsedGroup,
+    createReminder,
+    updateReminder,
+    toggleComplete,
+    toggleStar,
+    postponeReminder,
+    deleteReminder,
+  } = useRemindersStore();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [reminders, setReminders] = useState<Reminder[]>(() => createMockReminders(now));
-
-  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterKey>("all");
-  const [activeCategory, setActiveCategory] = useState<ReminderCategory | null>(null);
-  const [activeRepeat, setActiveRepeat] = useState<ReminderRepeat | null>(null);
-  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState<ReminderPriority | null>(null);
-  const [sortKey, setSortKey] = useState<ReminderSortKey>("time");
-  const [viewMode, setViewMode] = useState<RemindersViewMode>("list");
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
-
   const [formOpen, setFormOpen] = useState(false);
+  const [createDefaults, setCreateDefaults] = useState<Partial<ReminderFormValues> | undefined>();
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [eventCreator, setEventCreator] = useState<EventCreatorRequest | null>(null);
   const [stubDialog, setStubDialog] = useState<{ title: string; message?: string } | null>(null);
-
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  function handleQuickFilterChange(filter: QuickFilterKey) {
-    setActiveQuickFilter(filter);
-    setSelectedDateKey(null);
-  }
-
-  function handleSelectDate(dateKey: string) {
-    setSelectedDateKey((current) => (current === dateKey ? null : dateKey));
-  }
-
-  const visibleReminders = useMemo(() => {
-    let list = reminders;
-
-    if (selectedDateKey) {
-      list = list.filter((reminder) => reminder.date === selectedDateKey);
-    } else {
-      list = list.filter((reminder) => matchesQuickFilter(reminder, activeQuickFilter, now, todayKey));
-    }
-
-    if (activeCategory) list = list.filter((reminder) => reminder.category === activeCategory);
-    if (activeRepeat) list = list.filter((reminder) => reminder.repeat === activeRepeat);
-    if (priorityFilter) list = list.filter((reminder) => reminder.priority === priorityFilter);
-
-    const query = searchQuery.trim().toLowerCase();
-    if (query) {
-      list = list.filter(
-        (reminder) =>
-          reminder.title.toLowerCase().includes(query) || (reminder.description ?? "").toLowerCase().includes(query),
-      );
-    }
-
-    return sortReminders(list, sortKey);
-  }, [reminders, selectedDateKey, activeQuickFilter, activeCategory, activeRepeat, priorityFilter, searchQuery, sortKey, now, todayKey]);
-
-  const groups = useMemo(() => {
-    const isCompletedFilter = activeQuickFilter === "completed" && !selectedDateKey;
-    if (isCompletedFilter) {
-      return visibleReminders.length > 0 ? [{ key: "completed", label: "Выполненные", reminders: visibleReminders }] : [];
-    }
-    return groupReminders(visibleReminders, now);
-  }, [visibleReminders, now, activeQuickFilter, selectedDateKey]);
-
-  const statCounts = useMemo(() => {
-    const byKey = (key: QuickFilterKey) => QUICK_FILTERS.find((filter) => filter.key === key)?.count ?? 0;
-    return {
-      today: byKey("today"),
-      upcoming: byKey("upcoming"),
-      overdue: byKey("overdue"),
-      completed: byKey("completed"),
-    };
-  }, []);
-
-  function toggleComplete(id: string) {
-    setReminders((prev) =>
-      prev.map((reminder) => {
-        if (reminder.id !== id) return reminder;
-        const completed = !reminder.completed;
-        return { ...reminder, completed, completedLabel: completed ? "Только что" : undefined };
-      }),
-    );
-  }
-
-  function toggleStar(id: string) {
-    setReminders((prev) => prev.map((reminder) => (reminder.id === id ? { ...reminder, starred: !reminder.starred } : reminder)));
-  }
-
-  function handleSnooze(id: string, option: Parameters<typeof applySnooze>[1]) {
-    setReminders((prev) =>
-      prev.map((reminder) => (reminder.id === id ? { ...reminder, ...applySnooze(reminder, option, now) } : reminder)),
-    );
-  }
-
-  function handleDelete(id: string) {
-    setReminders((prev) => prev.filter((reminder) => reminder.id !== id));
-  }
-
-  function toggleCollapse(key: string) {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
+  useEffect(() => {
+    if (searchParams.get("create") !== "1" || searchParams.get("relationType") !== "note") return;
+    const relationId = searchParams.get("relationId") ?? "";
+    const relationLabel = searchParams.get("relationLabel") ?? "";
+    if (!relationId) return;
+    setEditingReminder(null);
+    setCreateDefaults({ title: searchParams.get("title") ?? relationLabel, linkNote: relationId, linkNoteLabel: relationLabel });
+    setFormOpen(true);
+    router.replace("/reminders");
+  }, [searchParams, router]);
 
   function openNewReminderModal() {
     setEditingReminder(null);
+    setCreateDefaults(undefined);
     setFormOpen(true);
   }
 
   function openEditReminderModal(reminder: Reminder) {
     setEditingReminder(reminder);
+    setCreateDefaults(undefined);
     setFormOpen(true);
   }
 
   function handleFormSubmit(values: ReminderFormValues) {
-    const links: Reminder["links"] = {};
+    const links: Reminder["links"] = { ...(editingReminder?.links ?? {}) };
     if (values.linkProject.trim()) links.project = values.linkProject.trim();
-    if (values.linkTask.trim()) links.task = values.linkTask.trim();
+    else delete links.project;
     if (values.linkNote.trim()) links.note = values.linkNote.trim();
+    else delete links.note;
+    if (values.linkNoteLabel.trim()) links.noteLabel = values.linkNoteLabel.trim();
+    else delete links.noteLabel;
     if (values.linkEvent.trim()) links.event = values.linkEvent.trim();
-    const hasLinks = Object.keys(links).length > 0;
+    else delete links.event;
 
-    if (editingReminder) {
-      setReminders((prev) =>
-        prev.map((reminder) =>
-          reminder.id === editingReminder.id
-            ? {
-                ...reminder,
-                title: values.title.trim(),
-                description: values.description.trim() || undefined,
-                date: values.date || undefined,
-                time: values.date ? values.time || undefined : undefined,
-                category: values.category,
-                priority: values.priority,
-                repeat: values.repeat,
-                leadTime: values.leadTime,
-                links: hasLinks ? links : undefined,
-              }
-            : reminder,
-        ),
-      );
-    } else {
-      const newReminder: Reminder = {
-        id: `r-${Date.now()}`,
-        title: values.title.trim(),
-        description: values.description.trim() || undefined,
-        date: values.date || undefined,
-        time: values.date ? values.time || undefined : undefined,
-        category: values.category,
-        priority: values.priority,
-        repeat: values.repeat,
-        leadTime: values.leadTime,
-        completed: false,
-        starred: false,
-        links: hasLinks ? links : undefined,
-      };
-      setReminders((prev) => [newReminder, ...prev]);
-    }
+    const draft: ReminderDraft = {
+      title: values.title.trim(),
+      description: values.description.trim() || undefined,
+      date: values.date || undefined,
+      time: values.date ? values.time || undefined : undefined,
+      category: values.category,
+      priority: values.priority,
+      repeat: values.repeat,
+      leadTime: values.leadTime,
+      links: Object.keys(links).length > 0 ? links : undefined,
+    };
+
+    if (editingReminder) updateReminder(editingReminder.id, draft);
+    else createReminder(draft);
 
     setFormOpen(false);
     setEditingReminder(null);
+    setCreateDefaults(undefined);
   }
 
-  function handleQuickAction(action: string) {
-    setStubDialog({ title: "Скоро будет доступно", message: `«${action}» появится в одном из следующих обновлений.` });
+  function openEventCreator(defaults: ReminderEventDefaults, onCreated: (eventId: string) => void) {
+    setEventCreator({ defaults, onCreated });
+  }
+
+  function openQuickEventCreator() {
+    const targetReminder = nextReminder ?? reminders.find((reminder) => !reminder.completed) ?? null;
+
+    openEventCreator(
+      { title: targetReminder?.title ?? "", date: targetReminder?.date, time: targetReminder?.time },
+      (eventId) => {
+        if (!targetReminder) return;
+        updateReminder(
+          targetReminder.id,
+          reminderToDraft(targetReminder, { ...targetReminder.links, event: eventId }),
+        );
+      },
+    );
+  }
+
+  function toggleStatsFilter(filter: QuickFilterKey) {
+    setActiveQuickFilter(activeQuickFilter === filter ? "all" : filter);
   }
 
   return (
     <div className="h-screen overflow-hidden bg-[#FAFAFA] dark:bg-gray-950">
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        remindersExtras={{
-          activeQuickFilter,
-          onQuickFilterChange: handleQuickFilterChange,
-          activeCategory,
-          onCategoryChange: setActiveCategory,
-          activeRepeat,
-          onRepeatChange: setActiveRepeat,
-          onNewReminder: openNewReminderModal,
-        }}
-      />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex h-screen flex-col lg:pl-64">
         <Header
@@ -224,12 +177,19 @@ export default function RemindersPage() {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             onMoreSettings={() =>
-              setStubDialog({ title: "Скоро будет доступно", message: "Дополнительные настройки появятся позже." })
+              setStubDialog({
+                title: "Скоро будет доступно",
+                message: "Дополнительные настройки появятся позже.",
+              })
             }
             searchInputRef={searchInputRef}
           />
 
-          <RemindersStatsRow {...statCounts} />
+          <RemindersStatsRow
+            {...stats}
+            activeFilter={activeQuickFilter}
+            onToggleFilter={toggleStatsFilter}
+          />
 
           <div className="grid flex-1 grid-cols-[1fr_300px] items-start gap-6">
             <div>
@@ -239,12 +199,12 @@ export default function RemindersPage() {
                   now={now}
                   today={today}
                   collapsedKeys={collapsedGroups}
-                  onToggleCollapse={toggleCollapse}
+                  onToggleCollapse={toggleCollapsedGroup}
                   onToggleComplete={toggleComplete}
                   onToggleStar={toggleStar}
-                  onSnooze={handleSnooze}
+                  onSnooze={postponeReminder}
                   onEdit={openEditReminderModal}
-                  onDelete={handleDelete}
+                  onDelete={deleteReminder}
                 />
               ) : (
                 <RemindersScheduleView
@@ -253,9 +213,9 @@ export default function RemindersPage() {
                   today={today}
                   onToggleComplete={toggleComplete}
                   onToggleStar={toggleStar}
-                  onSnooze={handleSnooze}
+                  onSnooze={postponeReminder}
                   onEdit={openEditReminderModal}
-                  onDelete={handleDelete}
+                  onDelete={deleteReminder}
                 />
               )}
             </div>
@@ -264,12 +224,13 @@ export default function RemindersPage() {
               reminders={reminders}
               now={now}
               today={today}
+              nextReminder={nextReminder}
               selectedDateKey={selectedDateKey}
-              onSelectDate={handleSelectDate}
+              onSelectDate={toggleSelectedDate}
               onToggleComplete={toggleComplete}
-              onSnooze={handleSnooze}
-              onEdit={openEditReminderModal}
-              onQuickAction={handleQuickAction}
+              onSnooze={postponeReminder}
+              onOpenReminder={openEditReminderModal}
+              onCreateEvent={openQuickEventCreator}
               onCreateReminder={openNewReminderModal}
               onOpenCalendar={() => router.push("/calendar")}
             />
@@ -280,11 +241,23 @@ export default function RemindersPage() {
       <ReminderFormModal
         open={formOpen}
         initial={editingReminder}
+        defaults={createDefaults}
         onClose={() => {
           setFormOpen(false);
           setEditingReminder(null);
+          setCreateDefaults(undefined);
         }}
         onSubmit={handleFormSubmit}
+      />
+
+      <ReminderEventModal
+        open={eventCreator !== null}
+        defaults={eventCreator?.defaults ?? null}
+        onClose={() => setEventCreator(null)}
+        onCreated={(eventId) => {
+          eventCreator?.onCreated(eventId);
+          setEventCreator(null);
+        }}
       />
 
       <ComingSoonDialog
@@ -295,4 +268,8 @@ export default function RemindersPage() {
       />
     </div>
   );
+}
+
+export default function RemindersPage() {
+  return <Suspense fallback={null}><RemindersPageContent /></Suspense>;
 }

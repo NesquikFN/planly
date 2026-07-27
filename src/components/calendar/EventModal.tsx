@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { PlanlyDatePicker } from "@/components/ui/PlanlyDatePicker";
+import { PlanlyTimePicker } from "@/components/ui/PlanlyTimePicker";
 import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { MIN_DURATION_MINUTES } from "@/lib/calendar-constants";
 import { minutesToTime, timeToMinutes } from "@/lib/calendar-time";
 import { toISODate } from "@/lib/date-utils";
 
-export function EventModal() {
+export function EventModal({ onSaved }: { onSaved?: (mode: "create" | "edit", eventId: string) => void } = {}) {
   const { modalState, closeModal, events, calendars, createEvent, updateEvent, deleteEvent } = useCalendarStore();
   const editingEvent =
     modalState?.mode === "edit" ? events.find((event) => event.id === modalState.eventId) : undefined;
@@ -21,6 +23,7 @@ export function EventModal() {
   const [important, setImportant] = useState(false);
   const [description, setDescription] = useState("");
   const [project, setProject] = useState("");
+  const [projectId, setProjectId] = useState<string | undefined>();
   const [task, setTask] = useState("");
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export function EventModal() {
       setImportant(editingEvent.important);
       setDescription(editingEvent.description ?? "");
       setProject(editingEvent.project ?? "");
+      setProjectId(editingEvent.projectId);
       setTask(editingEvent.task ?? "");
     } else if (modalState.mode === "create") {
       const defaults = modalState.defaults;
@@ -46,6 +50,7 @@ export function EventModal() {
       setImportant(defaults.important ?? false);
       setDescription(defaults.description ?? "");
       setProject(defaults.project ?? "");
+      setProjectId(defaults.projectId);
       setTask(defaults.task ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,13 +78,16 @@ export function EventModal() {
       important,
       description: description.trim() || undefined,
       project: project.trim() || undefined,
+      projectId,
       task: task.trim() || undefined,
     };
 
     if (modalState.mode === "edit") {
       updateEvent(modalState.eventId, payload);
+      onSaved?.("edit", modalState.eventId);
     } else {
-      createEvent(payload);
+      const created = createEvent(payload);
+      onSaved?.("create", created.id);
     }
     closeModal();
   }
@@ -117,35 +125,17 @@ export function EventModal() {
 
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Дата</span>
-            <input
-              type="date"
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
-              required
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-            />
+            <PlanlyDatePicker value={date} onChange={setDate} required />
           </label>
 
           <div className="flex gap-3">
             <label className="block flex-1">
               <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Время начала</span>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-              />
+              <PlanlyTimePicker value={startTime} onChange={setStartTime} required />
             </label>
             <label className="block flex-1">
               <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Время окончания</span>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(event) => setEndTime(event.target.value)}
-                required
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-              />
+              <PlanlyTimePicker value={endTime} onChange={setEndTime} required />
             </label>
           </div>
 

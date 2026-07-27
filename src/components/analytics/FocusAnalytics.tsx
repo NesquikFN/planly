@@ -1,9 +1,13 @@
 "use client";
 
-import { Clock3, Sparkles, Timer, Zap } from "lucide-react";
-import { WEEKDAY_LABELS } from "@/lib/analytics-mock-data";
+import { CalendarClock, Clock3, Sparkles, Timer } from "lucide-react";
+import { WEEKDAY_LABELS } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-import type { FocusAnalyticsData } from "@/types/analytics";
+import type { CalendarTimeData } from "@/types/analytics";
+
+// Planly has no time-tracked "focus sessions" anywhere in the data model —
+// this card shows real scheduled calendar time instead (CalendarEvent
+// start/end), which is the closest honest equivalent.
 
 const INTENSITY_CLASSES = [
   "bg-gray-100 dark:bg-gray-800",
@@ -16,15 +20,17 @@ const INTENSITY_CLASSES = [
 function formatMinutesShort(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
+  if (hours === 0 && mins === 0) return "0";
   return mins === 0 ? `${hours}ч` : `${hours}ч ${mins}м`;
 }
 
-export function FocusAnalytics({ data }: { data: FocusAnalyticsData }) {
-  const maxMinutes = Math.max(...data.dailyMinutes);
+export function FocusAnalytics({ data }: { data: CalendarTimeData }) {
+  const maxMinutes = Math.max(1, ...data.dailyMinutes);
+  const hasEvents = data.eventsCount > 0;
 
   return (
     <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Время продуктивной работы</h2>
+      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Время в календаре</h2>
       <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-50">{data.totalLabel}</p>
 
       <div className="mt-4 flex h-28 items-end gap-2">
@@ -44,47 +50,51 @@ export function FocusAnalytics({ data }: { data: FocusAnalyticsData }) {
 
       <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-gray-100 pt-4 text-xs dark:border-gray-800">
         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-          <Zap size={14} className="shrink-0 text-indigo-500" />
-          Продуктивнее всего — <span className="font-medium text-gray-900 dark:text-gray-50">{data.bestDay}</span>
+          <Sparkles size={14} className="shrink-0 text-indigo-500" />
+          Больше всего событий — <span className="font-medium text-gray-900 dark:text-gray-50">{data.bestDay ?? "нет данных"}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Clock3 size={14} className="shrink-0 text-gray-400" />
-          Лучшее время — <span className="font-medium text-gray-900 dark:text-gray-50">{data.bestTimeWindow}</span>
+          Загруженный час — <span className="font-medium text-gray-900 dark:text-gray-50">{data.busiestHourLabel ?? "нет данных"}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
           <Timer size={14} className="shrink-0 text-gray-400" />
-          Средняя сессия — <span className="font-medium text-gray-900 dark:text-gray-50">{data.averageSessionLabel}</span>
+          Средняя встреча — <span className="font-medium text-gray-900 dark:text-gray-50">{data.averageEventLabel}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-          <Sparkles size={14} className="shrink-0 text-gray-400" />
-          Сессий завершено — <span className="font-medium text-gray-900 dark:text-gray-50">{data.sessionsCompleted}</span>
+          <CalendarClock size={14} className="shrink-0 text-gray-400" />
+          Событий за период — <span className="font-medium text-gray-900 dark:text-gray-50">{data.eventsCount}</span>
         </div>
       </div>
 
       <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-        <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">Активность по часам</p>
-        <div className="overflow-x-auto">
-          <div className="inline-flex flex-col gap-[3px]">
-            <div className="flex gap-[3px] pl-6">
-              {WEEKDAY_LABELS.map((label) => (
-                <span key={label} className="w-4 text-center text-[9px] text-gray-400 dark:text-gray-500">
-                  {label}
-                </span>
-              ))}
-            </div>
-            {data.hourLabels.map((hourLabel, hourIndex) => (
-              <div key={hourLabel} className="flex items-center gap-[3px]">
-                <span className="w-6 shrink-0 text-right text-[9px] text-gray-400 dark:text-gray-500">{hourLabel}</span>
-                {data.hourHeatmap.map((dayRow, dayIndex) => (
-                  <span
-                    key={dayIndex}
-                    className={cn("h-4 w-4 rounded-[3px]", INTENSITY_CLASSES[dayRow[hourIndex]] ?? INTENSITY_CLASSES[0])}
-                  />
+        <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">События по часам</p>
+        {hasEvents ? (
+          <div className="overflow-x-auto">
+            <div className="inline-flex flex-col gap-[3px]">
+              <div className="flex gap-[3px] pl-6">
+                {WEEKDAY_LABELS.map((label) => (
+                  <span key={label} className="w-4 text-center text-[9px] text-gray-400 dark:text-gray-500">
+                    {label}
+                  </span>
                 ))}
               </div>
-            ))}
+              {data.hourLabels.map((hourLabel, hourIndex) => (
+                <div key={hourLabel} className="flex items-center gap-[3px]">
+                  <span className="w-6 shrink-0 text-right text-[9px] text-gray-400 dark:text-gray-500">{hourLabel}</span>
+                  {data.hourHeatmap.map((dayRow, dayIndex) => (
+                    <span
+                      key={dayIndex}
+                      className={cn("h-4 w-4 rounded-[3px]", INTENSITY_CLASSES[dayRow[hourIndex]] ?? INTENSITY_CLASSES[0])}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <p className="py-4 text-center text-xs text-gray-400 dark:text-gray-500">Нет событий в этом периоде</p>
+        )}
       </div>
     </section>
   );

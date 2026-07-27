@@ -1,14 +1,16 @@
 "use client";
 
-import { Award, Flame, ShieldCheck, Zap, type LucideIcon } from "lucide-react";
+import { Award, CalendarCheck2, Flame, ShieldCheck, Sparkle, Trophy, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Achievement } from "@/types/analytics";
 
 const ICONS: Record<string, LucideIcon> = {
-  "Продуктивная неделя": Zap,
-  "Без просрочек": ShieldCheck,
-  "Фокус-мастер": Award,
-  Стабильность: Flame,
+  "first-task": Sparkle,
+  "ten-tasks": Award,
+  "fifty-tasks": Trophy,
+  "streak-3": Flame,
+  "streak-7": Flame,
+  "no-overdue": ShieldCheck,
 };
 
 export function Achievements({ achievements }: { achievements: Achievement[] }) {
@@ -16,9 +18,9 @@ export function Achievements({ achievements }: { achievements: Achievement[] }) 
     <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Ваши достижения</h2>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
         {achievements.map((achievement) => {
-          const Icon = ICONS[achievement.title] ?? Award;
+          const Icon = ICONS[achievement.id] ?? CalendarCheck2;
           return (
             <div
               key={achievement.id}
@@ -41,10 +43,7 @@ export function Achievements({ achievements }: { achievements: Achievement[] }) 
               </div>
               <p className="mt-2.5 text-sm font-semibold text-gray-900 dark:text-gray-50">{achievement.title}</p>
               <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{achievement.description}</p>
-              {achievement.earned && achievement.note && (
-                <p className="mt-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400">{achievement.note}</p>
-              )}
-              {!achievement.earned && achievement.progressLabel && (
+              {achievement.progressLabel && (
                 <p className="mt-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500">{achievement.progressLabel}</p>
               )}
             </div>

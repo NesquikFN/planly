@@ -5,22 +5,14 @@ import { settingsCard, settingsSectionTitle } from "@/lib/settings-form-styles";
 interface ArchiveInfoPanelProps {
   totalItems: number;
   totalSizeLabel: string;
-  lastCleanupLabel: string;
-  freeSpaceLabel: string;
-  freeSpaceUsedPercent: number;
+  mostRecentLabel: string;
 }
 
-export function ArchiveInfoPanel({
-  totalItems,
-  totalSizeLabel,
-  lastCleanupLabel,
-  freeSpaceLabel,
-  freeSpaceUsedPercent,
-}: ArchiveInfoPanelProps) {
+export function ArchiveInfoPanel({ totalItems, totalSizeLabel, mostRecentLabel }: ArchiveInfoPanelProps) {
   const rows = [
     { label: "Количество элементов", value: String(totalItems) },
     { label: "Размер архива", value: totalSizeLabel },
-    { label: "Последняя очистка", value: lastCleanupLabel },
+    { label: "Последнее удаление", value: mostRecentLabel },
   ];
 
   return (
@@ -34,16 +26,6 @@ export function ArchiveInfoPanel({
             <span className="font-medium text-gray-900 dark:text-gray-50">{row.value}</span>
           </div>
         ))}
-      </div>
-
-      <div className="mt-3">
-        <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
-          <span>Свободное место</span>
-        </div>
-        <div className="mt-1.5 h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800">
-          <div className="h-1.5 rounded-full bg-blue-600" style={{ width: `${freeSpaceUsedPercent}%` }} />
-        </div>
-        <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{freeSpaceLabel}</p>
       </div>
     </aside>
   );

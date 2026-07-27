@@ -1,44 +1,20 @@
 "use client";
 
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { useProjectsStore } from "@/hooks/useProjectsStore";
 import { projectCard, projectSectionTitle } from "@/lib/projects";
-import { cn } from "@/lib/utils";
-import type { ProjectMember } from "@/types/project";
+import type { Project, ProjectRole } from "@/types/project";
 
-function workloadTone(percent: number): string {
-  if (percent >= 85) return "bg-red-500";
-  if (percent >= 60) return "bg-amber-500";
-  return "bg-emerald-500";
-}
-
-interface ProjectTeamCardProps {
-  members: ProjectMember[];
-}
-
-export function ProjectTeamCard({ members }: ProjectTeamCardProps) {
-  return (
-    <section className={projectCard}>
-      <h3 className={projectSectionTitle}>Команда</h3>
-      <ul className="mt-3 space-y-4">
-        {members.map((member) => (
-          <li key={member.id} className="flex items-center gap-3">
-            <Avatar name={member.name} size={36} />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">
-                  {member.name}
-                  {member.isOwner && <span className="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">· Владелец</span>}
-                </p>
-                <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{member.workloadPercent}%</span>
-              </div>
-              <p className="truncate text-xs text-gray-400 dark:text-gray-500">{member.role}</p>
-              <div className="mt-1.5 h-1 w-full rounded-full bg-gray-100 dark:bg-gray-800">
-                <div className={cn("h-1 rounded-full", workloadTone(member.workloadPercent))} style={{ width: `${member.workloadPercent}%` }} />
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
+export function ProjectTeamCard({ project }: { project: Project }) {
+  const { addMember, removeMember, changeMemberRole, canManageMembers } = useProjectsStore();
+  const [email, setEmail] = useState(""); const [error, setError] = useState(""); const manageable = canManageMembers(project);
+  function add() { if (addMember(project.id, email)) { setEmail(""); setError(""); } else setError("Проверьте email или права доступа"); }
+  return <section className={projectCard}><h3 className={projectSectionTitle}>Команда</h3>
+    {manageable && <div className="mt-3 flex gap-2"><input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="email@example.com" className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-transparent px-2 py-1.5 text-xs dark:border-gray-700"/><button onClick={add} className="rounded-lg bg-blue-600 px-2 text-xs text-white">Добавить</button></div>}
+    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+    <ul className="mt-3 space-y-3">{project.members.map(member => <li key={member.id} className="flex items-center gap-2"><Avatar name={member.displayName ?? member.name} size={32}/><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{member.displayName ?? member.name}</p><p className="truncate text-xs text-gray-400">{member.email} · {member.invitationStatus === "pending" ? "ожидает" : "принят"}</p></div>
+      {manageable && member.role !== "Owner" ? <><select value={member.role} onChange={e => changeMemberRole(project.id, member.id, e.target.value as ProjectRole)} className="rounded border border-gray-200 bg-transparent p-1 text-xs dark:border-gray-700"><option value="Editor">Editor</option><option value="Viewer">Viewer</option></select><button onClick={() => removeMember(project.id, member.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={14}/></button></> : <span className="text-xs text-gray-400">{member.role}</span>}
+    </li>)}</ul></section>;
 }

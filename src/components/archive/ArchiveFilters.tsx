@@ -1,10 +1,10 @@
 "use client";
 
 import type { RefObject } from "react";
-import { CalendarRange, Folder, ListFilter, Search, Tag } from "lucide-react";
+import { CalendarRange, ListFilter, Search } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
-import { ARCHIVE_DATE_FILTERS, ARCHIVE_TYPE_LABELS } from "@/lib/archive-mock-data";
-import type { ArchiveDateFilterKey, ArchiveItemType } from "@/types/archive";
+import { ARCHIVE_DATE_FILTERS, ARCHIVE_TYPE_LABELS } from "@/lib/archive";
+import type { ArchiveDateFilterKey, ArchiveEntityType } from "@/types/archive";
 
 const filterTriggerClass =
   "inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800";
@@ -13,16 +13,10 @@ interface ArchiveFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   searchInputRef?: RefObject<HTMLInputElement | null>;
-  typeFilter: ArchiveItemType | null;
-  onTypeFilterChange: (type: ArchiveItemType | null) => void;
+  typeFilter: ArchiveEntityType | null;
+  onTypeFilterChange: (type: ArchiveEntityType | null) => void;
   dateFilter: ArchiveDateFilterKey;
   onDateFilterChange: (filter: ArchiveDateFilterKey) => void;
-  projectFilter: string | null;
-  onProjectFilterChange: (project: string | null) => void;
-  tagFilter: string | null;
-  onTagFilterChange: (tag: string | null) => void;
-  projects: string[];
-  tags: string[];
 }
 
 export function ArchiveFilters({
@@ -33,12 +27,6 @@ export function ArchiveFilters({
   onTypeFilterChange,
   dateFilter,
   onDateFilterChange,
-  projectFilter,
-  onProjectFilterChange,
-  tagFilter,
-  onTagFilterChange,
-  projects,
-  tags,
 }: ArchiveFiltersProps) {
   const dateLabel = ARCHIVE_DATE_FILTERS.find((option) => option.key === dateFilter)?.label ?? "Всё время";
 
@@ -70,7 +58,7 @@ export function ArchiveFilters({
           triggerClassName={filterTriggerClass}
           items={[
             { key: "all", label: "Все типы", active: typeFilter === null, onSelect: () => onTypeFilterChange(null) },
-            ...(Object.keys(ARCHIVE_TYPE_LABELS) as ArchiveItemType[]).map((type) => ({
+            ...(Object.keys(ARCHIVE_TYPE_LABELS) as ArchiveEntityType[]).map((type) => ({
               key: type,
               label: ARCHIVE_TYPE_LABELS[type],
               active: typeFilter === type,
@@ -93,44 +81,6 @@ export function ArchiveFilters({
             active: dateFilter === option.key,
             onSelect: () => onDateFilterChange(option.key),
           }))}
-        />
-
-        <DropdownMenu
-          trigger={
-            <>
-              <Folder size={15} />
-              {projectFilter ?? "Проект"}
-            </>
-          }
-          triggerClassName={filterTriggerClass}
-          items={[
-            { key: "all", label: "Все проекты", active: projectFilter === null, onSelect: () => onProjectFilterChange(null) },
-            ...projects.map((project) => ({
-              key: project,
-              label: project,
-              active: projectFilter === project,
-              onSelect: () => onProjectFilterChange(project),
-            })),
-          ]}
-        />
-
-        <DropdownMenu
-          trigger={
-            <>
-              <Tag size={15} />
-              {tagFilter ?? "Теги"}
-            </>
-          }
-          triggerClassName={filterTriggerClass}
-          items={[
-            { key: "all", label: "Все теги", active: tagFilter === null, onSelect: () => onTagFilterChange(null) },
-            ...tags.map((tag) => ({
-              key: tag,
-              label: tag,
-              active: tagFilter === tag,
-              onSelect: () => onTagFilterChange(tag),
-            })),
-          ]}
         />
       </div>
     </section>

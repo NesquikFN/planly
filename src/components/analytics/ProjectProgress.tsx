@@ -1,19 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowRight, FolderKanban, Trophy } from "lucide-react";
+import { ArrowRight, FolderKanban, FolderX, Trophy } from "lucide-react";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { cn } from "@/lib/utils";
 import type { CalendarColor } from "@/types/calendar";
-import type { ProjectProgressItem } from "@/types/analytics";
+import type { ProjectsAnalyticsData } from "@/types/analytics";
 
 interface ProjectProgressProps {
-  projects: ProjectProgressItem[];
+  data: ProjectsAnalyticsData;
 }
 
-export function ProjectProgress({ projects }: ProjectProgressProps) {
+export function ProjectProgress({ data }: ProjectProgressProps) {
   const router = useRouter();
-  const best = [...projects].sort((a, b) => b.deltaPercent - a.deltaPercent)[0];
 
   return (
     <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -29,57 +28,61 @@ export function ProjectProgress({ projects }: ProjectProgressProps) {
         </button>
       </div>
 
-      {best && (
-        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
-          <Trophy size={13} />
-          Лучший прогресс недели — {best.name}
+      {!data.available ? (
+        <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 py-8 text-center dark:border-gray-800">
+          <FolderX size={22} className="text-gray-300 dark:text-gray-600" />
+          <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">Аналитика проектов пока недоступна здесь</p>
+          <p className="mt-1 max-w-xs text-xs text-gray-400 dark:text-gray-500">
+            Данные о проектах хранятся только на странице «Проекты» — откройте её, чтобы посмотреть прогресс.
+          </p>
         </div>
-      )}
+      ) : data.items.length === 0 ? (
+        <p className="mt-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500">Проектов пока нет</p>
+      ) : (
+        <>
+          {data.mostActive && (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+              <Trophy size={13} />
+              Больше всего выполнено задач — {data.mostActive.name}
+            </div>
+          )}
 
-      <div className="mt-4 space-y-3">
-        {projects.map((project) => {
-          const styles = calendarColorStyles[project.color as CalendarColor];
-          return (
-            <button
-              key={project.id}
-              type="button"
-              onClick={() => router.push("/projects")}
-              className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", styles.block)}>
-                <FolderKanban size={16} className={styles.text} />
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{project.name}</span>
-                  <span className="shrink-0 text-xs font-medium text-gray-400 dark:text-gray-500">
-                    {project.tasksDone}/{project.tasksTotal} задач
-                  </span>
-                </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                    <div className={cn("h-full rounded-full", styles.swatch)} style={{ width: `${project.percent}%` }} />
+          <div className="mt-4 space-y-3">
+            {data.items.map((project) => {
+              const styles = calendarColorStyles[project.color as CalendarColor];
+              return (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => router.push("/projects")}
+                  className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", styles.block)}>
+                    <FolderKanban size={16} className={styles.text} />
                   </div>
-                  <span className="w-9 shrink-0 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
-                    {project.percent}%
-                  </span>
-                  <span
-                    className={cn(
-                      "w-11 shrink-0 text-right text-xs font-medium",
-                      project.deltaPercent > 0
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-gray-400 dark:text-gray-500",
-                    )}
-                  >
-                    {project.deltaPercent > 0 ? `+${project.deltaPercent}%` : "0%"}
-                  </span>
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{project.name}</span>
+                      <span className="shrink-0 text-xs font-medium text-gray-400 dark:text-gray-500">
+                        {project.tasksDone}/{project.tasksTotal} задач
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                        <div className={cn("h-full rounded-full", styles.swatch)} style={{ width: `${project.percent}%` }} />
+                      </div>
+                      <span className="w-9 shrink-0 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {project.percent}%
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </section>
   );
 }

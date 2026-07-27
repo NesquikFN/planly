@@ -9,7 +9,6 @@ interface ArchiveBulkActionsBarProps {
   onRestoreSelected: () => void;
   onExportSelected: () => void;
   onDeleteSelected: () => void;
-  onClearArchive: () => void;
 }
 
 export function ArchiveBulkActionsBar({
@@ -17,7 +16,6 @@ export function ArchiveBulkActionsBar({
   onRestoreSelected,
   onExportSelected,
   onDeleteSelected,
-  onClearArchive,
 }: ArchiveBulkActionsBarProps) {
   const hasSelection = selectedCount > 0;
 
@@ -54,14 +52,6 @@ export function ArchiveBulkActionsBar({
         >
           <Trash2 size={14} />
           Удалить
-        </button>
-        <button
-          type="button"
-          onClick={onClearArchive}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-        >
-          <Trash2 size={14} />
-          Очистить архив
         </button>
       </div>
     </section>

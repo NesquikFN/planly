@@ -26,6 +26,7 @@ import { UPCOMING_PREVIEW_COUNT } from "@/lib/calendar-constants";
 import { type CalendarEntry, eventToEntry, taskToEntry } from "@/lib/calendar-entries";
 import { useTasksStore } from "@/hooks/useTasksStore";
 import { useClock } from "@/hooks/useClock";
+import { useArchiveStore } from "@/hooks/useArchiveStore";
 import {
   addDays,
   addMonths,
@@ -138,9 +139,10 @@ interface CalendarStoreValue {
     changes: { date: string; startTime: string | null; endTime: string | null },
   ) => void;
 
-  createEvent: (draft: CalendarEventDraft) => void;
+  createEvent: (draft: CalendarEventDraft) => CalendarEvent;
   updateEvent: (id: string, changes: Partial<CalendarEventDraft>) => void;
   deleteEvent: (id: string) => void;
+  restoreDeletedEvent: (event: CalendarEvent) => void;
 
   calendarFormState: CalendarFormState;
   openCreateCalendarForm: () => void;
@@ -160,6 +162,7 @@ const CalendarContext = createContext<CalendarStoreValue | null>(null);
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const tasksStore = useTasksStore();
+  const archiveStore = useArchiveStore();
   const { now, today } = useClock();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -374,17 +377,35 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     [tasksStore],
   );
 
+  const archiveAndRemoveEvent = useCallback(
+    (id: string) => {
+      const event = events.find((item) => item.id === id);
+      if (event) {
+        archiveStore.addItem({
+          entityType: "event",
+          entityId: event.id,
+          title: event.title,
+          preview: `${event.date} ${event.startTime}–${event.endTime}`,
+          sourceModule: "Календарь",
+          originalData: event,
+        });
+      }
+      setEvents((prev) => prev.filter((item) => item.id !== id));
+    },
+    [events, archiveStore],
+  );
+
   const deleteEntry = useCallback(
     (entry: CalendarEntry) => {
       if (entry.kind === "event") {
-        setEvents((prev) => prev.filter((event) => event.id !== entry.sourceId));
+        archiveAndRemoveEvent(entry.sourceId);
         setModalState((current) => (current?.mode === "edit" && current.eventId === entry.sourceId ? null : current));
       } else {
         tasksStore.deleteTask(entry.sourceId);
       }
       setSelectedEntryId((current) => (current === entry.id ? null : current));
     },
-    [tasksStore],
+    [tasksStore, archiveAndRemoveEvent],
   );
 
   const toggleEntryComplete = useCallback(
@@ -417,17 +438,27 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   );
 
   const createEvent = useCallback((draft: CalendarEventDraft) => {
-    setEvents((prev) => [...prev, { id: generateId("event"), ...draft }]);
+    const event = { id: generateId("event"), ...draft };
+    setEvents((prev) => [...prev, event]);
+    return event;
   }, []);
 
   const updateEvent = useCallback((id: string, changes: Partial<CalendarEventDraft>) => {
     setEvents((prev) => prev.map((event) => (event.id === id ? { ...event, ...changes } : event)));
   }, []);
 
-  const deleteEvent = useCallback((id: string) => {
-    setEvents((prev) => prev.filter((event) => event.id !== id));
-    setSelectedEntryId((current) => (current === `event:${id}` ? null : current));
-    setModalState((current) => (current?.mode === "edit" && current.eventId === id ? null : current));
+  const deleteEvent = useCallback(
+    (id: string) => {
+      archiveAndRemoveEvent(id);
+      setSelectedEntryId((current) => (current === `event:${id}` ? null : current));
+      setModalState((current) => (current?.mode === "edit" && current.eventId === id ? null : current));
+    },
+    [archiveAndRemoveEvent],
+  );
+
+  /** Reinserts a full event snapshot — used only by the Archive restore pipeline. */
+  const restoreDeletedEvent = useCallback((event: CalendarEvent) => {
+    setEvents((prev) => [...prev, event]);
   }, []);
 
   const openCreateCalendarForm = useCallback(() => setCalendarFormState({ mode: "create" }), []);
@@ -460,30 +491,45 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setCalendarDeleteRequest(null);
   }, []);
 
-  const confirmDeleteCalendar = useCallback((mode: CalendarDeleteMode, targetCalendarId?: string) => {
-    setCalendarDeleteRequest((current) => {
-      if (!current) return null;
-      const { calendarId } = current;
+  const confirmDeleteCalendar = useCallback(
+    (mode: CalendarDeleteMode, targetCalendarId?: string) => {
+      setCalendarDeleteRequest((current) => {
+        if (!current) return null;
+        const { calendarId } = current;
 
-      setCalendars((prevCalendars) => {
-        if (prevCalendars.length <= 1) return prevCalendars; // never delete the last calendar
+        setCalendars((prevCalendars) => {
+          if (prevCalendars.length <= 1) return prevCalendars; // never delete the last calendar
 
-        if (mode === "withEvents") {
-          setEvents((prevEvents) => prevEvents.filter((event) => event.calendarId !== calendarId));
-        } else if (mode === "moveEvents" && targetCalendarId) {
-          setEvents((prevEvents) =>
-            prevEvents.map((event) =>
-              event.calendarId === calendarId ? { ...event, calendarId: targetCalendarId } : event,
-            ),
-          );
-        }
+          if (mode === "withEvents") {
+            // Every event in a deleted calendar goes through the same archive
+            // pipeline as a single deleteEvent() — no bulk deletion bypasses it.
+            for (const event of events.filter((item) => item.calendarId === calendarId)) {
+              archiveStore.addItem({
+                entityType: "event",
+                entityId: event.id,
+                title: event.title,
+                preview: `${event.date} ${event.startTime}–${event.endTime}`,
+                sourceModule: "Календарь",
+                originalData: event,
+              });
+            }
+            setEvents((prevEvents) => prevEvents.filter((event) => event.calendarId !== calendarId));
+          } else if (mode === "moveEvents" && targetCalendarId) {
+            setEvents((prevEvents) =>
+              prevEvents.map((event) =>
+                event.calendarId === calendarId ? { ...event, calendarId: targetCalendarId } : event,
+              ),
+            );
+          }
 
-        return prevCalendars.filter((cal) => cal.id !== calendarId);
+          return prevCalendars.filter((cal) => cal.id !== calendarId);
+        });
+
+        return null;
       });
-
-      return null;
-    });
-  }, []);
+    },
+    [events, archiveStore],
+  );
 
   const value: CalendarStoreValue = {
     today,
@@ -546,6 +592,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     createEvent,
     updateEvent,
     deleteEvent,
+    restoreDeletedEvent,
 
     calendarFormState,
     openCreateCalendarForm,

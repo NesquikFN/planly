@@ -2,6 +2,7 @@
 
 import { Fragment } from "react";
 import { Bell, Mail, Smartphone, Volume2 } from "lucide-react";
+import { PlanlyTimePicker } from "@/components/ui/PlanlyTimePicker";
 import { Switch } from "@/components/ui/Switch";
 import { settingsCard, settingsInput, settingsLabel, settingsSectionTitle } from "@/lib/settings-form-styles";
 import { cn } from "@/lib/utils";
@@ -114,11 +115,11 @@ export function NotificationSettings({ value, onChange }: NotificationSettingsPr
         <div className="mt-3 grid grid-cols-2 gap-4">
           <label className="block">
             <span className={settingsLabel}>Начало</span>
-            <input type="time" value={value.dndStart} onChange={(e) => onChange({ dndStart: e.target.value })} className={settingsInput} />
+            <PlanlyTimePicker value={value.dndStart} onChange={(next) => onChange({ dndStart: next })} required />
           </label>
           <label className="block">
             <span className={settingsLabel}>Конец</span>
-            <input type="time" value={value.dndEnd} onChange={(e) => onChange({ dndEnd: e.target.value })} className={settingsInput} />
+            <PlanlyTimePicker value={value.dndEnd} onChange={(next) => onChange({ dndEnd: next })} required />
           </label>
         </div>
         <div className="mt-3">

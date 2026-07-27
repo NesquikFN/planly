@@ -1,26 +1,54 @@
-export type AnalyticsPeriod = "week" | "month" | "quarter" | "year";
+// Analytics domain model — every field here is meant to be derived from real
+// Task / CalendarEvent / Project data by src/lib/analytics.ts. Nullable
+// fields mark metrics that can be honestly "unknown" (not enough data) —
+// components must render an explicit empty/neutral state for them instead
+// of inventing a number.
 
-export type ProductivityMetric = "score" | "tasks" | "focus" | "onTime";
+export type AnalyticsPeriod = "week" | "month" | "quarter" | "year" | "all";
+
+export type ProductivityMetric = "score" | "tasks" | "events" | "onTime";
+
+export type TrendKind = "up" | "down" | "flat" | "new" | "none";
+
+/**
+ * Real percent-change vs. the previous period of equal length.
+ * - "up"/"down"/"flat": previous > 0, percent is the real signed change.
+ * - "flat": both periods are 0.
+ * - "new": previous is 0 but current > 0 — there is no finite percentage, so
+ *   `percent` stays null and the UI shows a safe label ("Новые данные")
+ *   instead of "+Infinity%".
+ * - "none": nothing to compare (e.g. no data at all).
+ */
+export interface Trend {
+  kind: TrendKind;
+  percent: number | null;
+}
 
 export interface DailyPoint {
+  dateKey: string;
   label: string;
-  score: number;
-  prevScore: number;
   tasksCompleted: number;
-  focusMinutes: number;
-  onTimeRate: number;
+  tasksCreated: number;
+  eventsCount: number;
+  eventMinutes: number;
+  /** Share of that day's due tasks completed on or before their due date. Null when no due tasks were completed that day. */
+  onTimeRate: number | null;
+  /** See computeActivityScore() in lib/analytics.ts for the formula. */
+  activityScore: number;
 }
 
 export interface ScoreBreakdownItem {
   key: string;
   label: string;
-  value: number;
+  /** 0–100, or null when this component couldn't be evaluated. */
+  value: number | null;
 }
 
 export interface ProductivityScoreData {
-  score: number;
-  maxScore: number;
-  deltaPercent: number;
+  /** 0–100, or null when there isn't enough data to score the period honestly. */
+  score: number | null;
+  maxScore: 100;
+  trend: Trend;
   explanation: string;
   breakdown: ScoreBreakdownItem[];
 }
@@ -32,23 +60,28 @@ export interface MetricCardData {
   label: string;
   value: string;
   helper: string;
+  /** Icon name, resolved to a component in the UI layer — never a React node here. */
   icon: string;
   accent: MetricAccent;
 }
 
-export interface TaskCategoryBreakdown {
+export interface TaskPriorityBreakdownItem {
+  key: string;
   label: string;
-  done: number;
-  total: number;
+  count: number;
 }
 
 export interface TaskAnalyticsData {
+  /** Due-date-scoped: tasks due in the period that are done. Partitions totalWithDueDate together with pending/overdue — used by the completion ring. */
   completed: number;
-  inProgress: number;
+  pending: number;
   overdue: number;
-  cancelled: number;
-  completionPercent: number;
-  categories: TaskCategoryBreakdown[];
+  totalWithDueDate: number;
+  /** Real completions during the period (by completedAt), regardless of whether the task has a due date — used for the headline "tasks completed" metric. */
+  completedInPeriod: number;
+  /** null when there are no due tasks in the period to compute a rate from. */
+  completionPercent: number | null;
+  priorityBreakdown: TaskPriorityBreakdownItem[];
 }
 
 export interface ProjectProgressItem {
@@ -56,28 +89,42 @@ export interface ProjectProgressItem {
   name: string;
   color: string;
   percent: number;
-  deltaPercent: number;
   tasksDone: number;
   tasksTotal: number;
 }
 
-export interface DeadlineAnalyticsData {
-  onTimePercent: number;
-  previousPeriodPercent: number;
-  averageLateLabel: string;
-  mostDisciplinedDay: string;
-  mostOverdueDay: string;
-  weekdayOnTime: number[];
+export interface ProjectsAnalyticsData {
+  /** False when ProjectsProvider isn't mounted on this route (see PROJECT_HANDOFF). */
+  available: boolean;
+  total: number;
+  active: number;
+  completed: number;
+  archived: number;
+  mostActive: ProjectProgressItem | null;
+  items: ProjectProgressItem[];
 }
 
-export interface FocusAnalyticsData {
+export interface DeadlineAnalyticsData {
+  onTimePercent: number | null;
+  previousPeriodPercent: number | null;
+  /** Raw counts behind onTimePercent, for "X из Y" style labels. */
+  onTimeCount: number;
+  completedWithDueDate: number;
+  averageLateLabel: string;
+  mostDisciplinedDay: string | null;
+  mostOverdueDay: string | null;
+  weekdayOnTime: (number | null)[];
+}
+
+export interface CalendarTimeData {
   totalLabel: string;
-  deltaLabel: string;
+  totalMinutes: number;
+  trend: Trend;
   dailyMinutes: number[];
-  bestDay: string;
-  bestTimeWindow: string;
-  averageSessionLabel: string;
-  sessionsCompleted: number;
+  bestDay: string | null;
+  busiestHourLabel: string | null;
+  averageEventLabel: string;
+  eventsCount: number;
   hourHeatmap: number[][];
   hourLabels: string[];
 }
@@ -88,7 +135,7 @@ export interface HeatmapDay {
   inCurrentMonth: boolean;
   intensity: number;
   tasksCompleted: number;
-  focusMinutesLabel: string;
+  activityScore: number;
 }
 
 export interface ActivityHeatmapData {
@@ -109,18 +156,12 @@ export interface Goal {
   onTrack: boolean;
 }
 
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  earned: boolean;
-  progressLabel?: string;
-  note?: string;
-}
+export type InsightSeverity = "positive" | "warning" | "info";
 
 export interface InsightItem {
   id: string;
   text: string;
+  severity: InsightSeverity;
 }
 
 export interface ImprovementItem {
@@ -128,6 +169,16 @@ export interface ImprovementItem {
   text: string;
   actionLabel: string;
   actionKey: string;
+  severity: InsightSeverity;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  earned: boolean;
+  /** e.g. "6 из 10 задач" — always a real, computed progress statement, never a fabricated date. */
+  progressLabel: string | null;
 }
 
 export interface WeeklySummaryData {
@@ -138,20 +189,23 @@ export interface WeeklySummaryData {
 
 export interface AnalyticsData {
   periodLabel: string;
+  /** True once the user has at least one task or event — gates the empty-state UI. */
+  hasAnyData: boolean;
   score: ProductivityScoreData;
   metrics: MetricCardData[];
   chart: DailyPoint[];
+  /** Same-length-as-possible series for the previous period, aligned by bucket index for the compare overlay. */
+  previousChart: DailyPoint[];
   taskAnalytics: TaskAnalyticsData;
-  projects: ProjectProgressItem[];
+  projects: ProjectsAnalyticsData;
   deadlines: DeadlineAnalyticsData;
-  focus: FocusAnalyticsData;
+  calendarTime: CalendarTimeData;
   activity: ActivityHeatmapData;
   goals: Goal[];
-  goalsOnTrack: string;
   achievements: Achievement[];
   strengths: InsightItem[];
   improvements: ImprovementItem[];
   summary: WeeklySummaryData;
-  today: { completed: number; total: number; focusLabel: string; scorePercent: number };
-  bestDay: { label: string; score: number; tasksDone: number };
+  today: { completed: number; total: number; eventsLabel: string; scorePercent: number | null };
+  bestDay: { label: string; tasksDone: number } | null;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { PlanlyDatePicker } from "@/components/ui/PlanlyDatePicker";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { CALENDAR_COLORS } from "@/lib/calendar-constants";
 import { PROJECT_PRIORITY_LABELS, PROJECT_STATUS_LABELS, projectCard, projectSectionTitle } from "@/lib/projects";
@@ -27,11 +28,10 @@ function valuesFromProject(project: Project): ProjectFormValues {
 interface ProjectSettingsTabProps {
   project: Project;
   onSave: (values: ProjectFormValues) => void;
-  onArchive: () => void;
   onDeleteRequest: () => void;
 }
 
-export function ProjectSettingsTab({ project, onSave, onArchive, onDeleteRequest }: ProjectSettingsTabProps) {
+export function ProjectSettingsTab({ project, onSave, onDeleteRequest }: ProjectSettingsTabProps) {
   const [values, setValues] = useState<ProjectFormValues>(() => valuesFromProject(project));
   const [saved, setSaved] = useState(false);
 
@@ -127,7 +127,7 @@ export function ProjectSettingsTab({ project, onSave, onArchive, onDeleteRequest
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className={labelClass}>Дедлайн</span>
-              <input type="date" value={values.deadlineKey} onChange={(event) => update("deadlineKey", event.target.value)} className={inputClass} />
+              <PlanlyDatePicker value={values.deadlineKey} onChange={(next) => update("deadlineKey", next)} />
             </label>
             <label className="block">
               <span className={labelClass}>Теги (через запятую)</span>
@@ -147,19 +147,6 @@ export function ProjectSettingsTab({ project, onSave, onArchive, onDeleteRequest
       <section className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm dark:border-red-500/20 dark:bg-gray-900">
         <h3 className="text-sm font-semibold text-red-500 dark:text-red-400">Опасная зона</h3>
         <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-          <div className="flex items-center justify-between gap-4 py-2.5">
-            <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Архивировать проект</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Проект переместится в архив, данные сохранятся.</p>
-            </div>
-            <button
-              type="button"
-              onClick={onArchive}
-              className="shrink-0 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Архивировать
-            </button>
-          </div>
           <div className="flex items-center justify-between gap-4 py-2.5">
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Удалить проект</p>

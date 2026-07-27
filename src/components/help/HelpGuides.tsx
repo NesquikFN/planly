@@ -19,7 +19,9 @@ export function HelpGuides({ guides, onOpenGuide }: HelpGuidesProps) {
   return (
     <section>
       <h3 className={settingsSectionTitle}>Руководства</h3>
-      <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {guides.length === 0 ? (
+        <p className="mt-3 rounded-xl border border-dashed border-gray-200 px-4 py-5 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">Нет подходящих руководств</p>
+      ) : <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {guides.map((guide) => {
           const Icon = guide.icon;
           return (
@@ -27,7 +29,7 @@ export function HelpGuides({ guides, onOpenGuide }: HelpGuidesProps) {
               key={guide.key}
               type="button"
               onClick={() => onOpenGuide(guide)}
-              className="flex flex-col items-start rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50/40 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-500/30 dark:hover:bg-blue-500/5"
+              className="flex flex-col items-start rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50/40 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-500/30 dark:hover:bg-blue-500/5"
             >
               <div className="flex w-full items-start justify-between">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
@@ -54,7 +56,7 @@ export function HelpGuides({ guides, onOpenGuide }: HelpGuidesProps) {
             </button>
           );
         })}
-      </div>
+      </div>}
     </section>
   );
 }

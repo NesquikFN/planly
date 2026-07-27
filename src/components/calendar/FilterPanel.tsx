@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
+import { PlanlyDatePicker } from "@/components/ui/PlanlyDatePicker";
 import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { calendarColorStyles } from "@/lib/calendar-colors";
@@ -130,18 +131,14 @@ export function FilterPanel() {
           <div className="mt-3">
             <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">Период времени</p>
             <div className="flex items-center gap-2">
-              <input
-                type="date"
+              <PlanlyDatePicker
                 value={draft.dateFrom ?? ""}
-                onChange={(event) => setDraft((prev) => ({ ...prev, dateFrom: event.target.value || null }))}
-                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                onChange={(next) => setDraft((prev) => ({ ...prev, dateFrom: next || null }))}
               />
               <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
-              <input
-                type="date"
+              <PlanlyDatePicker
                 value={draft.dateTo ?? ""}
-                onChange={(event) => setDraft((prev) => ({ ...prev, dateTo: event.target.value || null }))}
-                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                onChange={(next) => setDraft((prev) => ({ ...prev, dateTo: next || null }))}
               />
             </div>
           </div>

@@ -9,9 +9,9 @@ const CHART_HEIGHT = 200;
 const PADDING_Y = 12;
 
 const METRIC_OPTIONS: { key: ProductivityMetric; label: string }[] = [
-  { key: "score", label: "Общий результат" },
+  { key: "score", label: "Активность" },
   { key: "tasks", label: "Выполненные задачи" },
-  { key: "focus", label: "Фокус-время" },
+  { key: "events", label: "Время в календаре" },
   { key: "onTime", label: "Соблюдение сроков" },
 ];
 
@@ -25,27 +25,29 @@ function metricValue(point: DailyPoint, metric: ProductivityMetric): number {
   switch (metric) {
     case "tasks":
       return point.tasksCompleted;
-    case "focus":
-      return point.focusMinutes;
+    case "events":
+      return point.eventMinutes;
     case "onTime":
-      return point.onTimeRate;
+      return point.onTimeRate ?? 0;
     case "score":
     default:
-      return point.score;
+      return point.activityScore;
   }
 }
 
 interface ProductivityChartProps {
-  data: DailyPoint[];
+  chart: DailyPoint[];
+  previousChart: DailyPoint[];
   compareEnabled: boolean;
 }
 
-export function ProductivityChart({ data, compareEnabled }: ProductivityChartProps) {
+export function ProductivityChart({ chart, previousChart, compareEnabled }: ProductivityChartProps) {
   const [metric, setMetric] = useState<ProductivityMetric>("score");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
+  const data = chart;
   const values = data.map((point) => metricValue(point, metric));
-  const maxValue = metric === "score" || metric === "onTime" ? 100 : Math.max(...values) * 1.2;
+  const maxValue = metric === "onTime" ? 100 : Math.max(1, ...values) * 1.2;
   const minValue = 0;
 
   const step = data.length > 1 ? CHART_WIDTH / (data.length - 1) : 0;
@@ -57,22 +59,36 @@ export function ProductivityChart({ data, compareEnabled }: ProductivityChartPro
   }
 
   const currentPoints = values.map((value, index) => `${(index * step).toFixed(1)},${toY(value).toFixed(1)}`).join(" ");
-  const showCompare = compareEnabled && metric === "score";
+
+  const comparableLength = Math.min(data.length, previousChart.length);
+  const showCompare = compareEnabled && comparableLength > 1;
   const comparePoints = showCompare
-    ? data.map((point, index) => `${(index * step).toFixed(1)},${toY(point.prevScore).toFixed(1)}`).join(" ")
+    ? previousChart
+        .slice(0, comparableLength)
+        .map((point, index) => `${(index * step).toFixed(1)},${toY(metricValue(point, metric)).toFixed(1)}`)
+        .join(" ")
     : "";
 
-  const areaPath = `M0,${CHART_HEIGHT} L${currentPoints} L${CHART_WIDTH},${CHART_HEIGHT} Z`;
+  const areaPath = data.length > 0 ? `M0,${CHART_HEIGHT} L${currentPoints} L${CHART_WIDTH},${CHART_HEIGHT} Z` : "";
 
   const hovered = hoverIndex !== null ? data[hoverIndex] : null;
   const tooltipLeftPercent = hoverIndex !== null && data.length > 1 ? (hoverIndex / (data.length - 1)) * 100 : 0;
+
+  if (data.length === 0) {
+    return (
+      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Динамика продуктивности</h2>
+        <p className="mt-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">Нет данных за выбранный период</p>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Динамика продуктивности</h2>
-          <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Ваш ежедневный результат</p>
+          <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Ваш результат по реальным задачам и событиям</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-1 rounded-xl border border-gray-100 bg-gray-50 p-1 dark:border-gray-800 dark:bg-gray-800/60">
@@ -170,16 +186,16 @@ export function ProductivityChart({ data, compareEnabled }: ProductivityChartPro
             style={{ left: `${tooltipLeftPercent}%` }}
           >
             <p className="font-semibold text-gray-900 dark:text-gray-50">{hovered.label}</p>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">Результат: {hovered.score}</p>
-            <p className="text-gray-500 dark:text-gray-400">Задач выполнено: {hovered.tasksCompleted}</p>
-            <p className="text-gray-500 dark:text-gray-400">Фокус: {formatFocus(hovered.focusMinutes)}</p>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">Задач выполнено: {hovered.tasksCompleted}</p>
+            <p className="text-gray-500 dark:text-gray-400">В календаре: {formatFocus(hovered.eventMinutes)}</p>
+            <p className="text-gray-500 dark:text-gray-400">Вовремя: {hovered.onTimeRate !== null ? `${hovered.onTimeRate}%` : "нет данных"}</p>
           </div>
         )}
       </div>
 
       <div className="mt-1 flex justify-between text-xs text-gray-400 dark:text-gray-500">
         {data.map((point) => (
-          <span key={point.label}>{point.label}</span>
+          <span key={point.dateKey}>{point.label}</span>
         ))}
       </div>
     </section>

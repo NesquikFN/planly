@@ -3,6 +3,7 @@
 import { AlertTriangle, ArrowLeft, CalendarDays, ListChecks, Pencil, Star, Trash2 } from "lucide-react";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { PROJECT_PRIORITY_BADGE, PROJECT_PRIORITY_LABELS, PROJECT_STATUS_BADGE, PROJECT_STATUS_LABELS } from "@/lib/projects";
+import { PROJECT_ICON_MAP } from "@/lib/projects-mock-data";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types/project";
 
@@ -16,7 +17,7 @@ interface ProjectDetailHeaderProps {
 }
 
 export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, onEdit, onDeleteRequest }: ProjectDetailHeaderProps) {
-  const Icon = project.icon;
+  const Icon = PROJECT_ICON_MAP[project.iconKey];
   const styles = calendarColorStyles[project.color];
 
   return (

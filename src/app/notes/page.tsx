@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { FileText } from "lucide-react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { ComingSoonDialog } from "@/components/ui/ComingSoonDialog";
@@ -9,154 +9,171 @@ import { NotesToolbar, type NotesViewMode } from "@/components/notes/NotesToolba
 import { NotesListPanel } from "@/components/notes/NotesListPanel";
 import { NoteEditor } from "@/components/notes/NoteEditor";
 import { NotesInfoPanel } from "@/components/notes/NotesInfoPanel";
-import { mockNotes } from "@/lib/notes-mock-data";
+import { useNotesStore } from "@/hooks/useNotesStore";
+import { useTasksStore } from "@/hooks/useTasksStore";
+import { useCalendarStore } from "@/hooks/useCalendarStore";
+import { useProjectsStore } from "@/hooks/useProjectsStore";
+import { useRemindersStore } from "@/hooks/useRemindersStore";
+import { useArchiveStore } from "@/hooks/useArchiveStore";
+import { useClock } from "@/hooks/useClock";
+import {
+  matchesFolder,
+  matchesQuickFilter,
+  matchesSearch,
+  resolveRelationLabels,
+  sortNotes,
+  type NoteFilterKey,
+  type NoteSortKey,
+} from "@/lib/notes";
 import { USER_NAME } from "@/lib/app-constants";
-import type { Note, NoteFolderKey } from "@/types/note";
+import type { NoteFolderKey } from "@/types/note";
 
-function matchesFolder(note: Note, folder: NoteFolderKey): boolean {
-  switch (folder) {
-    case "all":
-      return !note.trashed && !note.archived;
-    case "favorites":
-      return note.starred && !note.trashed;
-    case "recent":
-      return !note.trashed && !note.archived;
-    case "drafts":
-      return note.draft && !note.trashed;
-    case "archived":
-      return note.archived;
-    case "trash":
-      return note.trashed;
-    default:
-      return true;
-  }
-}
+const FILTER_LABEL_TO_KEY: Record<string, NoteFilterKey> = {
+  Все: "all",
+  "С вложениями": "withAttachments",
+  "С задачами": "withRelations",
+  "Без тегов": "withoutTags",
+};
 
-export default function NotesPage() {
+const SORT_LABEL_TO_KEY: Record<string, NoteSortKey> = {
+  "По дате изменения": "modified",
+  "По названию": "title",
+  "По дате создания": "created",
+  "По избранному": "favorite",
+};
+
+function NotesPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { now } = useClock();
+
+  const {
+    hydrated,
+    notes,
+    tagDefs,
+    createNote,
+    updateNote,
+    deleteNote,
+    duplicateNote,
+    toggleStar,
+    togglePin,
+    toggleArchive,
+    tagColorFor,
+    addTagToNote,
+    removeTagFromNote,
+    recolorTagDef,
+    addAttachment,
+    removeAttachment,
+    setLink,
+  } = useNotesStore();
+  const { tasks, addTaskFromText } = useTasksStore();
+  const { events } = useCalendarStore();
+  const { projects } = useProjectsStore();
+  const { reminders } = useRemindersStore();
+  const { items: archiveItems, hydrated: archiveHydrated } = useArchiveStore();
+
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [notes, setNotes] = useState<Note[]>(mockNotes);
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(mockNotes[0]?.id ?? null);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [activeFolder, setActiveFolder] = useState<NoteFolderKey>("all");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterLabel, setFilterLabel] = useState("Все");
   const [sortLabel, setSortLabel] = useState("По дате изменения");
   const [viewMode, setViewMode] = useState<NotesViewMode>("list");
   const [stubDialog, setStubDialog] = useState<{ title: string; message?: string } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const appliedDeepLink = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (activeNoteId && notes.some((note) => note.id === activeNoteId)) return;
+    setActiveNoteId(notes[0]?.id ?? null);
+  }, [notes, activeNoteId, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || !archiveHydrated) return;
+    const archivedIds = new Set(archiveItems.filter((item) => item.entityType === "reminder").map((item) => item.entityId));
+    for (const note of notes) {
+      const id = note.links.reminderId;
+      if (id && !reminders.some((reminder) => reminder.id === id) && !archivedIds.has(id)) {
+        setLink(note.id, "reminderId", undefined);
+      }
+    }
+  }, [notes, reminders, archiveItems, hydrated, archiveHydrated, setLink]);
+
+  // "Скопировать ссылку" deep link: /notes?note=<id> opens that note once.
+  useEffect(() => {
+    if (appliedDeepLink.current) return;
+    const noteId = searchParams.get("note");
+    if (!noteId) return;
+    if (notes.some((note) => note.id === noteId)) {
+      appliedDeepLink.current = true;
+      setActiveNoteId(noteId);
+      setActiveFolder("all");
+      setSearchQuery("");
+    } else if (hydrated) {
+      appliedDeepLink.current = true;
+      router.replace("/notes");
+    }
+  }, [notes, searchParams, hydrated, router]);
+
+  const relationLabelsByNoteId = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof resolveRelationLabels>>();
+    for (const note of notes) map.set(note.id, resolveRelationLabels(note, projects, tasks, events));
+    return map;
+  }, [notes, projects, tasks, events]);
 
   const visibleNotes = useMemo(() => {
     let list = notes.filter((note) => matchesFolder(note, activeFolder));
-    if (activeTag) list = list.filter((note) => note.tags.includes(activeTag));
+    list = list.filter((note) => matchesQuickFilter(note, FILTER_LABEL_TO_KEY[filterLabel] ?? "all"));
 
-    const query = searchQuery.trim().toLowerCase();
+    const query = searchQuery.trim();
     if (query) {
-      list = list.filter(
-        (note) =>
-          note.title.toLowerCase().includes(query) ||
-          note.description.toLowerCase().includes(query) ||
-          note.tags.some((tag) => tag.toLowerCase().includes(query)),
-      );
+      list = list.filter((note) => matchesSearch(note, query, relationLabelsByNoteId.get(note.id)!));
     }
-    return list;
-  }, [notes, activeFolder, activeTag, searchQuery]);
+    return sortNotes(list, SORT_LABEL_TO_KEY[sortLabel] ?? "modified");
+  }, [notes, activeFolder, filterLabel, searchQuery, sortLabel, relationLabelsByNoteId]);
 
   const activeNote = notes.find((note) => note.id === activeNoteId) ?? null;
-
-  function toggleStar(id: string) {
-    setNotes((prev) => prev.map((note) => (note.id === id ? { ...note, starred: !note.starred } : note)));
-  }
-
-  function toggleSectionItem(noteId: string, sectionId: string, itemId: string) {
-    setNotes((prev) =>
-      prev.map((note) => {
-        if (note.id !== noteId || !note.sections) return note;
-        return {
-          ...note,
-          sections: note.sections.map((section) =>
-            section.id !== sectionId || !section.checklist
-              ? section
-              : {
-                  ...section,
-                  checklist: section.checklist.map((item) =>
-                    item.id === itemId ? { ...item, done: !item.done } : item,
-                  ),
-                },
-          ),
-        };
-      }),
-    );
-  }
-
-  function toggleBottomItem(noteId: string, itemId: string) {
-    setNotes((prev) =>
-      prev.map((note) => {
-        if (note.id !== noteId || !note.bottomChecklist) return note;
-        return {
-          ...note,
-          bottomChecklist: note.bottomChecklist.map((item) =>
-            item.id === itemId ? { ...item, done: !item.done } : item,
-          ),
-        };
-      }),
-    );
+  function selectFirstAvailable(excludeId: string) {
+    const next = notes.find((note) => note.id !== excludeId && matchesFolder(note, activeFolder));
+    setActiveNoteId(next?.id ?? null);
   }
 
   function handleNewNote() {
-    const id = `n-${Date.now()}`;
-    const newNote: Note = {
-      id,
-      title: "Новая заметка",
-      description: "Начните печатать, чтобы добавить содержимое…",
-      icon: FileText,
-      color: "blue",
-      tags: [],
-      dateLabel: "Сейчас",
-      starred: false,
-      draft: true,
-      archived: false,
-      trashed: false,
-      lastEditedLabel: "Сейчас",
-    };
-    setNotes((prev) => [newNote, ...prev]);
+    const id = createNote();
     setActiveNoteId(id);
     setActiveFolder("all");
-    setActiveTag(null);
     setSearchQuery("");
   }
 
-  function handleStubAction(action: string, note: Note) {
-    setStubDialog({ title: "Скоро будет доступно", message: `«${action}» для заметки «${note.title}» появится позже.` });
+  function handleDelete(id: string) {
+    deleteNote(id);
+    if (activeNoteId === id) selectFirstAvailable(id);
   }
 
-  function handleAddTag(note: Note) {
-    setStubDialog({
-      title: "Скоро будет доступно",
-      message: `Добавление тегов для «${note.title}» появится в одном из следующих обновлений.`,
-    });
+  function handleDuplicate(id: string) {
+    const newId = duplicateNote(id);
+    setActiveNoteId(newId);
   }
 
-  function handleMoreTags() {
-    setStubDialog({ title: "Скоро будет доступно", message: "Полный список тегов появится в одном из следующих обновлений." });
+  function handleCreateTaskFromNote(note: { id: string; title: string }) {
+    const taskId = addTaskFromText(note.title);
+    if (taskId) setLink(note.id, "taskId", taskId);
   }
 
-  function handleQuickAction(action: string, note: Note) {
-    setStubDialog({ title: "Скоро будет доступно", message: `«${action}» для заметки «${note.title}» появится позже.` });
+  async function handleCopyLink(note: { id: string }) {
+    const url = `${window.location.origin}/notes?note=${note.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setStubDialog({ title: "Ссылка скопирована", message: url });
+    } catch {
+      setStubDialog({ title: "Не удалось скопировать", message: url });
+    }
   }
 
   return (
     <div className="h-screen overflow-hidden bg-[#FAFAFA] dark:bg-gray-950">
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        notesExtras={{
-          activeFolder,
-          onFolderChange: setActiveFolder,
-          activeTag,
-          onTagChange: setActiveTag,
-          onMoreTags: handleMoreTags,
-        }}
-      />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex h-screen flex-col lg:pl-64">
         <Header
@@ -183,27 +200,69 @@ export default function NotesPage() {
             />
           </div>
 
-          <div className="grid min-h-0 flex-1 grid-cols-[350px_1fr_300px] gap-6 pb-4">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 pb-4 md:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 min-[1320px]:grid-cols-[300px_minmax(0,1fr)_280px]">
             <NotesListPanel
               notes={visibleNotes}
               activeNoteId={activeNoteId}
               onSelectNote={setActiveNoteId}
               onToggleStar={toggleStar}
+              onTogglePin={togglePin}
               activeFolder={activeFolder}
               onFolderChange={setActiveFolder}
               viewMode={viewMode}
+              searchQuery={searchQuery}
+              isLoading={!hydrated}
+              now={now}
+              tagColorFor={tagColorFor}
             />
 
             <NoteEditor
               note={activeNote}
+              now={now}
+              tagDefs={tagDefs}
+              tagColorFor={tagColorFor}
+              onUpdateNote={updateNote}
               onToggleStar={toggleStar}
-              onStubAction={handleStubAction}
-              onAddTag={handleAddTag}
-              onToggleSectionItem={toggleSectionItem}
-              onToggleBottomItem={toggleBottomItem}
+              onTogglePin={togglePin}
+              onToggleArchive={toggleArchive}
+              onDuplicate={handleDuplicate}
+              onDelete={handleDelete}
+              onAddTag={addTagToNote}
+              onRemoveTag={removeTagFromNote}
+              onRecolorTag={recolorTagDef}
             />
 
-            <NotesInfoPanel note={activeNote} onAddTag={handleAddTag} onQuickAction={handleQuickAction} />
+            <div className="hidden min-h-0 min-[1320px]:block">
+              <NotesInfoPanel
+                note={activeNote}
+                tagDefs={tagDefs}
+                tagColorFor={tagColorFor}
+                projects={projects}
+                tasks={tasks}
+                events={events}
+                reminders={reminders}
+                archiveItems={archiveItems}
+                onAddTag={addTagToNote}
+                onRemoveTag={removeTagFromNote}
+                onRecolorTag={recolorTagDef}
+                onAddAttachment={addAttachment}
+                onRemoveAttachment={removeAttachment}
+                onSetLink={setLink}
+                onCreateTaskFromNote={handleCreateTaskFromNote}
+                onCopyLink={handleCopyLink}
+                onOpenReminders={() => {
+                  if (!activeNote) return;
+                  const query = new URLSearchParams({
+                    create: "1",
+                    relationType: "note",
+                    relationId: activeNote.id,
+                    relationLabel: activeNote.title,
+                    title: activeNote.title,
+                  });
+                  router.push(`/reminders?${query.toString()}`);
+                }}
+              />
+            </div>
           </div>
         </main>
       </div>
@@ -215,5 +274,13 @@ export default function NotesPage() {
         message={stubDialog?.message}
       />
     </div>
+  );
+}
+
+export default function NotesPage() {
+  return (
+    <Suspense fallback={null}>
+      <NotesPageContent />
+    </Suspense>
   );
 }

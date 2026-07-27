@@ -24,14 +24,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useTasksStore } from "@/hooks/useTasksStore";
 import { useTheme } from "@/hooks/useTheme";
+import { useProfileStore, getInitials } from "@/hooks/useProfileStore";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { Avatar } from "@/components/ui/Avatar";
 import { ComingSoonDialog } from "@/components/ui/ComingSoonDialog";
 import { NotesFoldersPanel } from "@/components/notes/NotesFoldersPanel";
-import { RemindersSidebarPanel } from "@/components/reminders/RemindersSidebarPanel";
-import { USER_NAME } from "@/lib/app-constants";
-import type { NoteFolderKey } from "@/types/note";
-import type { QuickFilterKey, ReminderCategory, ReminderRepeat } from "@/types/reminder";
+import type { CalendarColor } from "@/types/calendar";
+import type { NoteFolderKey, NoteTagDef } from "@/types/note";
 
 interface NavItem {
   label: string;
@@ -58,19 +57,15 @@ const secondaryItems: NavItem[] = [
 interface NotesExtras {
   activeFolder: NoteFolderKey;
   onFolderChange: (folder: NoteFolderKey) => void;
+  folderCounts: Record<NoteFolderKey, number>;
   activeTag: string | null;
   onTagChange: (tag: string | null) => void;
-  onMoreTags: () => void;
-}
-
-interface RemindersExtras {
-  activeQuickFilter: QuickFilterKey;
-  onQuickFilterChange: (filter: QuickFilterKey) => void;
-  activeCategory: ReminderCategory | null;
-  onCategoryChange: (category: ReminderCategory | null) => void;
-  activeRepeat: ReminderRepeat | null;
-  onRepeatChange: (repeat: ReminderRepeat | null) => void;
-  onNewReminder: () => void;
+  tagDefs: NoteTagDef[];
+  tagCounts: Record<string, number>;
+  onCreateTag: (label: string) => void;
+  onRenameTag: (oldLabel: string, newLabel: string) => void;
+  onDeleteTag: (label: string) => void;
+  onRecolorTag: (label: string, color: CalendarColor) => void;
 }
 
 interface SidebarProps {
@@ -79,12 +74,12 @@ interface SidebarProps {
   /** Only passed by the Notes page — renders the folders/tags block below the main nav. */
   notesExtras?: NotesExtras;
   /** Only passed by the Reminders page — renders the categories/type block below the main nav. */
-  remindersExtras?: RemindersExtras;
 }
 
-export function Sidebar({ isOpen, onClose, notesExtras, remindersExtras }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
   const { setView } = useTasksStore();
   const { theme, toggleTheme } = useTheme();
+  const { profile } = useProfileStore();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -168,23 +163,18 @@ export function Sidebar({ isOpen, onClose, notesExtras, remindersExtras }: Sideb
           <NotesFoldersPanel
             activeFolder={notesExtras.activeFolder}
             onFolderChange={notesExtras.onFolderChange}
+            folderCounts={notesExtras.folderCounts}
             activeTag={notesExtras.activeTag}
             onTagChange={notesExtras.onTagChange}
-            onMoreTags={notesExtras.onMoreTags}
+            tagDefs={notesExtras.tagDefs}
+            tagCounts={notesExtras.tagCounts}
+            onCreateTag={notesExtras.onCreateTag}
+            onRenameTag={notesExtras.onRenameTag}
+            onDeleteTag={notesExtras.onDeleteTag}
+            onRecolorTag={notesExtras.onRecolorTag}
           />
         )}
 
-        {remindersExtras && (
-          <RemindersSidebarPanel
-            activeQuickFilter={remindersExtras.activeQuickFilter}
-            onQuickFilterChange={remindersExtras.onQuickFilterChange}
-            activeCategory={remindersExtras.activeCategory}
-            onCategoryChange={remindersExtras.onCategoryChange}
-            activeRepeat={remindersExtras.activeRepeat}
-            onRepeatChange={remindersExtras.onRepeatChange}
-            onNewReminder={remindersExtras.onNewReminder}
-          />
-        )}
         </div>
 
         <div className="space-y-1 border-t border-gray-100 pt-4 dark:border-gray-800">
@@ -237,9 +227,9 @@ export function Sidebar({ isOpen, onClose, notesExtras, remindersExtras }: Sideb
             aria-expanded={userMenuOpen}
             className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
           >
-            <Avatar name={USER_NAME} size={36} />
+            <Avatar name={profile.displayName} initials={getInitials(profile)} src={profile.avatarDataUrl} size={36} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{USER_NAME}</p>
+              <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{profile.displayName}</p>
               <p className="truncate text-xs text-gray-400 dark:text-gray-500">Бесплатный план</p>
             </div>
             <ChevronDown
@@ -260,6 +250,10 @@ export function Sidebar({ isOpen, onClose, notesExtras, remindersExtras }: Sideb
                   type="button"
                   onClick={() => {
                     setUserMenuOpen(false);
+                    if (key === "profile") {
+                      router.push("/settings?tab=profile");
+                      return;
+                    }
                     setStubMessage(`Раздел «${label}» пока в разработке.`);
                   }}
                   className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"

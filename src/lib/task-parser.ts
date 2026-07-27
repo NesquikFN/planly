@@ -24,5 +24,6 @@ export function createTaskFromText(text: string, today: Date): Task {
     completed: false,
     important: isImportant,
     date: isTomorrow ? toISODate(addDays(today, 1)) : undefined,
+    createdAt: today.toISOString(),
   };
 }

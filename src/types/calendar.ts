@@ -28,6 +28,7 @@ export interface CalendarEvent {
   important: boolean;
   description?: string;
   project?: string;
+  projectId?: string;
   task?: string;
 }
 

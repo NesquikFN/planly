@@ -5,10 +5,12 @@ import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { useTasksStore } from "@/hooks/useTasksStore";
 import { useClock } from "@/hooks/useClock";
 import { useTheme } from "@/hooks/useTheme";
+import { useProfileStore } from "@/hooks/useProfileStore";
 import { formatRussianDate, getGreeting } from "@/lib/date-utils";
 
 interface HeaderProps {
-  userName: string;
+  /** @deprecated Header now sources the live name from useProfileStore; kept optional so existing call sites don't need to change. */
+  userName?: string;
   onMenuClick: () => void;
   /** Overrides the greeting block with a plain heading — used by pages other than Dashboard. */
   title?: string;
@@ -28,7 +30,9 @@ export function Header({
   const { searchOpen, setSearchOpen, searchQuery, setSearchQuery } = useTasksStore();
   const { now } = useClock();
   const { theme, toggleTheme } = useTheme();
+  const { profile } = useProfileStore();
 
+  const displayName = profile.displayName || userName || "";
   const dateLabel = formatRussianDate(now);
   const greeting = getGreeting(now);
 
@@ -59,7 +63,7 @@ export function Header({
         ) : (
           <div className="min-w-0">
             <h1 className="truncate text-xl font-semibold text-gray-900 sm:text-2xl dark:text-gray-50">
-              {greeting}, {userName}! 👋
+              {greeting}, {displayName}! 👋
             </h1>
             <p className="mt-0.5 text-sm text-gray-400 dark:text-gray-500">{dateLabel}</p>
           </div>

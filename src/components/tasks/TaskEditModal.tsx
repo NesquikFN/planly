@@ -1,17 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { useTasksStore } from "@/hooks/useTasksStore";
+import { PlanlyDatePicker } from "@/components/ui/PlanlyDatePicker";
+import { PlanlyTimePicker } from "@/components/ui/PlanlyTimePicker";
+import { RECURRENCE_RULE_OPTIONS, WEEKDAY_OPTIONS, localWeekdayIndex, weekdaysForRule } from "@/lib/task-recurrence";
+import { fromISODate } from "@/lib/date-utils";
+import { cn } from "@/lib/utils";
+import type { TaskRecurrenceRule } from "@/types/task";
 
 export function TaskEditModal() {
-  const { tasks, editingTaskId, cancelEditing, saveTaskEdit } = useTasksStore();
+  const { tasks, today, editingTaskId, cancelEditing, saveTaskEdit, deleteTask } = useTasksStore();
   const task = editingTaskId ? tasks.find((item) => item.id === editingTaskId) : undefined;
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [important, setImportant] = useState(false);
+  const [recurrenceRule, setRecurrenceRule] = useState<TaskRecurrenceRule>("none");
+  const [customWeekdays, setCustomWeekdays] = useState<number[]>([]);
 
   useEffect(() => {
     if (!task) return;
@@ -19,9 +27,18 @@ export function TaskEditModal() {
     setDate(task.date ?? "");
     setTime(task.time ?? "");
     setImportant(task.important);
+    setRecurrenceRule(task.recurrence?.rule ?? "none");
+    setCustomWeekdays(task.recurrence?.rule === "custom" ? task.recurrence.weekdays : []);
   }, [task]);
 
   if (!task) return null;
+
+  const needsCustomDays = recurrenceRule === "custom";
+  const canSubmit = !needsCustomDays || customWeekdays.length > 0;
+
+  function toggleWeekday(day: number) {
+    setCustomWeekdays((prev) => (prev.includes(day) ? prev.filter((value) => value !== day) : [...prev, day].sort((a, b) => a - b)));
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -48,7 +65,14 @@ export function TaskEditModal() {
           className="mt-4 space-y-3"
           onSubmit={(event) => {
             event.preventDefault();
-            saveTaskEdit(task.id, { title, date, time, important });
+            if (!canSubmit) return;
+            const pickedDays =
+              recurrenceRule === "weekly" ? [localWeekdayIndex(date ? fromISODate(date) : today)] : customWeekdays;
+            const recurrence =
+              recurrenceRule === "none"
+                ? undefined
+                : { rule: recurrenceRule, weekdays: weekdaysForRule(recurrenceRule, pickedDays), time: time || undefined };
+            saveTaskEdit(task.id, { title, date, time, important, recurrence });
           }}
         >
           <label className="block">
@@ -64,25 +88,17 @@ export function TaskEditModal() {
           <div className="flex gap-3">
             <label className="block flex-1">
               <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Дата</span>
-              <input
-                type="date"
+              <PlanlyDatePicker
                 value={date}
-                onChange={(event) => {
-                  setDate(event.target.value);
-                  if (!event.target.value) setTime("");
+                onChange={(next) => {
+                  setDate(next);
+                  if (!next) setTime("");
                 }}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               />
             </label>
             <label className="block flex-1">
               <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Время</span>
-              <input
-                type="time"
-                value={time}
-                onChange={(event) => setTime(event.target.value)}
-                disabled={!date}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none disabled:opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-              />
+              <PlanlyTimePicker value={time} onChange={setTime} disabled={!date} />
             </label>
           </div>
 
@@ -96,20 +112,75 @@ export function TaskEditModal() {
             <span className="text-sm text-gray-600 dark:text-gray-300">Важная задача</span>
           </label>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Повторять</span>
+            <select
+              value={recurrenceRule}
+              onChange={(event) => setRecurrenceRule(event.target.value as TaskRecurrenceRule)}
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+            >
+              {RECURRENCE_RULE_OPTIONS.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {needsCustomDays && (
+            <div>
+              <span className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Дни недели</span>
+              <div className="flex flex-wrap gap-1.5">
+                {WEEKDAY_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => toggleWeekday(option.key)}
+                    aria-pressed={customWeekdays.includes(option.key)}
+                    className={cn(
+                      "h-8 w-8 rounded-lg text-xs font-medium transition-colors",
+                      customWeekdays.includes(option.key)
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700",
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              {!canSubmit && (
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">Выберите хотя бы один день</p>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-2 pt-2">
             <button
               type="button"
-              onClick={cancelEditing}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+              onClick={() => deleteTask(task.id)}
+              aria-label="Удалить задачу"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
             >
-              Отмена
+              <Trash2 size={15} />
+              Удалить
             </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              Сохранить
-            </button>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={cancelEditing}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Сохранить
+              </button>
+            </div>
           </div>
         </form>
       </div>

@@ -12,7 +12,6 @@ interface ProjectsGridProps {
   onToggleStar: (id: string) => void;
   onEdit: (project: Project) => void;
   onDuplicate: (project: Project) => void;
-  onArchive: (project: Project) => void;
   onDeleteRequest: (project: Project) => void;
 }
 
@@ -23,7 +22,6 @@ export function ProjectsGrid({
   onToggleStar,
   onEdit,
   onDuplicate,
-  onArchive,
   onDeleteRequest,
 }: ProjectsGridProps) {
   if (projects.length === 0) {
@@ -36,7 +34,7 @@ export function ProjectsGrid({
     );
   }
 
-  const cardProps = { onOpen, onToggleStar, onEdit, onDuplicate, onArchive, onDeleteRequest };
+  const cardProps = { onOpen, onToggleStar, onEdit, onDuplicate, onDeleteRequest };
 
   if (viewMode === "list") {
     return (

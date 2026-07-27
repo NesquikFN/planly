@@ -2,21 +2,21 @@
 
 import { settingsSectionTitle } from "@/lib/settings-form-styles";
 import { cn } from "@/lib/utils";
-import type { ArchiveCategorySummary } from "@/lib/archive";
-import type { ArchiveCategoryInfo, ArchiveItemType } from "@/types/archive";
+import type { ArchiveCategoryInfo, ArchiveCategorySummary } from "@/lib/archive";
+import type { ArchiveEntityType } from "@/types/archive";
 
 interface ArchiveCategoriesProps {
   categories: ArchiveCategoryInfo[];
-  summaries: Record<ArchiveItemType, ArchiveCategorySummary>;
-  activeType: ArchiveItemType | null;
-  onSelectType: (type: ArchiveItemType) => void;
+  summaries: Record<ArchiveEntityType, ArchiveCategorySummary>;
+  activeType: ArchiveEntityType | null;
+  onSelectType: (type: ArchiveEntityType) => void;
 }
 
 export function ArchiveCategories({ categories, summaries, activeType, onSelectType }: ArchiveCategoriesProps) {
   return (
     <section>
       <h3 className={settingsSectionTitle}>Категории</h3>
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {categories.map((category) => {
           const Icon = category.icon;
           const summary = summaries[category.key];

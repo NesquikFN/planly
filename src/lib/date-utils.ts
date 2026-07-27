@@ -130,3 +130,28 @@ export function getMonthGrid(monthStart: Date): Date[] {
   const gridStart = startOfWeek(monthStart);
   return Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
 }
+
+// --- Shared display formatting (PlanlyDatePicker / PlanlyTimePicker) -------
+// The single source of truth for how a picked date/time is *displayed*.
+// Uses local getters only — never toISOString() — so the label always
+// matches the local calendar day the user picked, with no UTC-driven shift.
+
+/** "DD.MM.YYYY", local. */
+export function formatDateDMY(date: Date): string {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}.${month}.${date.getFullYear()}`;
+}
+
+/** "DD.MM.YYYY" from a "YYYY-MM-DD" date key, or "" if absent. */
+export function formatDateKeyDMY(dateKey: string | undefined): string {
+  if (!dateKey) return "";
+  return formatDateDMY(fromISODate(dateKey));
+}
+
+/** "DD.MM.YYYY, HH:mm" — falls back to just the date or just the time if one is missing. */
+export function formatDateTimeDMY(dateKey: string | undefined, time: string | undefined): string {
+  const datePart = formatDateKeyDMY(dateKey);
+  if (!datePart) return time ?? "";
+  return time ? `${datePart}, ${time}` : datePart;
+}

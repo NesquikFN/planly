@@ -1,6 +1,7 @@
 import {
   BarChart3,
   BookOpen,
+  Folder,
   Globe,
   Megaphone,
   Palette,
@@ -8,7 +9,22 @@ import {
   Search,
   Smartphone,
   Users,
+  type LucideIcon,
 } from "lucide-react";
+import type { ProjectIconKey } from "@/types/project";
+
+export const PROJECT_ICON_MAP: Record<ProjectIconKey, LucideIcon> = {
+  palette: Palette,
+  smartphone: Smartphone,
+  megaphone: Megaphone,
+  search: Search,
+  "bar-chart": BarChart3,
+  globe: Globe,
+  "book-open": BookOpen,
+  users: Users,
+  rocket: Rocket,
+  folder: Folder,
+};
 import { USER_NAME } from "@/lib/app-constants";
 import { computeMilestoneStatus } from "@/lib/projects";
 import type {
@@ -233,7 +249,7 @@ interface ProjectSeed {
   id: string;
   name: string;
   description: string;
-  icon: Project["icon"];
+  iconKey: ProjectIconKey;
   color: Project["color"];
   status: Project["status"];
   deadlineLabel: string;
@@ -246,7 +262,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p1",
     name: "Редизайн Planly",
     description: "Обновление интерфейса и системы компонентов приложения.",
-    icon: Palette,
+    iconKey: "palette",
     color: "blue",
     status: "active",
     deadlineLabel: "12 авг",
@@ -257,7 +273,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p2",
     name: "Мобильное приложение",
     description: "Портирование основных сценариев планировщика на мобильные устройства.",
-    icon: Smartphone,
+    iconKey: "smartphone",
     color: "purple",
     status: "active",
     deadlineLabel: "20 сент",
@@ -268,7 +284,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p3",
     name: "Маркетинговая кампания",
     description: "Запуск рекламной кампании к осеннему обновлению продукта.",
-    icon: Megaphone,
+    iconKey: "megaphone",
     color: "orange",
     status: "active",
     deadlineLabel: "1 авг",
@@ -279,7 +295,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p4",
     name: "Исследование рынка",
     description: "Анализ конкурентов и опрос пользователей по ключевым сценариям.",
-    icon: Search,
+    iconKey: "search",
     color: "teal",
     status: "active",
     deadlineLabel: "30 авг",
@@ -290,7 +306,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p5",
     name: "Автоматизация отчётов",
     description: "Еженедельные отчёты по прогрессу собираются и рассылаются автоматически.",
-    icon: BarChart3,
+    iconKey: "bar-chart",
     color: "indigo",
     status: "active",
     deadlineLabel: "10 июля",
@@ -301,7 +317,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p6",
     name: "Сайт-визитка",
     description: "Лендинг с описанием продукта и формой обратной связи.",
-    icon: Globe,
+    iconKey: "globe",
     color: "green",
     status: "completed",
     deadlineLabel: "1 июля",
@@ -312,7 +328,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p7",
     name: "Внутренняя база знаний",
     description: "Документация процессов и онбординг новых сотрудников.",
-    icon: BookOpen,
+    iconKey: "book-open",
     color: "pink",
     status: "completed",
     deadlineLabel: "15 июня",
@@ -323,7 +339,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p8",
     name: "Партнёрская программа",
     description: "Условия сотрудничества и первые переговоры с партнёрами.",
-    icon: Users,
+    iconKey: "users",
     color: "red",
     status: "onHold",
     deadlineLabel: "—",
@@ -334,7 +350,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     id: "p9",
     name: "Личный сайт",
     description: "Портфолио и блог — приостановлено до конца сезона.",
-    icon: Rocket,
+    iconKey: "rocket",
     color: "orange",
     status: "onHold",
     deadlineLabel: "—",
@@ -354,7 +370,7 @@ function buildProject(seed: ProjectSeed, index: number): Project {
     id: seed.id,
     name: seed.name,
     description: seed.description,
-    icon: seed.icon,
+    iconKey: seed.iconKey,
     color: seed.color,
     status: seed.status,
     priority: pick(PRIORITY_POOL, index),

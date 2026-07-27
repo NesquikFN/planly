@@ -9,6 +9,7 @@ const PERIOD_OPTIONS: { key: AnalyticsPeriod; label: string }[] = [
   { key: "month", label: "Месяц" },
   { key: "quarter", label: "3 месяца" },
   { key: "year", label: "Год" },
+  { key: "all", label: "Всё время" },
 ];
 
 interface AnalyticsHeaderProps {
@@ -35,8 +36,7 @@ export function AnalyticsHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-gray-50">Аналитика</h1>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Ваши результаты, прогресс и продуктивность</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Ваши результаты, прогресс и продуктивность</p>
         <p className="mt-2 text-xs font-medium text-gray-400 dark:text-gray-500">{periodLabel}</p>
       </div>
 
