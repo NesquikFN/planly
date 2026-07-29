@@ -5,9 +5,36 @@ import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { ARCHIVE_TYPE_LABELS, estimateItemBytes, formatByteSize, formatDeletedAtLabel, resolveArchiveIcon } from "@/lib/archive";
 import { settingsCard } from "@/lib/settings-form-styles";
 import { cn } from "@/lib/utils";
-import type { ArchiveItem } from "@/types/archive";
+import type { ArchiveItem, ArchiveReason } from "@/types/archive";
 
 const checkboxClass = "h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-0 dark:border-gray-600 dark:bg-gray-800";
+
+// Neutral, non-alarming states — "completed" and "deleted" both just describe
+// how the item got here, neither is a warning. Records without a reason
+// (written before this field existed) fall back to a plain "В архиве" badge.
+const REASON_BADGE: Record<ArchiveReason | "unknown", { label: string; className: string }> = {
+  completed: {
+    label: "Выполнена",
+    className: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+  },
+  deleted: {
+    label: "Удалена",
+    className: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+  },
+  unknown: {
+    label: "В архиве",
+    className: "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500",
+  },
+};
+
+function ReasonBadge({ reason }: { reason?: ArchiveReason }) {
+  const { label, className } = REASON_BADGE[reason ?? "unknown"];
+  return (
+    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", className)}>
+      {label}
+    </span>
+  );
+}
 
 interface ArchiveTableProps {
   items: ArchiveItem[];
@@ -39,6 +66,7 @@ export function ArchiveTable({ items, selectedIds, onToggleSelect, onToggleSelec
             </th>
             <th className="px-2 py-3 font-medium">Название</th>
             <th className="px-2 py-3 font-medium">Тип</th>
+            <th className="px-2 py-3 font-medium">Результат</th>
             <th className="px-2 py-3 font-medium">Источник</th>
             <th className="px-2 py-3 font-medium">Дата удаления</th>
             <th className="px-2 py-3 font-medium">Размер</th>
@@ -73,6 +101,9 @@ export function ArchiveTable({ items, selectedIds, onToggleSelect, onToggleSelec
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{ARCHIVE_TYPE_LABELS[item.entityType]}</td>
+                <td className="whitespace-nowrap px-2 py-3">
+                  <ReasonBadge reason={item.reason} />
+                </td>
                 <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{item.sourceModule}</td>
                 <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{formatDeletedAtLabel(item.deletedAt)}</td>
                 <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{formatByteSize(estimateItemBytes(item))}</td>

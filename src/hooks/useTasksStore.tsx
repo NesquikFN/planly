@@ -1,69 +1,75 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Task, TaskRecurrence } from "@/types/task";
-import { createMockTasks } from "@/lib/mock-data";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { matchesFilter, sortTasks, type FilterKey, type SortKey } from "@/lib/filters";
 import { createTaskFromText } from "@/lib/task-parser";
-import { formatTaskDueLabel } from "@/lib/task-date";
+import { computeTaskPriority, formatTaskDueLabel } from "@/lib/task-date";
 import { buildNextOccurrence } from "@/lib/task-recurrence";
 import { addDays, getLocalDateKey } from "@/lib/date-utils";
 import { pickAutoFocusTask } from "@/lib/focus";
+import { recordDailyActivity } from "@/lib/streak";
 import { useClock } from "@/hooks/useClock";
 import { useArchiveStore } from "@/hooks/useArchiveStore";
+import { useAuth, describeAuthError } from "@/hooks/useAuth";
+import * as tasksRepository from "@/lib/tasks-repository";
 
 const TASKS_STORAGE_KEY = "planly:tasks";
 const FOCUS_STORAGE_KEY = "planly:focus";
+const TASKS_MIGRATION_FLAG_PREFIX = "planly:tasksMigrated:";
+
+const EMPTY_TASKS: Task[] = [];
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function generateTaskId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `task-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-// Grace period during which a completed task stays in place and can still be
-// un-checked (requirements 1–2).
-const COMPLETE_GRACE_MS = 500;
-// Duration of the collapse/fade-out animation once the grace period ends.
-const EXIT_ANIMATION_MS = 220;
-const TOAST_DURATION_MS = 5000;
+/** Dev builds show the real Supabase message (and log the full error); production shows only the action phrase. */
+function reportError(action: string, err: unknown): string {
+  const detail = describeAuthError(err);
+  return process.env.NODE_ENV !== "production" ? `${action}: ${detail}` : action;
+}
+
+// Temporary dev-only tracing for the delete/complete/recurrence flow — logs
+// exactly what each action does (one line per repository call) so a real
+// browser session can confirm the call count without guessing. No-op in
+// production builds. Remove once the recurrence duplication report is closed.
+function debugLog(action: string, details: Record<string, unknown>): void {
+  if (process.env.NODE_ENV !== "production") {
+    console.debug(`[tasks:${action}]`, details);
+  }
+}
+
+/** Cloud `tasks.id` is a uuid column — old locally-generated ids from the (rare) non-crypto.randomUUID fallback get a fresh uuid before migrating. */
+function ensureUuidIds(list: Task[]): { tasks: Task[]; idMap: Map<string, string> } {
+  const idMap = new Map<string, string>();
+  const tasks = list.map((task) => {
+    if (UUID_RE.test(task.id)) return task;
+    const newId = generateTaskId();
+    idMap.set(task.id, newId);
+    return { ...task, id: newId };
+  });
+  return { tasks, idMap };
+}
+
+function noop(): void {}
+
+// Completing/deleting a task archives it immediately (no grace period, no
+// undo toast, no timers) — the checkbox/delete action and the archive write
+// happen in the same synchronous update. `toast`/`undoComplete`/`dismissToast`
+// and the two empty-id sets below stay in the public API only because
+// TaskRow/CompletedTaskToast/CompletedTasksList already read them; they're
+// permanently inert now that nothing ever populates them.
+const EMPTY_ID_SET: Set<string> = new Set();
 
 export type DashboardView = "dashboard" | "completed";
 
 export interface ToastState {
   taskId: string;
   title: string;
-}
-
-/**
- * One task's undo/archive countdown. Kept in a collection keyed by task ID so
- * completing several tasks in quick succession gives each its own snapshot,
- * deadline and finalize timer instead of sharing one (requirements 1-2).
- */
-interface PendingCompletion {
-  taskId: string;
-  snapshot: Task;
-  completedAt: string;
-  /** ISO datetime — when this entry finalizes (archives) if not undone first. */
-  archiveAt: string;
-}
-
-const PENDING_COMPLETIONS_STORAGE_KEY = "planly:pendingCompletions";
-
-/** Removes a finalized occurrence from the task list and splices in its next occurrence, if any. */
-function applyArchivalToTasks(taskList: Task[], snapshot: Task, today: Date): Task[] {
-  const nextOccurrence = buildNextOccurrence(snapshot, today, generateTaskId);
-  const withoutCompleted = taskList.filter((task) => task.id !== snapshot.id);
-  return nextOccurrence ? [nextOccurrence, ...withoutCompleted] : withoutCompleted;
 }
 
 export interface TaskEditDraft {
@@ -90,6 +96,9 @@ export type FocusStatus =
 interface TasksStoreValue {
   today: Date;
   hydrated: boolean;
+  loading: boolean;
+  error: string | null;
+  refresh: () => void;
   tasks: Task[];
   visibleTasks: Task[];
   completedTasks: Task[];
@@ -141,8 +150,19 @@ const TasksContext = createContext<TasksStoreValue | null>(null);
 export function TasksProvider({ children }: { children: ReactNode }) {
   const { today, todayKey } = useClock();
   const archiveStore = useArchiveStore();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
 
-  const [tasks, setTasks] = useState<Task[]>(() => createMockTasks(today));
+  // Supabase is the source of truth; `rawTasks` may briefly still hold the
+  // previous account's data for one render after `userId` changes (before the
+  // effect below clears it) — `tasks` (below) is what every consumer actually
+  // reads, and it's gated so that render can never show it.
+  const [rawTasks, setRawTasks] = useState<Task[]>([]);
+  const [loadedForUserId, setLoadedForUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const currentUserRef = useRef<string | null>(null);
+
   const [focusRecord, setFocusRecord] = useState<FocusRecord | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -152,297 +172,257 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Tasks within the 500ms cancellable grace window.
-  const [pendingCompleteIds, setPendingCompleteIds] = useState<Set<string>>(new Set());
-  // Tasks past the grace window, playing the collapse/fade-out animation.
-  const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
-  // Toast bubbles the user explicitly dismissed (without undoing) — their
-  // underlying pending completion keeps counting down, only the bubble hides.
-  const [hiddenToastIds, setHiddenToastIds] = useState<Set<string>>(new Set());
-
-  const graceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const exitTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  // One finalize timer per pending completion (requirement 2) — completing
-  // task B must never clear or replace task A's timer.
-  const finalizeTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  // Source of truth for in-flight completions, keyed by task ID (requirement 1).
-  // A ref (not state) so rapid-fire completions/undos always read the latest
-  // value synchronously; `pendingCompletionsTick` below drives re-renders.
-  const pendingCompletionsRef = useRef<Map<string, PendingCompletion>>(new Map());
-  const [pendingCompletionsTick, setPendingCompletionsTick] = useState(0);
-
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  // Shared by toggleComplete and deleteTask: blocks a second action on the
+  // same task id while one is still in flight (fast double-click, or
+  // clicking Complete then Delete before the first request settles). Each
+  // action owns removing its own id when it finishes, success or failure.
+  const pendingTaskIdsRef = useRef<Set<string>>(new Set());
+  // Guards against React Strict Mode's double-invoke of the mount effect
+  // below (dev only, App Router default since Next 13.5): without this, two
+  // concurrent loadFromCloud(uid) calls can both see zero cloud tasks and an
+  // un-set migration flag, and both independently upsert the local cache —
+  // each minting its own fresh UUIDs, so every legacy task gets migrated twice.
+  const loadInFlightRef = useRef<Set<string>>(new Set());
 
-  const finalizeCompletion = useCallback(
-    (id: string) => {
-      finalizeTimers.current.delete(id);
-      const entry = pendingCompletionsRef.current.get(id);
-      // Already undone, deleted, or finalized by another call — nothing to do.
-      // This guard is what makes finalization idempotent (requirement 6).
-      if (!entry) return;
-
-      pendingCompletionsRef.current.delete(id);
-      setPendingCompletionsTick((tick) => tick + 1);
-      setHiddenToastIds((prev) => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-
-      archiveStore.addItem({
-        entityType: "task",
-        entityId: entry.snapshot.id,
-        title: entry.snapshot.title,
-        preview: entry.snapshot.dueLabel,
-        sourceModule: "Задачи",
-        originalData: entry.snapshot,
-      });
-
-      // Recurring tasks: completing one occurrence archives it like any other
-      // task, but the recurrence rule survives by spawning the next
-      // occurrence as its own row — never hundreds in advance, only ever the
-      // single next date.
-      setTasks((prev) => applyArchivalToTasks(prev, entry.snapshot, today));
-    },
-    [archiveStore, today],
+  const tasks = useMemo(
+    () => (loadedForUserId === userId ? rawTasks : EMPTY_TASKS),
+    [rawTasks, loadedForUserId, userId],
   );
 
-  // Hydrate from localStorage after mount (avoids SSR/client markup mismatch).
-  useEffect(() => {
-    const storedTasks = readStorage<Task[] | null>(TASKS_STORAGE_KEY, null);
-    let workingTasks = storedTasks && storedTasks.length > 0 ? storedTasks : null;
+  // Reconciles with Supabase: fetches this user's rows, and — the first time
+  // ever, only while the cloud has nothing yet — migrates whatever is in the
+  // local cache up. Every state update is guarded by currentUserRef so a
+  // slow response for an account the user has since signed out of can never
+  // clobber the next account's freshly-loaded state.
+  const loadFromCloud = useCallback(async (uid: string) => {
+    if (loadInFlightRef.current.has(uid)) return;
+    loadInFlightRef.current.add(uid);
+    setLoading(true);
+    setError(null);
+    try {
+      const cloudTasks = await tasksRepository.listTasks(uid);
+      if (currentUserRef.current !== uid) return;
 
-    // Resume pending completions across reload (requirement 3): expired ones
-    // finalize immediately, the rest keep counting down from where they left off.
-    const storedPending = readStorage<PendingCompletion[] | null>(PENDING_COMPLETIONS_STORAGE_KEY, null);
-    if (storedPending && storedPending.length > 0 && workingTasks) {
-      const now = Date.now();
-      for (const entry of storedPending) {
-        const archiveAtMs = new Date(entry.archiveAt).getTime();
-        const stillCompleted = workingTasks.some((task) => task.id === entry.taskId && task.completed);
-        if (!stillCompleted) continue; // deleted/restored while the app was closed
+      if (cloudTasks.length === 0) {
+        const cached = readStorage<Task[] | null>(TASKS_STORAGE_KEY, null);
+        const migrationFlag = `${TASKS_MIGRATION_FLAG_PREFIX}${uid}`;
 
-        if (Number.isNaN(archiveAtMs) || archiveAtMs <= now) {
-          archiveStore.addItem({
-            entityType: "task",
-            entityId: entry.snapshot.id,
-            title: entry.snapshot.title,
-            preview: entry.snapshot.dueLabel,
-            sourceModule: "Задачи",
-            originalData: entry.snapshot,
-          });
-          workingTasks = applyArchivalToTasks(workingTasks, entry.snapshot, today);
-        } else {
-          pendingCompletionsRef.current.set(entry.taskId, entry);
-          const timer = setTimeout(() => finalizeCompletion(entry.taskId), archiveAtMs - now);
-          finalizeTimers.current.set(entry.taskId, timer);
+        if (cached && cached.length > 0 && !readStorage(migrationFlag, false)) {
+          const { tasks: migratable, idMap } = ensureUuidIds(cached);
+          try {
+            await tasksRepository.upsertTasks(uid, migratable);
+            if (currentUserRef.current !== uid) return;
+            writeStorage(migrationFlag, true);
+            if (idMap.size > 0) {
+              setFocusRecord((current) =>
+                current && idMap.has(current.taskId) ? { ...current, taskId: idMap.get(current.taskId)! } : current,
+              );
+            }
+            const reloaded = await tasksRepository.listTasks(uid);
+            if (currentUserRef.current !== uid) return;
+            setRawTasks(reloaded);
+            writeStorage(TASKS_STORAGE_KEY, reloaded);
+          } catch (migrateErr) {
+            // Local cache (already shown, from the effect below) stays as-is — nothing lost, just not migrated yet.
+            setError(reportError("Не удалось перенести локальные задачи в облако", migrateErr));
+          }
+          return;
         }
       }
-      setPendingCompletionsTick((tick) => tick + 1);
+
+      setRawTasks(cloudTasks);
+      writeStorage(TASKS_STORAGE_KEY, cloudTasks);
+    } catch (err) {
+      if (currentUserRef.current !== uid) return;
+      // Network/Supabase failure: leave whatever is currently shown (the
+      // local cache loaded synchronously below) untouched.
+      setError(reportError("Не удалось загрузить задачи", err));
+    } finally {
+      loadInFlightRef.current.delete(uid);
+      if (currentUserRef.current === uid) setLoading(false);
     }
-
-    if (workingTasks) setTasks(workingTasks);
-
-    const storedFocus = readStorage<FocusRecord | null>(FOCUS_STORAGE_KEY, null);
-    if (storedFocus) {
-      // A stale *automatic* focus from a previous day is discarded — it'll be
-      // recomputed fresh for today. A manual pick persists across days until
-      // the user changes or clears it (requirement 8).
-      if (storedFocus.source === "manual" || storedFocus.dateKey === todayKey) {
-        setFocusRecord(storedFocus);
-      }
-    }
-
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const refresh = useCallback(() => {
+    if (userId) loadFromCloud(userId);
+  }, [userId, loadFromCloud]);
+
+  // Runs on every sign-in/sign-out. Synchronously (before any network round
+  // trip) shows this user's local cache — or nothing, for a signed-out state
+  // or a user with no cache — then kicks off the Supabase reconciliation.
   useEffect(() => {
-    if (hydrated) writeStorage(TASKS_STORAGE_KEY, tasks);
-  }, [tasks, hydrated]);
+    currentUserRef.current = userId;
+    setError(null);
+
+    if (!userId) {
+      setRawTasks([]);
+      setFocusRecord(null);
+      setLoadedForUserId(null);
+      setHydrated(true);
+      return;
+    }
+
+    const cached = readStorage<Task[] | null>(TASKS_STORAGE_KEY, null);
+    setRawTasks(cached ?? []);
+    setLoadedForUserId(userId);
+    setHydrated(true);
+
+    const storedFocus = readStorage<FocusRecord | null>(FOCUS_STORAGE_KEY, null);
+    if (storedFocus && (storedFocus.source === "manual" || storedFocus.dateKey === todayKey)) {
+      setFocusRecord(storedFocus);
+    } else {
+      setFocusRecord(null);
+    }
+
+    loadFromCloud(userId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // Cache mirror for instant next-load paint / offline fallback — only once
+  // this user's real data is in place, never during the gated empty window.
+  useEffect(() => {
+    if (!hydrated || !userId || loadedForUserId !== userId) return;
+    writeStorage(TASKS_STORAGE_KEY, tasks);
+  }, [tasks, hydrated, userId, loadedForUserId]);
 
   useEffect(() => {
     if (hydrated) writeStorage(FOCUS_STORAGE_KEY, focusRecord);
   }, [focusRecord, hydrated]);
 
-  useEffect(() => {
-    if (hydrated) {
-      writeStorage(PENDING_COMPLETIONS_STORAGE_KEY, Array.from(pendingCompletionsRef.current.values()));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingCompletionsTick, hydrated]);
-
-  // Clear any in-flight timers on unmount.
-  useEffect(() => {
-    return () => {
-      graceTimers.current.forEach((timer) => clearTimeout(timer));
-      exitTimers.current.forEach((timer) => clearTimeout(timer));
-      finalizeTimers.current.forEach((timer) => clearTimeout(timer));
-    };
-  }, []);
-
   const toggleStatFilter = useCallback((filter: FilterKey) => {
     setActiveFilter((prev) => (prev === filter ? "all" : filter));
   }, []);
 
-  const completeTask = useCallback(
-    (id: string) => {
-      const target = tasks.find((task) => task.id === id);
-      if (!target || target.completed) return;
+  // Optimistic single-field patch shared by every "edit a field" action below:
+  // apply locally, persist, and on failure revert to the exact pre-patch task.
+  const applyOptimisticUpdate = useCallback(
+    (id: string, patch: Partial<Task>, failureMessage: string) => {
+      if (!userId) return;
+      let previous: Task | undefined;
+      setRawTasks((prev) => {
+        previous = prev.find((task) => task.id === id);
+        return prev.map((task) => (task.id === id ? { ...task, ...patch } : task));
+      });
 
-      const completedAt = new Date().toISOString();
-      const completedSnapshot: Task = { ...target, completed: true, completedAt };
-      setTasks((prev) => prev.map((task) => (task.id === id ? completedSnapshot : task)));
-      setPendingCompleteIds((prev) => new Set(prev).add(id));
-
-      const graceTimer = setTimeout(() => {
-        graceTimers.current.delete(id);
-        setPendingCompleteIds((prev) => {
-          const next = new Set(prev);
-          next.delete(id);
-          return next;
+      tasksRepository
+        .updateTask(userId, id, patch)
+        .then((updated) => setRawTasks((prev) => prev.map((task) => (task.id === id ? updated : task))))
+        .catch((err) => {
+          setRawTasks((prev) => (previous ? prev.map((task) => (task.id === id ? previous! : task)) : prev));
+          setError(reportError(failureMessage, err));
         });
-        setExitingIds((prev) => new Set(prev).add(id));
-
-        const exitTimer = setTimeout(() => {
-          exitTimers.current.delete(id);
-          setExitingIds((prev) => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-          });
-
-          // Enter the undo/archive countdown. This task gets its own entry
-          // and its own timer — completing another task never touches this
-          // one (requirements 1-2).
-          const archiveAt = new Date(Date.now() + TOAST_DURATION_MS).toISOString();
-          pendingCompletionsRef.current.set(id, { taskId: id, snapshot: completedSnapshot, completedAt, archiveAt });
-          setPendingCompletionsTick((tick) => tick + 1);
-
-          const finalizeTimer = setTimeout(() => finalizeCompletion(id), TOAST_DURATION_MS);
-          finalizeTimers.current.set(id, finalizeTimer);
-        }, EXIT_ANIMATION_MS);
-        exitTimers.current.set(id, exitTimer);
-      }, COMPLETE_GRACE_MS);
-      graceTimers.current.set(id, graceTimer);
     },
-    [tasks, finalizeCompletion],
+    [userId],
   );
 
-  // Cancels completion while still inside the 500ms grace window.
-  const cancelComplete = useCallback((id: string) => {
-    setPendingCompleteIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-
-    const timer = graceTimers.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      graceTimers.current.delete(id);
-    }
-
-    setTasks((prev) =>
-      prev.map((task) => (task.id === id ? { ...task, completed: false, completedAt: undefined } : task)),
-    );
-  }, []);
-
+  // Marks a task done and archives it in the same update — no grace period,
+  // no undo timer. The task disappears from the active list and shows up in
+  // Archive with reason "completed" immediately. Recurring tasks: completing
+  // one occurrence archives it like any other task, but the recurrence rule
+  // survives by spawning the next occurrence as its own row — never hundreds
+  // in advance, only ever the single next date.
   const toggleComplete = useCallback(
     (id: string) => {
+      if (!userId) return;
+      // Blocks a second Complete/Delete on this id while this one is still
+      // in flight — covers a fast double-click and a Complete-then-Delete
+      // race, for every task, not just recurring ones.
+      if (pendingTaskIdsRef.current.has(id)) return;
       const target = tasks.find((task) => task.id === id);
-      if (!target) return;
+      if (!target || target.completed) return;
+      pendingTaskIdsRef.current.add(id);
 
-      if (!target.completed) {
-        completeTask(id);
-      } else if (pendingCompleteIds.has(id)) {
-        cancelComplete(id);
-      }
-      // Already past the grace window (archived/exiting) — checkbox isn't
-      // interactive there, nothing to do.
+      const isRecurring = Boolean(
+        target.recurrence &&
+        target.recurrence.rule !== "none" &&
+        target.recurrence.weekdays.length > 0,
+      );
+
+      const completedSnapshot: Task = { ...target, completed: true, completedAt: new Date().toISOString() };
+      // buildNextOccurrence is the ONLY place a next occurrence is computed —
+      // Delete never calls it, and nothing else in this file does either.
+      const nextOccurrence = isRecurring ? buildNextOccurrence(completedSnapshot, today, generateTaskId) : null;
+
+      debugLog("complete", {
+        taskId: id,
+        recurrence: target.recurrence,
+        isRecurring,
+        nextOccurrenceId: nextOccurrence?.id ?? null,
+        nextOccurrenceDate: nextOccurrence?.date ?? null,
+      });
+
+      const archiveItem = archiveStore.addItem({
+        entityType: "task",
+        entityId: completedSnapshot.id,
+        title: completedSnapshot.title,
+        preview: completedSnapshot.dueLabel,
+        sourceModule: "Задачи",
+        reason: "completed",
+        originalData: completedSnapshot,
+      });
+
+      setRawTasks((prev) => {
+        const withoutCompleted = prev.filter((task) => task.id !== id);
+        return nextOccurrence ? [nextOccurrence, ...withoutCompleted] : withoutCompleted;
+      });
+
+      (async () => {
+        try {
+          debugLog("complete:delete-current", { taskId: id, source: "toggleComplete" });
+          await tasksRepository.deleteTask(userId, id);
+        } catch (err) {
+          // Completion didn't actually persist — put everything back exactly as it was.
+          // Never reaches create-next below: an occurrence is only ever
+          // created after the current one is confirmed gone.
+          setRawTasks((prev) => {
+            const withoutNext = nextOccurrence ? prev.filter((task) => task.id !== nextOccurrence.id) : prev;
+            return withoutNext.some((task) => task.id === target.id) ? withoutNext : [target, ...withoutNext];
+          });
+          archiveStore.removeItem(archiveItem.id);
+          setError(reportError("Не удалось сохранить изменения", err));
+          pendingTaskIdsRef.current.delete(id);
+          return;
+        }
+
+        // Streak is a secondary effect: a malformed legacy streak snapshot
+        // must never block task completion or its Supabase persistence.
+        try {
+          recordDailyActivity();
+        } catch (err) {
+          describeAuthError(err);
+        }
+
+        if (nextOccurrence) {
+          try {
+            debugLog("complete:create-next", { taskId: nextOccurrence.id, date: nextOccurrence.date, source: "toggleComplete" });
+            await tasksRepository.createTask(userId, nextOccurrence);
+          } catch (err) {
+            // Completion stands; only the next occurrence failed to persist — drop the local-only copy so it can't duplicate on retry.
+            setRawTasks((prev) => prev.filter((task) => task.id !== nextOccurrence.id));
+            setError(reportError("Не удалось создать повторяющуюся задачу", err));
+          }
+        }
+        pendingTaskIdsRef.current.delete(id);
+      })();
     },
-    [tasks, pendingCompleteIds, completeTask, cancelComplete],
+    [tasks, archiveStore, today, userId],
   );
 
-  // Shared restore path for both the undo-toast and the archive's "Вернуть".
-  // Targets exactly one task ID — undoing task A never touches task B's
-  // timers, entry, or toast (requirement 4).
-  const restoreTask = useCallback((id: string) => {
-    const graceTimer = graceTimers.current.get(id);
-    if (graceTimer) {
-      clearTimeout(graceTimer);
-      graceTimers.current.delete(id);
-    }
-    const exitTimer = exitTimers.current.get(id);
-    if (exitTimer) {
-      clearTimeout(exitTimer);
-      exitTimers.current.delete(id);
-    }
-    const finalizeTimer = finalizeTimers.current.get(id);
-    if (finalizeTimer) {
-      clearTimeout(finalizeTimer);
-      finalizeTimers.current.delete(id);
-    }
-    if (pendingCompletionsRef.current.has(id)) {
-      pendingCompletionsRef.current.delete(id);
-      setPendingCompletionsTick((tick) => tick + 1);
-    }
-
-    setPendingCompleteIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    setExitingIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    setHiddenToastIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-
-    setTasks((prev) =>
-      prev.map((task) => (task.id === id ? { ...task, completed: false, completedAt: undefined } : task)),
-    );
-  }, []);
-
-  // The visible undo bubble: the most recently completed task still pending
-  // (and not explicitly dismissed). Derived from the pending-completions
-  // collection rather than its own state, so it can never go stale relative
-  // to which timers are actually still running.
-  const toast = useMemo<ToastState | null>(() => {
-    let latest: PendingCompletion | null = null;
-    for (const entry of pendingCompletionsRef.current.values()) {
-      if (hiddenToastIds.has(entry.taskId)) continue;
-      if (!latest || entry.completedAt > latest.completedAt) {
-        latest = entry;
+  // Kept for CompletedTasksList's "Вернуть" — resets a still-present task
+  // back to active. Distinct from `restoreDeletedTask`, which re-inserts a
+  // full snapshot pulled back out of the Archive. Effectively unreachable
+  // today (completion always removes the task from `tasks` immediately), so
+  // this only best-effort logs a persistence failure rather than rolling back.
+  const restoreTask = useCallback(
+    (id: string) => {
+      setRawTasks((prev) => prev.map((task) => (task.id === id ? { ...task, completed: false, completedAt: undefined } : task)));
+      if (userId) {
+        tasksRepository.updateTask(userId, id, { completed: false, completedAt: undefined }).catch((err) => describeAuthError(err));
       }
-    }
-    return latest ? { taskId: latest.taskId, title: latest.snapshot.title } : null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingCompletionsTick, hiddenToastIds]);
-
-  const undoComplete = useCallback(() => {
-    if (!toast) return;
-    restoreTask(toast.taskId);
-  }, [toast, restoreTask]);
-
-  // Hides the toast bubble only — the underlying completion keeps counting
-  // down and archives normally. (Previously this cancelled the archive timer
-  // outright, orphaning the task as completed-forever; unused by any UI today
-  // but fixed since it belongs to the same lifecycle.)
-  const dismissToast = useCallback(() => {
-    if (!toast) return;
-    setHiddenToastIds((prev) => new Set(prev).add(toast.taskId));
-  }, [toast]);
+    },
+    [userId],
+  );
 
   const setManualFocus = useCallback(
     (id: string) => {
@@ -457,101 +437,123 @@ export function TasksProvider({ children }: { children: ReactNode }) {
 
   const addTaskFromText = useCallback(
     (text: string) => {
-      if (!text.trim()) return undefined;
+      if (!text.trim() || !userId) return undefined;
       const newTask = createTaskFromText(text, today);
-      setTasks((prev) => [newTask, ...prev]);
+      setRawTasks((prev) => [newTask, ...prev]);
+      recordDailyActivity();
+
+      debugLog("create", { taskId: newTask.id, userId, source: "addTaskFromText" });
+
+      tasksRepository.createTask(userId, newTask).catch((err) => {
+        // tasksRepository.createTask already logged the structured
+        // code/message/details/hint (dev-only) before rejecting — this just
+        // marks which local action that failure belongs to.
+        debugLog("create:failed", { taskId: newTask.id, userId });
+        // Optimistic task never persisted — remove it and surface why,
+        // rather than leaving a phantom local-only task the user thinks was saved.
+        setRawTasks((prev) => prev.filter((task) => task.id !== newTask.id));
+        setError(reportError("Не удалось сохранить задачу", err));
+      });
+
       return newTask.id;
     },
-    [today],
+    [today, userId],
   );
 
+  // Plain delete — regardless of recurrence, this only ever removes the one
+  // targeted row. It never calls toggleComplete, never calls
+  // buildNextOccurrence, never archives with reason "completed", and never
+  // creates a next occurrence: recurrence generation lives exclusively in
+  // toggleComplete above.
   const deleteTask = useCallback(
     (id: string) => {
+      if (!userId) return;
+      if (pendingTaskIdsRef.current.has(id)) return;
       const target = tasks.find((task) => task.id === id);
-      if (target) {
-        archiveStore.addItem({
-          entityType: "task",
-          entityId: target.id,
-          title: target.title,
-          preview: target.dueLabel,
-          sourceModule: "Задачи",
-          originalData: target,
-        });
-      }
+      if (!target) return;
+      pendingTaskIdsRef.current.add(id);
 
-      const graceTimer = graceTimers.current.get(id);
-      if (graceTimer) {
-        clearTimeout(graceTimer);
-        graceTimers.current.delete(id);
-      }
-      const exitTimer = exitTimers.current.get(id);
-      if (exitTimer) {
-        clearTimeout(exitTimer);
-        exitTimers.current.delete(id);
-      }
-      // If this same task's completion-undo countdown is still pending, its
-      // timer would otherwise fire later and archive it a second time (plus
-      // spawn a stray recurrence next-occurrence) — deleting it now must
-      // cancel that. Only this task's entry is touched; other pending
-      // completions (rapid multi-delete) are unaffected.
-      const finalizeTimer = finalizeTimers.current.get(id);
-      if (finalizeTimer) {
-        clearTimeout(finalizeTimer);
-        finalizeTimers.current.delete(id);
-      }
-      if (pendingCompletionsRef.current.has(id)) {
-        pendingCompletionsRef.current.delete(id);
-        setPendingCompletionsTick((tick) => tick + 1);
-      }
-      setHiddenToastIds((prev) => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
+      debugLog("delete", { taskId: id, recurrence: target.recurrence, source: "deleteTask" });
+
+      const archiveItem = archiveStore.addItem({
+        entityType: "task",
+        entityId: target.id,
+        title: target.title,
+        preview: target.dueLabel,
+        sourceModule: "Задачи",
+        reason: "deleted",
+        originalData: target,
       });
 
-      setTasks((prev) => prev.filter((task) => task.id !== id));
+      setRawTasks((prev) => prev.filter((task) => task.id !== id));
       setFocusRecord((current) => (current?.taskId === id ? null : current));
-      setPendingCompleteIds((prev) => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      setExitingIds((prev) => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
+
+      tasksRepository
+        .deleteTask(userId, id)
+        .catch((err) => {
+          setRawTasks((prev) => (prev.some((task) => task.id === target.id) ? prev : [target, ...prev]));
+          archiveStore.removeItem(archiveItem.id);
+          setError(reportError("Не удалось удалить задачу", err));
+        })
+        .finally(() => {
+          pendingTaskIdsRef.current.delete(id);
+        });
     },
-    [tasks, archiveStore],
+    [tasks, archiveStore, userId],
   );
 
-  /** Reinserts a full task snapshot — used only by the Archive restore pipeline. */
-  const restoreDeletedTask = useCallback((task: Task) => {
-    setTasks((prev) => [task, ...prev]);
-  }, []);
+  /**
+   * Reinserts a full task snapshot pulled back out of the Archive. Always
+   * comes back active (completed:false) regardless of why it was archived —
+   * otherwise a task archived via completion would silently re-enter the
+   * list still marked done and vanish from the active view again. Guarded
+   * against being present already so double-restore can't duplicate it.
+   * The archive/page.tsx caller removes the ArchiveItem right after calling
+   * this, so on failure a fresh ArchiveItem is re-added — otherwise the task
+   * would vanish from both the active list and the Archive.
+   */
+  const restoreDeletedTask = useCallback(
+    (task: Task) => {
+      if (!userId) return;
+      const restored: Task = { ...task, completed: false, completedAt: undefined };
+      setRawTasks((prev) => {
+        if (prev.some((existing) => existing.id === task.id)) return prev;
+        return [restored, ...prev];
+      });
+
+      tasksRepository.restoreTask(userId, restored).catch((err) => {
+        setRawTasks((prev) => prev.filter((existing) => existing.id !== task.id));
+        archiveStore.addItem({
+          entityType: "task",
+          entityId: task.id,
+          title: task.title,
+          preview: task.dueLabel,
+          sourceModule: "Задачи",
+          reason: task.completed ? "completed" : "deleted",
+          originalData: task,
+        });
+        setError(reportError("Не удалось восстановить задачу", err));
+      });
+    },
+    [userId, archiveStore],
+  );
 
   const postponeToTomorrow = useCallback(
     (id: string) => {
       const tomorrow = getLocalDateKey(addDays(today, 1));
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === id
-            ? { ...task, dueLabel: "Завтра", priority: "upcoming", date: tomorrow, time: undefined }
-            : task,
-        ),
-      );
+      applyOptimisticUpdate(id, { dueLabel: "Завтра", priority: "upcoming", date: tomorrow, time: undefined }, "Не удалось сохранить изменения");
     },
-    [today],
+    [today, applyOptimisticUpdate],
   );
 
-  const toggleImportant = useCallback((id: string) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === id ? { ...task, important: !task.important } : task)),
-    );
-  }, []);
+  const toggleImportant = useCallback(
+    (id: string) => {
+      const target = tasks.find((task) => task.id === id);
+      if (!target) return;
+      applyOptimisticUpdate(id, { important: !target.important }, "Не удалось сохранить изменения");
+    },
+    [tasks, applyOptimisticUpdate],
+  );
 
   const startEditing = useCallback((id: string) => {
     setEditingTaskId(id);
@@ -563,44 +565,37 @@ export function TasksProvider({ children }: { children: ReactNode }) {
 
   const saveTaskEdit = useCallback(
     (id: string, draft: TaskEditDraft) => {
-      setTasks((prev) =>
-        prev.map((task) => {
-          if (task.id !== id) return task;
-          const date = draft.date.trim() || undefined;
-          const time = draft.time.trim() || undefined;
-          return {
-            ...task,
-            title: draft.title.trim() || task.title,
-            date,
-            time,
-            dueLabel: formatTaskDueLabel(date, time, today),
-            important: draft.important,
-            recurrence: draft.recurrence,
-          };
-        }),
-      );
+      const date = draft.date.trim() || undefined;
+      const time = draft.time.trim() || undefined;
+      const currentTitle = tasks.find((task) => task.id === id)?.title ?? "";
+      const patch: Partial<Task> = {
+        title: draft.title.trim() || currentTitle,
+        date,
+        time,
+        // Deadline changes must re-flag overdue/today/upcoming immediately —
+        // priority was previously left stale after editing the date.
+        dueLabel: formatTaskDueLabel(date, time, today),
+        priority: computeTaskPriority(date, today),
+        important: draft.important,
+        recurrence: draft.recurrence,
+      };
+      applyOptimisticUpdate(id, patch, "Не удалось сохранить изменения");
       setEditingTaskId(null);
     },
-    [today],
+    [tasks, today, applyOptimisticUpdate],
   );
 
   // Used by calendar drag-and-drop: moves a task to a new date/time without
   // touching its priority bucket.
   const rescheduleTask = useCallback(
     (id: string, date: string | undefined, time: string | undefined) => {
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === id ? { ...task, date, time, dueLabel: formatTaskDueLabel(date, time, today) } : task,
-        ),
-      );
+      applyOptimisticUpdate(id, { date, time, dueLabel: formatTaskDueLabel(date, time, today) }, "Не удалось сохранить изменения");
     },
-    [today],
+    [today, applyOptimisticUpdate],
   );
 
   const visibleTasks = useMemo(() => {
-    let list = tasks.filter(
-      (task) => !task.completed || pendingCompleteIds.has(task.id) || exitingIds.has(task.id),
-    );
+    let list = tasks.filter((task) => !task.completed);
 
     if (activeFilter !== "all") {
       list = list.filter((task) => matchesFilter(task, activeFilter));
@@ -612,16 +607,11 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     }
 
     return sortTasks(list, sortKey);
-  }, [tasks, pendingCompleteIds, exitingIds, activeFilter, searchQuery, sortKey]);
+  }, [tasks, activeFilter, searchQuery, sortKey]);
 
-  // Fully archived tasks: completed and past the grace/exit-animation windows.
-  const completedTasks = useMemo(
-    () =>
-      tasks.filter(
-        (task) => task.completed && !pendingCompleteIds.has(task.id) && !exitingIds.has(task.id),
-      ),
-    [tasks, pendingCompleteIds, exitingIds],
-  );
+  // Always empty now that completion archives immediately — kept for
+  // CompletedTasksList, which renders its own empty state for this.
+  const completedTasks = useMemo(() => tasks.filter((task) => task.completed), [tasks]);
 
   const stats = useMemo(() => {
     const active = tasks.filter((task) => !task.completed);
@@ -672,6 +662,9 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   const value: TasksStoreValue = {
     today,
     hydrated,
+    loading,
+    error,
+    refresh,
     tasks,
     visibleTasks,
     completedTasks,
@@ -692,12 +685,12 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     searchQuery,
     setSearchQuery,
 
-    pendingCompleteIds,
-    exitingIds,
+    pendingCompleteIds: EMPTY_ID_SET,
+    exitingIds: EMPTY_ID_SET,
     toggleComplete,
-    toast,
-    undoComplete,
-    dismissToast,
+    toast: null,
+    undoComplete: noop,
+    dismissToast: noop,
     restoreTask,
 
     focusStatus,

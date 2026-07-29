@@ -1,7 +1,8 @@
 import type { CalendarColor } from "@/types/calendar";
 
-export const DAY_START_HOUR = 8;
-export const DAY_END_HOUR = 20;
+// Full day: the grid must show 00:00-24:00, not a clipped work-hours window.
+export const DAY_START_HOUR = 0;
+export const DAY_END_HOUR = 24;
 export const HOUR_HEIGHT = 64;
 export const SNAP_MINUTES = 15;
 export const MIN_DURATION_MINUTES = 30;

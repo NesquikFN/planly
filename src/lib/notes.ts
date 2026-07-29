@@ -13,7 +13,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { addDays, isToday, isYesterday, formatShortDate } from "@/lib/date-utils";
+import { isToday, isYesterday, formatShortDate } from "@/lib/date-utils";
 import type { CalendarEvent } from "@/types/calendar";
 import type { Note, NoteAttachment, NoteFolderKey, NoteIconKey, NoteTagDef } from "@/types/note";
 import type { Project } from "@/types/project";
@@ -231,9 +231,9 @@ export function attachmentToFileMeta(file: File, dataUrl: string): NoteAttachmen
 // users still see the same sample content, now actually editable/persisted.
 
 export function seedNotes(now: Date): Note[] {
-  const iso = (daysAgo: number) => addDays(now, -daysAgo).toISOString();
-
-  return [
+  void now;
+  return [];
+  /*
     {
       id: "n1",
       title: "Протокол All-on-6",
@@ -345,5 +345,5 @@ export function seedNotes(now: Date): Note[] {
       attachments: [],
       links: {},
     },
-  ];
+  */
 }

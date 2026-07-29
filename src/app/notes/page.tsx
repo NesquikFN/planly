@@ -214,6 +214,8 @@ function NotesPageContent() {
               isLoading={!hydrated}
               now={now}
               tagColorFor={tagColorFor}
+              onCreate={handleNewNote}
+              isFiltered={Boolean(searchQuery || filterLabel !== "Все" || activeFolder !== "all")}
             />
 
             <NoteEditor

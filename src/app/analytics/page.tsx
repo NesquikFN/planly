@@ -24,6 +24,7 @@ import { useClock } from "@/hooks/useClock";
 import { useTasksStore } from "@/hooks/useTasksStore";
 import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { useArchiveStore } from "@/hooks/useArchiveStore";
+import { useProjectsStore } from "@/hooks/useProjectsStore";
 import { computeAnalytics } from "@/lib/analytics";
 import { USER_NAME } from "@/lib/app-constants";
 import type { AnalyticsPeriod, ImprovementItem } from "@/types/analytics";
@@ -35,6 +36,7 @@ export default function AnalyticsPage() {
   const { tasks } = useTasksStore();
   const { events } = useCalendarStore();
   const { items: archiveItems } = useArchiveStore();
+  const { projects } = useProjectsStore();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [period, setPeriod] = useState<AnalyticsPeriod>("week");
@@ -63,12 +65,9 @@ export default function AnalyticsPage() {
   );
   const tasksForAnalytics = useMemo(() => [...tasks, ...archivedCompletedTasks], [tasks, archivedCompletedTasks]);
 
-  // ProjectsProvider is only mounted under /projects (see app/projects/layout.tsx) —
-  // reading it here would crash, and mirroring its state would create a second
-  // source of truth, so project metrics honestly report as unavailable instead.
   const data = useMemo(
-    () => computeAnalytics(tasksForAnalytics, events, null, period, today),
-    [tasksForAnalytics, events, period, today],
+    () => computeAnalytics(tasksForAnalytics, events, projects, period, today),
+    [tasksForAnalytics, events, projects, period, today],
   );
 
   function handleStub(title: string, message?: string) {

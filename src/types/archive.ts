@@ -5,6 +5,9 @@
 
 export type ArchiveEntityType = "task" | "projectTask" | "note" | "project" | "event" | "reminder";
 
+/** Why the item ended up in the archive. Absent on records written before this field existed. */
+export type ArchiveReason = "completed" | "deleted";
+
 export interface ArchiveItem {
   id: string;
   entityType: ArchiveEntityType;
@@ -12,6 +15,9 @@ export interface ArchiveItem {
 
   title: string;
   preview?: string;
+
+  /** Why this item was archived — "В архиве" is shown when absent (older records, or entities that don't distinguish). */
+  reason?: ArchiveReason;
 
   /** ISO datetime — when the entity was deleted (moved into the archive). */
   deletedAt: string;

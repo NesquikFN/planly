@@ -18,6 +18,7 @@ import {
   StickyNote,
   Sun,
   User,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useTasksStore } from "@/hooks/useTasksStore";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfileStore, getInitials } from "@/hooks/useProfileStore";
+import { useAuth } from "@/hooks/useAuth";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { Avatar } from "@/components/ui/Avatar";
 import { ComingSoonDialog } from "@/components/ui/ComingSoonDialog";
@@ -46,6 +48,7 @@ const navItems: NavItem[] = [
   { label: "Заметки", icon: StickyNote, href: "/notes" },
   { label: "Напоминания", icon: Bell, href: "/reminders" },
   { label: "Аналитика", icon: BarChart3, href: "/analytics" },
+  { label: "Сообщество", icon: Users, href: "/community" },
 ];
 
 const secondaryItems: NavItem[] = [
@@ -80,8 +83,12 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
   const { setView } = useTasksStore();
   const { theme, toggleTheme } = useTheme();
   const { profile } = useProfileStore();
+  const { user, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+
+  const accountName = profile.displayName || user?.email || "Пользователь";
+  const accountEmail = user?.email ?? null;
 
   const [stubMessage, setStubMessage] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -227,10 +234,10 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
             aria-expanded={userMenuOpen}
             className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
           >
-            <Avatar name={profile.displayName} initials={getInitials(profile)} src={profile.avatarDataUrl} size={36} />
+            <Avatar name={accountName} initials={getInitials(profile)} src={profile.avatarDataUrl} size={36} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{profile.displayName}</p>
-              <p className="truncate text-xs text-gray-400 dark:text-gray-500">Бесплатный план</p>
+              <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{accountName}</p>
+              <p className="truncate text-xs text-gray-400 dark:text-gray-500">{accountEmail ?? "Бесплатный план"}</p>
             </div>
             <ChevronDown
               size={16}
@@ -248,10 +255,18 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     setUserMenuOpen(false);
                     if (key === "profile") {
                       router.push("/settings?tab=profile");
+                      return;
+                    }
+                    if (key === "logout") {
+                      // Signs out of Supabase and clears only the auth-scope
+                      // pointer — local tasks/projects/notes/settings for
+                      // this (or any) account stay on disk untouched.
+                      await signOut();
+                      router.push("/login");
                       return;
                     }
                     setStubMessage(`Раздел «${label}» пока в разработке.`);

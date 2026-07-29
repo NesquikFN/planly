@@ -94,7 +94,7 @@ export interface ProjectProgressItem {
 }
 
 export interface ProjectsAnalyticsData {
-  /** False when ProjectsProvider isn't mounted on this route (see PROJECT_HANDOFF). */
+  /** False only when project data is intentionally unavailable to the caller. */
   available: boolean;
   total: number;
   active: number;

@@ -18,7 +18,6 @@ import { ProjectFormModal } from "@/components/projects/ProjectFormModal";
 import { ProjectDeleteModal } from "@/components/projects/ProjectDeleteModal";
 import { EventModal } from "@/components/calendar/EventModal";
 import { useProjectsStore } from "@/hooks/useProjectsStore";
-import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { useClock } from "@/hooks/useClock";
 import { isProjectOverdue } from "@/lib/projects";
 import { USER_NAME } from "@/lib/app-constants";
@@ -28,9 +27,8 @@ export default function ProjectDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { today } = useClock();
-  const store = useProjectsStore();
-  const { getProjectById, updateProject, deleteProject, toggleStar, moveTask, addTask, deleteTask, canEdit, currentRole, addTag, removeTag, logActivity } = store;
-  const { events, openCreateModal, openEditModal } = useCalendarStore();
+  const { getProjectById, updateProject, deleteProject, toggleStar, moveTask, addTask, updateTask, deleteTask, canEdit, currentRole, logActivity } =
+    useProjectsStore();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ProjectTabKey>("overview");
@@ -70,7 +68,7 @@ export default function ProjectDetailPage() {
       <div className="flex min-h-screen flex-col lg:pl-64">
         <Header userName={USER_NAME} onMenuClick={() => setSidebarOpen(true)} title={project.name} enableTaskSearch={false} />
 
-        <main className="flex-1 space-y-6 px-4 pb-16 sm:px-6 lg:px-8">
+        <main className="flex-1 space-y-5 px-4 pb-16 sm:px-6 lg:px-8">
           <ProjectDetailHeader
             project={project}
             isOverdue={isProjectOverdue(project, today)}
@@ -80,38 +78,23 @@ export default function ProjectDetailPage() {
             onDeleteRequest={() => { if (currentRole(project) === "Owner") setDeleteTarget(project); }}
           />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" disabled={!canEdit(project)} onClick={() => setActiveTab("tasks")} className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-40">Новая задача</button>
-            <button type="button" disabled={!canEdit(project)} onClick={() => openCreateModal({ project: project.name, projectId: project.id })} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium dark:border-gray-700 disabled:opacity-40">Новое событие</button>
-            <form onSubmit={(e) => { e.preventDefault(); const input = new FormData(e.currentTarget).get("tag")?.toString() ?? ""; if (addTag(project.id, input)) e.currentTarget.reset(); }} className="flex gap-1">
-              <input name="tag" disabled={!canEdit(project)} placeholder="Новый тег" className="w-28 rounded-lg border border-gray-200 bg-transparent px-2 py-1.5 text-xs dark:border-gray-700"/>
-              <button disabled={!canEdit(project)} className="rounded-lg bg-gray-100 px-2 text-xs dark:bg-gray-800">Добавить</button>
-            </form>
-            {project.tags.map(tag => <button key={tag} disabled={!canEdit(project)} onClick={() => removeTag(project.id, tag)} title="Удалить тег" className="rounded-full bg-gray-100 px-2 py-1 text-xs dark:bg-gray-800">#{tag} ×</button>)}
-          </div>
-
           <ProjectTabs active={activeTab} onChange={setActiveTab} />
 
-          {activeTab === "overview" && <ProjectOverviewTab project={project} />}
+          {activeTab === "overview" && <ProjectOverviewTab project={project} onOpenTab={setActiveTab} />}
           {activeTab === "tasks" && (
             <ProjectKanbanBoard
               project={project}
               onMoveTask={(taskId, status) => moveTask(project.id, taskId, status)}
               onAddTask={(title) => addTask(project.id, title)}
+              onUpdateTask={(taskId, patch) => updateTask(project.id, taskId, patch)}
               onDeleteTask={(taskId, archive) => deleteTask(project.id, taskId, archive)}
               editable={canEdit(project)}
             />
           )}
-          {activeTab === "notes" && <ProjectNotesTab project={project} />}
+          {activeTab === "notes" && <ProjectNotesTab project={project} editable={canEdit(project)} />}
           {activeTab === "files" && <ProjectFilesTab project={project} />}
           {activeTab === "activity" && <ProjectActivityTab project={project} />}
           {activeTab === "timeline" && <ProjectTimelineTab project={project} />}
-          {activeTab === "overview" && events.filter((event) => event.projectId === project.id).length > 0 && (
-            <section className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-              <h3 className="font-semibold">События проекта</h3>
-              <ul className="mt-2 space-y-2">{events.filter((event) => event.projectId === project.id).map(event => <li key={event.id}><button onClick={() => openEditModal(event.id)} className="text-sm text-blue-600">{event.date} · {event.title}</button></li>)}</ul>
-            </section>
-          )}
           {activeTab === "settings" && (
             <ProjectSettingsTab
               project={project}

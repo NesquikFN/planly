@@ -650,6 +650,22 @@ function computeProductivityScore(params: {
 }): ProductivityScoreData {
   const { completionPercent, onTimePercent, overdueNow, totalTasksNow, streak, periodDaysWithEvents, periodDayCount } = params;
 
+  if (totalTasksNow === 0 && periodDaysWithEvents === 0 && streak === 0) {
+    return {
+      score: null,
+      maxScore: 100,
+      trend: { kind: "none", percent: null },
+      explanation: "Недостаточно данных — добавьте и выполните первую задачу или запланируйте событие.",
+      breakdown: [
+        { key: "completion", label: "Выполнение задач", value: null },
+        { key: "onTime", label: "Соблюдение сроков", value: null },
+        { key: "noOverdue", label: "Без просрочек", value: null },
+        { key: "consistency", label: "Регулярность", value: null },
+        { key: "planning", label: "Планирование в календаре", value: null },
+      ],
+    };
+  }
+
   const noOverdueValue = totalTasksNow > 0 ? (overdueNow === 0 ? 100 : Math.max(0, 100 - overdueNow * 20)) : null;
   const consistencyValue = Math.round(Math.min(1, streak / 7) * 100);
   const planningValue = periodDayCount > 0 ? Math.round((periodDaysWithEvents / periodDayCount) * 100) : null;
@@ -1015,7 +1031,7 @@ export function computeAnalytics(tasks: Task[], events: CalendarEvent[], project
 
   return {
     periodLabel: getPeriodRangeLabel(period, today),
-    hasAnyData: tasks.length > 0 || events.length > 0,
+    hasAnyData: tasks.length > 0 || events.length > 0 || (projects?.length ?? 0) > 0,
     score,
     metrics,
     chart,

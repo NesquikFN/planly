@@ -19,7 +19,7 @@ import type {
   EventFilters,
   NavigationDirection,
 } from "@/types/calendar";
-import { mockCalendars, createMockEvents } from "@/lib/calendar-mock-data";
+import { DEFAULT_CALENDARS } from "@/lib/calendar-mock-data";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { createDefaultFilters, matchesEventFilters } from "@/lib/calendar-filters";
 import { UPCOMING_PREVIEW_COUNT } from "@/lib/calendar-constants";
@@ -35,11 +35,13 @@ import {
   formatMonthYear,
   getMonthGrid,
   getWeekDays,
+  isSameDay,
   startOfMonth,
   startOfWeek,
   toISODate,
 } from "@/lib/date-utils";
 import { timeToMinutes } from "@/lib/calendar-time";
+import { recordDailyActivity } from "@/lib/streak";
 
 const CALENDARS_STORAGE_KEY = "planly:calendars";
 const EVENTS_STORAGE_KEY = "planly:events";
@@ -166,8 +168,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const { now, today } = useClock();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const [calendars, setCalendars] = useState<CalendarDefinition[]>(mockCalendars);
-  const [events, setEvents] = useState<CalendarEvent[]>(() => createMockEvents(today));
+  const [calendars, setCalendars] = useState<CalendarDefinition[]>(DEFAULT_CALENDARS);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   const [anchorDate, setAnchorDate] = useState<Date>(today);
@@ -224,8 +226,13 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   }, [viewMode, anchorDate, monthStart, weekStart]);
 
   const goToToday = useCallback(() => {
-    setAnchorDate(today);
-    setMiniMonth(startOfMonth(today));
+    setAnchorDate((prev) => {
+      if (isSameDay(prev, today)) return prev; // already there — no animation, no flicker
+      setDirection(today.getTime() >= prev.getTime() ? "forward" : "backward");
+      setNavCounter((n) => n + 1);
+      setMiniMonth(startOfMonth(today));
+      return today;
+    });
   }, [today]);
 
   const goToPrevious = useCallback(() => {
@@ -440,6 +447,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const createEvent = useCallback((draft: CalendarEventDraft) => {
     const event = { id: generateId("event"), ...draft };
     setEvents((prev) => [...prev, event]);
+    recordDailyActivity();
     return event;
   }, []);
 

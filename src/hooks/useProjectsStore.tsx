@@ -6,6 +6,7 @@ import { useProfileStore } from "@/hooks/useProfileStore";
 import { computeMilestoneStatus, formatProjectDateLabel } from "@/lib/projects";
 import { fromISODate, formatShortDate, toISODate, addDays, addMonths } from "@/lib/date-utils";
 import { readStorage, writeStorage } from "@/lib/storage";
+import { recordDailyActivity } from "@/lib/streak";
 import type {
   Project, ProjectActivityEntry, ProjectActivityType, ProjectFormValues, ProjectMember,
   ProjectRole, ProjectTask, ProjectTaskStatus, ProjectTimeline, ProjectTimelinePreset,
@@ -137,6 +138,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     const tags = Array.from(new Set(v.tags.split(",").map(x => x.trim()).filter(Boolean)));
     const entry = activity(id, { actionType: p.status !== v.status ? "statusChanged" : "projectEdited", message: p.status !== v.status ? "изменил(а) статус проекта" : "изменил(а) проект", entityType: "project", entityId: id });
     setProjects(prev => prev.map(x => x.id === id ? progress({ ...x, name: v.name.trim(), description: v.description.trim(), color: v.color, status: v.status, priority: v.priority, deadlineKey: v.deadlineKey || null, deadlineLabel: v.deadlineKey ? formatShortDate(fromISODate(v.deadlineKey)) : "—", tags, activity: [entry, ...x.activity] }) : x));
+    recordDailyActivity();
     return true;
   }, [projects, canEdit, activity]);
 

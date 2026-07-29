@@ -13,6 +13,8 @@ interface ProjectsGridProps {
   onEdit: (project: Project) => void;
   onDuplicate: (project: Project) => void;
   onDeleteRequest: (project: Project) => void;
+  onCreate: () => void;
+  isFiltered: boolean;
 }
 
 export function ProjectsGrid({
@@ -23,13 +25,23 @@ export function ProjectsGrid({
   onEdit,
   onDuplicate,
   onDeleteRequest,
+  onCreate,
+  isFiltered,
 }: ProjectsGridProps) {
   if (projects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-800 dark:bg-gray-900">
         <FolderSearch size={28} className="text-gray-300 dark:text-gray-600" />
-        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">Ничего не найдено</p>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Попробуйте изменить запрос или фильтры</p>
+        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+          {isFiltered ? "Ничего не найдено" : "Проектов пока нет"}
+        </p>
+        {isFiltered ? (
+          <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Попробуйте изменить запрос или фильтры</p>
+        ) : (
+          <button type="button" onClick={onCreate} className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+            Создать первый проект
+          </button>
+        )}
       </div>
     );
   }

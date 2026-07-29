@@ -1,31 +1,47 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { readStorage, writeStorage } from "@/lib/storage";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth, describeAuthError } from "@/hooks/useAuth";
 import { DEFAULT_SETTINGS } from "@/lib/settings-defaults";
 import type { ProfileSettings as ProfileSettingsData } from "@/types/settings";
 
-// Profile is intentionally its own store with its own localStorage key,
-// completely separate from `planly:settings` (theme/appearance/notifications/
-// etc). That separation is the fix for "saving the profile resets the
-// theme" — the two used to live in one blob saved by one button.
+// Single source of truth for the Profile form: the Supabase `profiles` row
+// (name/phone/company/bio/timezone/language/avatar) is authoritative and
+// lives in useAuth(). This store only adds the handful of fields that don't
+// have a Supabase column yet (contact-visibility toggles, presence status) —
+// those stay local, scoped per-account via lib/storage.ts.
 
-const PROFILE_STORAGE_KEY = "planly:profile";
+const PROFILE_EXTRAS_KEY = "planly:profileExtras";
+// Pre-Supabase local profile blob. Never written to again — read once (per
+// user) to seed the cloud profile the first time it's empty. See migrateLegacyProfile.
+const LEGACY_PROFILE_KEY = "planly:profile";
+const MIGRATION_FLAG_PREFIX = "planly:profileMigrated:";
 
 export interface ProfileData extends ProfileSettingsData {
-  /** Data URL of the uploaded photo, or null to fall back to initials. */
+  /** Data URL of the uploaded photo, or null to fall back to initials. Mirrors Supabase `avatar_url`. */
   avatarDataUrl: string | null;
 }
 
+type ProfileExtras = Pick<ProfileData, "showEmail" | "showPhone" | "allowProjectInvites" | "status">;
+
 const DEFAULT_PROFILE: ProfileData = { ...DEFAULT_SETTINGS.profile, avatarDataUrl: null };
+const DEFAULT_EXTRAS: ProfileExtras = {
+  showEmail: DEFAULT_PROFILE.showEmail,
+  showPhone: DEFAULT_PROFILE.showPhone,
+  allowProjectInvites: DEFAULT_PROFILE.allowProjectInvites,
+  status: DEFAULT_PROFILE.status,
+};
 
 interface ProfileStoreValue {
-  /** Last saved profile — what every read-only surface (Sidebar, Header, ...) should render. */
+  /** Last saved profile (Supabase fields + local extras) — what every read-only surface (Sidebar, Header, ...) should render. */
   profile: ProfileData;
   /** Working copy edited by the Profile form. */
   draft: ProfileData;
   isDirty: boolean;
   isSaving: boolean;
+  saveError: string | null;
   updateDraft: (patch: Partial<ProfileData>) => void;
   save: () => void;
   cancel: () => void;
@@ -34,20 +50,92 @@ interface ProfileStoreValue {
 const ProfileContext = createContext<ProfileStoreValue | null>(null);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  // Deterministic default on both server and first client render (no
-  // localStorage read here) — avoids a hydration mismatch. The real stored
-  // profile, if any, is swapped in after mount, same pattern as useTasksStore.
-  const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE);
-  const [draft, setDraft] = useState<ProfileData>(DEFAULT_PROFILE);
-  const [isSaving, setIsSaving] = useState(false);
+  const { user, profile: cloud, refreshProfile } = useAuth();
 
+  const [extras, setExtras] = useState<ProfileExtras>(() => readStorage(PROFILE_EXTRAS_KEY, DEFAULT_EXTRAS));
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const migratingUserId = useRef<string | null>(null);
+
+  const profile = useMemo<ProfileData>(
+    () => ({
+      firstName: cloud?.first_name ?? "",
+      lastName: cloud?.last_name ?? "",
+      displayName: cloud?.display_name ?? cloud?.full_name ?? "",
+      email: user?.email ?? "",
+      phone: cloud?.phone ?? "",
+      jobTitle: cloud?.job_title ?? "",
+      company: cloud?.company ?? "",
+      timezone: cloud?.timezone || DEFAULT_PROFILE.timezone,
+      language: cloud?.language || DEFAULT_PROFILE.language,
+      bio: cloud?.bio ?? "",
+      avatarDataUrl: cloud?.avatar_url ?? null,
+      ...extras,
+    }),
+    [cloud, user, extras],
+  );
+
+  const [draft, setDraft] = useState<ProfileData>(profile);
+  useEffect(() => setDraft(profile), [profile]);
+
+  // One-time-per-user: if the cloud profile has no real data yet, seed it
+  // from the old local (pre-Supabase) profile blob so nothing typed before
+  // sign-in is lost. Never overwrites a cloud profile that already has data,
+  // and only ever runs once per user id (tracked by a local flag).
   useEffect(() => {
-    const stored = readStorage<ProfileData | null>(PROFILE_STORAGE_KEY, null);
-    if (stored) {
-      setProfile(stored);
-      setDraft(stored);
+    if (!user || !cloud) return;
+    if (migratingUserId.current === user.id) return;
+
+    const flagKey = `${MIGRATION_FLAG_PREFIX}${user.id}`;
+    if (readStorage(flagKey, false)) return;
+
+    const cloudHasData = Boolean(
+      cloud.first_name || cloud.last_name || cloud.display_name || cloud.phone || cloud.job_title || cloud.company || cloud.bio,
+    );
+    if (cloudHasData) {
+      writeStorage(flagKey, true);
+      return;
     }
-  }, []);
+
+    const legacy = readStorage<ProfileData | null>(LEGACY_PROFILE_KEY, null);
+    if (!legacy) {
+      writeStorage(flagKey, true);
+      return;
+    }
+
+    const supabase = createClient();
+    if (!supabase) return; // Supabase unavailable this render — retry next mount, don't mark as done.
+
+    migratingUserId.current = user.id;
+    supabase
+      .from("profiles")
+      .update({
+        first_name: legacy.firstName || null,
+        last_name: legacy.lastName || null,
+        display_name: legacy.displayName || null,
+        phone: legacy.phone || null,
+        job_title: legacy.jobTitle || null,
+        company: legacy.company || null,
+        bio: legacy.bio || null,
+        timezone: legacy.timezone || null,
+        avatar_url: legacy.avatarDataUrl || null,
+      })
+      .eq("id", user.id)
+      .then(({ error }) => {
+        if (error) return;
+        writeStorage(flagKey, true);
+        const migratedExtras: ProfileExtras = {
+          showEmail: legacy.showEmail,
+          showPhone: legacy.showPhone,
+          allowProjectInvites: legacy.allowProjectInvites,
+          status: legacy.status,
+        };
+        setExtras(migratedExtras);
+        writeStorage(PROFILE_EXTRAS_KEY, migratedExtras);
+        refreshProfile();
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, cloud]);
 
   const isDirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(profile), [draft, profile]);
 
@@ -55,24 +143,59 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setDraft((prev) => ({ ...prev, ...patch }));
   }
 
-  function save() {
-    if (!isDirty || isSaving) return;
+  async function save() {
+    if (!isDirty || isSaving || !user) return;
     setIsSaving(true);
-    const next = draft;
-    // No backend to await — a short delay is only so the "saving..." state
-    // is actually visible, per the task's UX requirement.
-    window.setTimeout(() => {
-      setProfile(next);
-      writeStorage(PROFILE_STORAGE_KEY, next);
+    setSaveError(null);
+
+    const supabase = createClient();
+    if (!supabase) {
       setIsSaving(false);
-    }, 400);
+      setSaveError("Supabase не настроен.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        first_name: draft.firstName.trim() || null,
+        last_name: draft.lastName.trim() || null,
+        display_name: draft.displayName.trim() || null,
+        phone: draft.phone.trim() || null,
+        job_title: draft.jobTitle.trim() || null,
+        company: draft.company.trim() || null,
+        bio: draft.bio.trim() || null,
+        timezone: draft.timezone.trim() || null,
+        language: draft.language,
+        avatar_url: draft.avatarDataUrl,
+      })
+      .eq("id", user.id);
+
+    if (error) {
+      setIsSaving(false);
+      setSaveError(describeAuthError(error));
+      return;
+    }
+
+    const nextExtras: ProfileExtras = {
+      showEmail: draft.showEmail,
+      showPhone: draft.showPhone,
+      allowProjectInvites: draft.allowProjectInvites,
+      status: draft.status,
+    };
+    setExtras(nextExtras);
+    writeStorage(PROFILE_EXTRAS_KEY, nextExtras);
+
+    await refreshProfile();
+    setIsSaving(false);
   }
 
   function cancel() {
     setDraft(profile);
+    setSaveError(null);
   }
 
-  const value: ProfileStoreValue = { profile, draft, isDirty, isSaving, updateDraft, save, cancel };
+  const value: ProfileStoreValue = { profile, draft, isDirty, isSaving, saveError, updateDraft, save, cancel };
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }

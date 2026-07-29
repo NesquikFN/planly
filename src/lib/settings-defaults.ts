@@ -46,6 +46,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
     jobTitle: "Стоматолог-ортопед",
     company: "Planly Workspace",
     timezone: "GMT+4 (Тбилиси)",
+    language: "ru",
     bio: "Занимаюсь имплантологией и протезированием, веду частную практику.",
     showEmail: true,
     showPhone: false,

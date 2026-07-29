@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, Paperclip, X } from "lucide-react";
 import { settingsCard, settingsInput, settingsLabel, settingsSectionTitle } from "@/lib/settings-form-styles";
 import { FEEDBACK_PRIORITY_OPTIONS } from "@/lib/help-mock-data";
+import { writeStorage } from "@/lib/storage";
 import type { FeedbackPriority } from "@/types/help";
 
 export type FeedbackType = "Ошибка" | "Предложение" | "Вопрос";
@@ -39,7 +40,7 @@ export function HelpFeedbackForm({ initialType = "Вопрос" }: HelpFeedbackF
     setIsSubmitting(true);
     window.setTimeout(() => {
       const payload = { type, subject: subject.trim(), description: description.trim(), priority, fileName: attachedFile?.name ?? null, createdAt: new Date().toISOString() };
-      try { window.localStorage.setItem("planly:help-last-feedback", JSON.stringify(payload)); } catch { /* demo state remains in memory */ }
+      writeStorage("planly:help-last-feedback", payload);
       setSubmitted(true);
       setIsSubmitting(false);
       setSubject("");

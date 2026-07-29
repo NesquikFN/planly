@@ -124,6 +124,8 @@ export default function ProjectsPage() {
               onEdit={(project) => setFormModal({ mode: "edit", project })}
               onDuplicate={(project) => duplicateProject(project.id)}
               onDeleteRequest={setDeleteTarget}
+              onCreate={() => setFormModal({ mode: "create" })}
+              isFiltered={Boolean(searchQuery || statusFilter || priorityFilter || tagFilter || summaryFilter !== "all")}
             />
             <ProjectsSidePanel
               onQuickAction={(action) => {

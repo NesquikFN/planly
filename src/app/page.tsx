@@ -6,6 +6,7 @@ import { Header } from "@/components/dashboard/Header";
 import { StatsRow } from "@/components/dashboard/StatsRow";
 import { TaskListCard } from "@/components/dashboard/TaskListCard";
 import { FocusCard } from "@/components/dashboard/FocusCard";
+import { StreakCard } from "@/components/dashboard/StreakCard";
 import { ProgressCard } from "@/components/dashboard/ProgressCard";
 import { TodayCalendarCard } from "@/components/dashboard/TodayCalendarCard";
 import { BottomInput } from "@/components/ai/BottomInput";
@@ -38,6 +39,7 @@ export default function DashboardPage() {
 
                 <div className="flex flex-col gap-6">
                   <FocusCard />
+                  <StreakCard />
                   <ProgressCard />
                   <TodayCalendarCard />
                 </div>

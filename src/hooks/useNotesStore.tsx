@@ -7,6 +7,7 @@ import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { useArchiveStore } from "@/hooks/useArchiveStore";
 import { useProjectsStore } from "@/hooks/useProjectsStore";
 import { DEFAULT_TAG_DEFS, extractPlainText, generateNoteId, nextTagColor, noteExcerpt } from "@/lib/notes";
+import { recordDailyActivity } from "@/lib/streak";
 import type { CalendarColor } from "@/types/calendar";
 import type { Note, NoteAttachment, NoteIconKey, NoteLinks, NoteTagDef } from "@/types/note";
 
@@ -124,6 +125,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       links: {},
     };
     setNotes((prev) => [newNote, ...prev]);
+    recordDailyActivity();
     return id;
   }, []);
 

@@ -11,6 +11,7 @@ export interface ProfileSettings {
   jobTitle: string;
   company: string;
   timezone: string;
+  language: string;
   bio: string;
   showEmail: boolean;
   showPhone: boolean;

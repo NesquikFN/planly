@@ -7,10 +7,11 @@ import { useTasksStore } from "@/hooks/useTasksStore";
 import { filterOptions, sortOptions } from "@/lib/filters";
 
 export function TaskListCard() {
-  const { visibleTasks, activeFilter, setActiveFilter, sortKey, setSortKey } = useTasksStore();
+  const { visibleTasks, activeFilter, setActiveFilter, sortKey, setSortKey, error } = useTasksStore();
 
   return (
     <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+      {error && <p className="mb-3 text-xs font-medium text-red-500 dark:text-red-400">{error}</p>}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Все задачи</h2>
         <div className="flex items-center gap-1.5">
@@ -61,7 +62,9 @@ export function TaskListCard() {
       </ul>
 
       {visibleTasks.length === 0 && (
-        <p className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">Ничего не найдено</p>
+        <p className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
+          {activeFilter === "all" ? "Задач пока нет — создайте первую в поле ниже" : "По выбранному фильтру задач нет"}
+        </p>
       )}
 
       <p className="pt-4 text-center text-sm text-gray-400 dark:text-gray-500">{visibleTasks.length} задач</p>

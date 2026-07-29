@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, Info, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Switch } from "@/components/ui/Switch";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
@@ -10,9 +10,10 @@ import { settingsCard, settingsInput, settingsLabel, settingsSectionTitle } from
 import { cn } from "@/lib/utils";
 import type { PresenceStatus } from "@/types/settings";
 
-// Self-contained: reads/writes the dedicated profile store directly instead
-// of going through the page's generic (theme-included) settings draft — that
-// separation is what stops a profile save from ever touching the theme.
+// One profile, one save button: name/phone/company/bio/timezone/language/
+// avatar all live in the Supabase `profiles` row (source of truth, see
+// useProfileStore); a few fields without a cloud column yet (visibility
+// toggles, presence) stay local but are edited and saved right alongside it.
 
 const STATUS_OPTIONS: { key: PresenceStatus; label: string; dot: string }[] = [
   { key: "available", label: "Доступен", dot: "bg-emerald-500" },
@@ -25,7 +26,7 @@ const BIO_MAX_LENGTH = 200;
 const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024;
 
 export function ProfileSettings() {
-  const { draft, isDirty, isSaving, updateDraft, save, cancel } = useProfileStore();
+  const { draft, isDirty, isSaving, saveError, updateDraft, save, cancel } = useProfileStore();
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +62,13 @@ export function ProfileSettings() {
         onCancel={cancel}
         onSave={save}
       />
+
+      {saveError && <p className="text-xs font-medium text-red-500 dark:text-red-400">{saveError}</p>}
+
+      <p className="flex items-start gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+        <Info size={13} className="mt-0.5 shrink-0" />
+        Данные этого устройства привязаны к аккаунту. Облачная синхронизация рабочих данных будет подключена следующим этапом.
+      </p>
 
       <section className={settingsCard}>
         <div className="flex items-center gap-4">
@@ -113,7 +121,7 @@ export function ProfileSettings() {
           </label>
           <label className="block">
             <span className={settingsLabel}>Email</span>
-            <input type="email" value={draft.email} onChange={(e) => updateDraft({ email: e.target.value })} className={settingsInput} />
+            <input type="email" value={draft.email} disabled className={cn(settingsInput, "opacity-60")} />
           </label>
           <label className="block">
             <span className={settingsLabel}>Телефон</span>
@@ -135,6 +143,13 @@ export function ProfileSettings() {
                   {tz}
                 </option>
               ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className={settingsLabel}>Язык</span>
+            <select value={draft.language} onChange={(e) => updateDraft({ language: e.target.value })} className={settingsInput}>
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
             </select>
           </label>
         </div>

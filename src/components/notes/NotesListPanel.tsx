@@ -23,6 +23,8 @@ interface NotesListPanelProps {
   isLoading?: boolean;
   now: Date;
   tagColorFor: (label: string) => CalendarColor;
+  onCreate?: () => void;
+  isFiltered?: boolean;
 }
 
 export function NotesListPanel({
@@ -38,6 +40,8 @@ export function NotesListPanel({
   isLoading = false,
   now,
   tagColorFor,
+  onCreate,
+  isFiltered,
 }: NotesListPanelProps) {
   const activeFolderDef = LIST_FOLDERS.find((folder) => folder.key === activeFolder) ?? LIST_FOLDERS[0];
 
@@ -84,8 +88,16 @@ export function NotesListPanel({
             <div className="rounded-2xl bg-blue-50 p-3 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
               <FileSearch size={22} />
             </div>
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Ничего не найдено</p>
-            <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">Измените запрос или выберите другую папку.</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              {isFiltered ? "Ничего не найдено" : "Заметок пока нет"}
+            </p>
+            {isFiltered ? (
+              <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">Измените запрос или выберите другую папку.</p>
+            ) : (
+              <button type="button" onClick={onCreate} disabled={!onCreate} className="mt-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:hidden">
+                Создать первую заметку
+              </button>
+            )}
           </div>
         ) : (
           <div className={viewMode === "grid" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-2"}>

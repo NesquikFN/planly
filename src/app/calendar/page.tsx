@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/dashboard/Header";
-import { CalendarSidebarPanel } from "@/components/calendar/CalendarSidebarPanel";
 import { CalendarToolbar } from "@/components/calendar/CalendarToolbar";
 import { CalendarViewTransition } from "@/components/calendar/CalendarViewTransition";
 import { DayView } from "@/components/calendar/DayView";
@@ -55,10 +54,7 @@ function CalendarPageContent() {
         <Header userName={USER_NAME} onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="flex-1 px-4 pb-8 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-            <CalendarSidebarPanel />
-            <CalendarMain />
-          </div>
+          <CalendarMain />
         </main>
       </div>
 
