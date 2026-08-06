@@ -16,9 +16,9 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 };
 
 export const PROJECT_STATUS_BADGE: Record<ProjectStatus, string> = {
-  active: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+  active: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
   completed: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
-  onHold: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+  onHold: "bg-gray-100 text-gray-500 dark:bg-surface-2 dark:text-ink-faint",
 };
 
 export const PROJECT_PRIORITY_LABELS: Record<ProjectPriority, string> = {
@@ -29,8 +29,8 @@ export const PROJECT_PRIORITY_LABELS: Record<ProjectPriority, string> = {
 };
 
 export const PROJECT_PRIORITY_BADGE: Record<ProjectPriority, string> = {
-  low: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
-  medium: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+  low: "bg-gray-100 text-gray-500 dark:bg-surface-2 dark:text-ink-faint",
+  medium: "bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400",
   high: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
   urgent: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
 };
@@ -38,8 +38,8 @@ export const PROJECT_PRIORITY_BADGE: Record<ProjectPriority, string> = {
 // Local copies of Planly's shared card/title tokens (see components/settings
 // for the canonical values) — kept here rather than imported so the Projects
 // module stays self-contained and doesn't reach into other sections.
-export const projectCard = "rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900";
-export const projectSectionTitle = "text-sm font-semibold text-gray-900 dark:text-gray-50";
+export const projectCard = "rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:shadow-none dark:border-white/8 dark:bg-surface";
+export const projectSectionTitle = "text-sm font-semibold text-gray-900 dark:text-ink";
 
 export const PROJECT_TASK_STATUSES: ProjectTaskStatus[] = ["todo", "inProgress", "review", "done"];
 
@@ -51,8 +51,8 @@ export const PROJECT_TASK_STATUS_LABELS: Record<ProjectTaskStatus, string> = {
 };
 
 export const PROJECT_TASK_PRIORITY_DOT: Record<ProjectTask["priority"], string> = {
-  low: "bg-gray-300 dark:bg-gray-600",
-  medium: "bg-blue-400",
+  low: "bg-gray-300 dark:bg-white/20",
+  medium: "bg-teal-400",
   high: "bg-red-400",
 };
 

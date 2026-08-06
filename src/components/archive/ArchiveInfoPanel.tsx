@@ -19,11 +19,11 @@ export function ArchiveInfoPanel({ totalItems, totalSizeLabel, mostRecentLabel }
     <aside className={settingsCard}>
       <h3 className={settingsSectionTitle}>Информация</h3>
 
-      <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
         {rows.map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-            <span className="text-gray-400 dark:text-gray-500">{row.label}</span>
-            <span className="font-medium text-gray-900 dark:text-gray-50">{row.value}</span>
+            <span className="text-gray-400 dark:text-ink-faint">{row.label}</span>
+            <span className="font-medium text-gray-900 dark:text-ink">{row.value}</span>
           </div>
         ))}
       </div>

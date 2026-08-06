@@ -45,7 +45,7 @@ export function DropdownMenu({
 
       {open && (
         <div
-          className={`absolute top-full z-20 mt-1 w-48 rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
+          className={`absolute top-full z-20 mt-1 w-48 rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none ${
             align === "right" ? "right-0" : "left-0"
           }`}
         >
@@ -63,8 +63,8 @@ export function DropdownMenu({
                 item.destructive
                   ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                   : item.active
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                    ? "bg-accent/10 text-accent"
+                    : "text-gray-600 hover:bg-gray-50 dark:text-ink-dim dark:hover:bg-surface-2"
               }`}
             >
               {item.label}

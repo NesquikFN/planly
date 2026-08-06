@@ -77,26 +77,26 @@ export function FilterPanel() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="absolute right-0 top-full z-30 mt-1 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-white/8 dark:bg-surface">
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">По календарям</p>
+            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-ink-faint">По календарям</p>
             <div className="space-y-1">
               {calendars.map((calendar) => (
-                <label key={calendar.id} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
+                <label key={calendar.id} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-surface-2">
                   <input
                     type="checkbox"
                     checked={calendar.visible}
                     onChange={() => toggleCalendarVisibility(calendar.id)}
                     className={`h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 ${calendarColorStyles[calendar.color].accent} focus:ring-0`}
                   />
-                  <span className="truncate text-gray-600 dark:text-gray-300">{calendar.name}</span>
+                  <span className="truncate text-gray-600 dark:text-ink-dim">{calendar.name}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div className="mt-3">
-            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">По цветам</p>
+            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-ink-faint">По цветам</p>
             <div className="flex flex-wrap gap-1.5">
               {CALENDAR_COLORS.map((color) => (
                 <button
@@ -107,7 +107,7 @@ export function FilterPanel() {
                   className={cn(
                     "h-6 w-6 rounded-full transition-shadow",
                     calendarColorStyles[color].dot,
-                    draft.colors.includes(color) && "ring-2 ring-gray-400 ring-offset-2 dark:ring-gray-500 dark:ring-offset-gray-900",
+                    draft.colors.includes(color) && "ring-2 ring-gray-400 ring-offset-2 dark:ring-white/30 dark:ring-offset-surface",
                   )}
                 />
               ))}
@@ -116,26 +116,26 @@ export function FilterPanel() {
 
           <div className="mt-3 space-y-1">
             {PRESET_FIELDS.map((field) => (
-              <label key={field.key} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
+              <label key={field.key} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-surface-2">
                 <input
                   type="checkbox"
                   checked={Boolean(draft[field.key])}
                   onChange={() => togglePreset(field.key)}
                   className="h-3.5 w-3.5 rounded border-gray-300 accent-gray-700 focus:ring-0 dark:border-gray-600 dark:accent-gray-400"
                 />
-                <span className="text-gray-600 dark:text-gray-300">{field.label}</span>
+                <span className="text-gray-600 dark:text-ink-dim">{field.label}</span>
               </label>
             ))}
           </div>
 
           <div className="mt-3">
-            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">Период времени</p>
+            <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-ink-faint">Период времени</p>
             <div className="flex items-center gap-2">
               <PlanlyDatePicker
                 value={draft.dateFrom ?? ""}
                 onChange={(next) => setDraft((prev) => ({ ...prev, dateFrom: next || null }))}
               />
-              <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
+              <span className="text-xs text-gray-400 dark:text-ink-faint">—</span>
               <PlanlyDatePicker
                 value={draft.dateTo ?? ""}
                 onChange={(next) => setDraft((prev) => ({ ...prev, dateTo: next || null }))}
@@ -147,14 +147,14 @@ export function FilterPanel() {
             <button
               type="button"
               onClick={handleReset}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-100 active:bg-gray-200 dark:text-ink-faint dark:hover:bg-surface-2 dark:active:bg-gray-700"
             >
               Сбросить
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-medium text-white hover:bg-accent/90"
             >
               Применить
             </button>

@@ -7,7 +7,7 @@ import { ARCHIVE_DATE_FILTERS, ARCHIVE_TYPE_LABELS } from "@/lib/archive";
 import type { ArchiveDateFilterKey, ArchiveEntityType } from "@/types/archive";
 
 const filterTriggerClass =
-  "inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800";
+  "inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:text-ink-faint dark:hover:bg-surface-2";
 
 interface ArchiveFiltersProps {
   searchQuery: string;
@@ -35,7 +35,7 @@ export function ArchiveFilters({
       <div className="relative min-w-0 flex-1">
         <Search
           size={18}
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-ink-faint"
         />
         <input
           ref={searchInputRef}
@@ -43,7 +43,7 @@ export function ArchiveFilters({
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Поиск по архиву..."
-          className="w-full rounded-2xl border border-gray-100 bg-white py-3 pl-11 pr-4 text-sm text-gray-700 shadow-sm placeholder:text-gray-400 focus:outline-none dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:placeholder:text-gray-500"
+          className="w-full rounded-2xl border border-gray-100 bg-white py-3 pl-11 pr-4 text-sm text-gray-700 shadow-sm placeholder:text-gray-400 focus:outline-none dark:border-white/8 dark:bg-surface dark:text-ink-dim dark:placeholder:text-ink-faint"
         />
       </div>
 

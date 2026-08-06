@@ -123,12 +123,12 @@ export function PlanlyTimePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         className={cn(
-          "flex w-full items-center gap-2 rounded-lg border bg-white px-3 py-2 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:pointer-events-none disabled:opacity-40 dark:bg-gray-800",
-          error ? "border-red-400 dark:border-red-500/60" : "border-gray-200 dark:border-gray-700",
+          "flex w-full items-center gap-2 rounded-lg border bg-white px-3 py-2 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:pointer-events-none disabled:opacity-40 dark:bg-surface-2",
+          error ? "border-red-400 dark:border-red-500/60" : "border-gray-200 dark:border-white/8",
         )}
       >
-        <ClockIcon size={15} className="shrink-0 text-gray-400 dark:text-gray-500" />
-        <span className={cn("flex-1 truncate tabular-nums", value ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>
+        <ClockIcon size={15} className="shrink-0 text-gray-400 dark:text-ink-faint" />
+        <span className={cn("flex-1 truncate tabular-nums", value ? "text-gray-700 dark:text-ink-dim" : "text-gray-400 dark:text-ink-faint")}>
           {value || placeholder}
         </span>
         {canClear && value && !disabled && (
@@ -158,7 +158,7 @@ export function PlanlyTimePicker({
         <div
           role="dialog"
           aria-label="Выбор времени"
-          className="absolute left-0 top-full z-30 mt-1 w-48 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+          className="absolute left-0 top-full z-30 mt-1 w-48 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-white/8 dark:bg-surface"
         >
           <input
             ref={inputRef}
@@ -174,11 +174,11 @@ export function PlanlyTimePicker({
               }
             }}
             onBlur={commitDraft}
-            className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center text-sm tabular-nums text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+            className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center text-sm tabular-nums text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim"
           />
 
           <div className="mt-2 flex gap-1.5">
-            <div className="max-h-40 flex-1 overflow-y-auto rounded-lg border border-gray-100 dark:border-gray-800">
+            <div className="max-h-40 flex-1 overflow-y-auto rounded-lg border border-gray-100 dark:border-white/8">
               {HOURS.map((hour) => {
                 const label = pad2(hour);
                 const isSelected = hourPart === label;
@@ -191,8 +191,8 @@ export function PlanlyTimePicker({
                     className={cn(
                       "block w-full px-2 py-1 text-center text-sm tabular-nums transition-colors",
                       isSelected
-                        ? "bg-blue-600 font-semibold text-white"
-                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800",
+                        ? "bg-accent font-semibold text-white"
+                        : "text-gray-600 hover:bg-gray-100 dark:text-ink-dim dark:hover:bg-surface-2",
                     )}
                   >
                     {label}
@@ -200,7 +200,7 @@ export function PlanlyTimePicker({
                 );
               })}
             </div>
-            <div className="max-h-40 flex-1 overflow-y-auto rounded-lg border border-gray-100 dark:border-gray-800">
+            <div className="max-h-40 flex-1 overflow-y-auto rounded-lg border border-gray-100 dark:border-white/8">
               {minuteOptions.map((minute) => {
                 const label = pad2(minute);
                 const isSelected = minutePart === label;
@@ -213,8 +213,8 @@ export function PlanlyTimePicker({
                     className={cn(
                       "block w-full px-2 py-1 text-center text-sm tabular-nums transition-colors",
                       isSelected
-                        ? "bg-blue-600 font-semibold text-white"
-                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800",
+                        ? "bg-accent font-semibold text-white"
+                        : "text-gray-600 hover:bg-gray-100 dark:text-ink-dim dark:hover:bg-surface-2",
                     )}
                   >
                     {label}
@@ -228,7 +228,7 @@ export function PlanlyTimePicker({
             <button
               type="button"
               onClick={clear}
-              className="mt-2 w-full rounded-lg px-2 py-1.5 text-center text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="mt-2 w-full rounded-lg px-2 py-1.5 text-center text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               Очистить время
             </button>

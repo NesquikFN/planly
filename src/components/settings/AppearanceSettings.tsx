@@ -62,8 +62,8 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
                 className={cn(
                   "rounded-xl border p-3 text-left transition-colors",
                   isActive
-                    ? "border-blue-300 bg-blue-50/60 dark:border-blue-500/50 dark:bg-blue-500/10"
-                    : "border-gray-100 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800",
+                    ? "border-accent/40 bg-accent/5"
+                    : "border-gray-100 hover:bg-gray-50 dark:border-white/8 dark:hover:bg-surface-2",
                 )}
               >
                 <div
@@ -78,7 +78,7 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
                 >
                   <Icon size={16} className={option.key === "light" ? "text-gray-400" : "text-gray-300"} />
                 </div>
-                <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">{option.label}</p>
+                <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-ink-dim">{option.label}</p>
               </button>
             );
           })}
@@ -97,8 +97,8 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
               aria-label={accent.label}
               title={accent.label}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-full ring-offset-2 transition-all dark:ring-offset-gray-900",
-                value.accent === accent.key && "ring-2 ring-gray-300 dark:ring-gray-600",
+                "flex h-9 w-9 items-center justify-center rounded-full ring-offset-2 transition-all dark:ring-offset-surface",
+                value.accent === accent.key && "ring-2 ring-gray-300 dark:ring-white/20",
               )}
             >
               <span className={cn("h-6 w-6 rounded-full", accent.swatch)} />
@@ -120,8 +120,8 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
                 className={cn(
                   "rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
                   value.density === option.key
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                    ? "bg-accent/10 text-accent"
+                    : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2",
                 )}
               >
                 {option.label}
@@ -142,8 +142,8 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
                 className={cn(
                   "rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
                   value.textSize === option.key
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                    ? "bg-accent/10 text-accent"
+                    : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2",
                 )}
               >
                 {option.label}
@@ -155,7 +155,7 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
 
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Живое превью</h3>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Изменится после сохранения на всех страницах</p>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-ink-faint">Изменится после сохранения на всех страницах</p>
         <div
           className={cn(
             "mt-3 rounded-xl border transition-colors",
@@ -179,7 +179,7 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
 
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Боковая панель</h3>
-        <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
           <Switch checked={value.sidebarShowLabels} onChange={(c) => onChange({ sidebarShowLabels: c })} label="Показывать подписи иконок" />
           <Switch checked={value.sidebarAutoCollapse} onChange={(c) => onChange({ sidebarAutoCollapse: c })} label="Сворачивать sidebar автоматически" />
           <Switch checked={value.sidebarShowCounts} onChange={(c) => onChange({ sidebarShowCounts: c })} label="Показывать количество элементов" />
@@ -189,7 +189,7 @@ export function AppearanceSettings({ value, onChange }: AppearanceSettingsProps)
 
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Анимации</h3>
-        <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
           <Switch checked={value.animationsEnabled} onChange={(c) => onChange({ animationsEnabled: c })} label="Включить анимации интерфейса" />
           <Switch checked={value.reduceMotion} onChange={(c) => onChange({ reduceMotion: c })} label="Уменьшить движение" />
           <Switch checked={value.cardAppearAnimation} onChange={(c) => onChange({ cardAppearAnimation: c })} label="Анимация появления карточек" />

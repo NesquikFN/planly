@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { ComingSoonDialog } from "@/components/ui/ComingSoonDialog";
@@ -14,7 +15,6 @@ import { ProjectProgress } from "@/components/analytics/ProjectProgress";
 import { DeadlineAnalytics } from "@/components/analytics/DeadlineAnalytics";
 import { FocusAnalytics } from "@/components/analytics/FocusAnalytics";
 import { ActivityHeatmap } from "@/components/analytics/ActivityHeatmap";
-import { GoalProgress } from "@/components/analytics/GoalProgress";
 import { Achievements } from "@/components/analytics/Achievements";
 import { PersonalInsights } from "@/components/analytics/PersonalInsights";
 import { WeeklySummary } from "@/components/analytics/WeeklySummary";
@@ -27,8 +27,15 @@ import { useArchiveStore } from "@/hooks/useArchiveStore";
 import { useProjectsStore } from "@/hooks/useProjectsStore";
 import { computeAnalytics } from "@/lib/analytics";
 import { USER_NAME } from "@/lib/app-constants";
+import { cn } from "@/lib/utils";
 import type { AnalyticsPeriod, ImprovementItem } from "@/types/analytics";
 import type { Task } from "@/types/task";
+
+// GoalProgress is intentionally not rendered here: Planly has no goals
+// feature/store yet, so the card is a permanently-empty placeholder — exactly
+// the kind of decorative filler the redesign brief asked to cut. The
+// component and its data plumbing (data.goals) are untouched for whenever a
+// real goals feature lands.
 
 export default function AnalyticsPage() {
   const { today } = useClock();
@@ -44,6 +51,11 @@ export default function AnalyticsPage() {
   const [planOpen, setPlanOpen] = useState(false);
   const [stubDialog, setStubDialog] = useState<{ title: string; message?: string } | null>(null);
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
+  // Deadline/focus-time breakdowns and the achievement badges are secondary
+  // signal — real, but not what you need to see on every visit. They're
+  // collapsed by default so the page opens on genuinely useful information
+  // rather than a wall of charts (see redesign brief).
+  const [showMore, setShowMore] = useState(false);
 
   const taskAnalyticsRef = useRef<HTMLDivElement>(null);
   const projectProgressRef = useRef<HTMLDivElement>(null);
@@ -93,24 +105,32 @@ export default function AnalyticsPage() {
     }
 
     setActiveMetric(metricKey);
+    // Deadline/calendar-time breakdowns live in the collapsed secondary
+    // section — expand it so the metric card can actually scroll to something.
+    if (metricKey === "onTime" || metricKey === "calendarTime") setShowMore(true);
+  }
 
+  // Runs after the ref's section is guaranteed to be in the DOM (including
+  // the tick where toggleMetricFocus above also had to expand showMore first).
+  useEffect(() => {
+    if (!activeMetric) return;
     const target =
-      metricKey === "completed" || metricKey === "overdue"
+      activeMetric === "completed" || activeMetric === "overdue"
         ? taskAnalyticsRef.current
-        : metricKey === "onTime"
+        : activeMetric === "onTime"
           ? deadlineAnalyticsRef.current
-          : metricKey === "projects"
+          : activeMetric === "projects"
             ? projectProgressRef.current
-            : metricKey === "calendarTime"
+            : activeMetric === "calendarTime"
               ? focusAnalyticsRef.current
               : null;
 
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
     target?.focus({ preventScroll: true });
-  }
+  }, [activeMetric, showMore]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-950">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-canvas">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex min-h-screen flex-col lg:pl-64">
@@ -154,25 +174,38 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div ref={deadlineAnalyticsRef} tabIndex={-1} className="scroll-mt-6 focus:outline-none">
-                  <DeadlineAnalytics data={data.deadlines} />
-                </div>
-                <div ref={focusAnalyticsRef} tabIndex={-1} className="scroll-mt-6 focus:outline-none">
-                  <FocusAnalytics data={data.calendarTime} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ActivityHeatmap data={data.activity} />
-                <GoalProgress goals={data.goals} />
-              </div>
-
-              <Achievements achievements={data.achievements} />
+              <ActivityHeatmap data={data.activity} />
 
               <PersonalInsights strengths={data.strengths} improvements={data.improvements} onAction={handleImprovementAction} />
 
               <WeeklySummary summary={data.summary} onOpenPlan={() => setPlanOpen(true)} />
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowMore((value) => !value)}
+                  aria-expanded={showMore}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-ink-faint dark:hover:text-ink-dim"
+                >
+                  <ChevronDown size={15} className={cn("transition-transform", showMore && "rotate-180")} />
+                  {showMore ? "Скрыть дополнительные показатели" : "Показать дополнительные показатели"}
+                </button>
+
+                {showMore && (
+                  <div className="mt-4 space-y-6">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                      <div ref={deadlineAnalyticsRef} tabIndex={-1} className="scroll-mt-6 focus:outline-none">
+                        <DeadlineAnalytics data={data.deadlines} />
+                      </div>
+                      <div ref={focusAnalyticsRef} tabIndex={-1} className="scroll-mt-6 focus:outline-none">
+                        <FocusAnalytics data={data.calendarTime} />
+                      </div>
+                    </div>
+
+                    <Achievements achievements={data.achievements} />
+                  </div>
+                )}
+              </div>
             </div>
 
             <AnalyticsSidePanel

@@ -12,7 +12,7 @@ interface ArchiveHeroProps {
 export function ArchiveHero({ totalItems, categoriesWithItems, archivedThisMonth }: ArchiveHeroProps) {
   return (
     <section>
-      <p className="text-sm text-gray-400 dark:text-gray-500">
+      <p className="text-sm text-gray-400 dark:text-ink-faint">
         Задачи, заметки, проекты и напоминания, удалённые из своих разделов — их можно найти и восстановить здесь
       </p>
 

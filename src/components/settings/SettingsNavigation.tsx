@@ -15,9 +15,9 @@ interface SettingsNavigationProps {
 export function SettingsNavigation({ active, onSelect, onResetSettings, onLogout }: SettingsNavigationProps) {
   return (
     <aside className="flex w-full shrink-0 flex-col gap-4 lg:w-64">
-      <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h1 className="text-base font-semibold text-gray-900 dark:text-gray-50">Настройки</h1>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Управление аккаунтом и приложением</p>
+      <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-surface">
+        <h1 className="text-base font-semibold text-gray-900 dark:text-ink">Настройки</h1>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-ink-faint">Управление аккаунтом и приложением</p>
 
         <nav className="mt-4 space-y-1">
           {SETTINGS_CATEGORIES.map((category) => {
@@ -32,8 +32,8 @@ export function SettingsNavigation({ active, onSelect, onResetSettings, onLogout
                 className={cn(
                   "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                    ? "bg-accent/10 text-accent"
+                    : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2",
                 )}
               >
                 <Icon size={16} className="shrink-0" />
@@ -44,11 +44,11 @@ export function SettingsNavigation({ active, onSelect, onResetSettings, onLogout
         </nav>
       </div>
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-2 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="rounded-2xl border border-gray-100 bg-white p-2 shadow-sm dark:border-white/8 dark:bg-surface">
         <button
           type="button"
           onClick={onResetSettings}
-          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
         >
           <RotateCcw size={16} />
           Сбросить настройки

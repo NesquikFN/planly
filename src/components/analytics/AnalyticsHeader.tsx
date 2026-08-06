@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarRange, Download, MoreHorizontal, Scale } from "lucide-react";
+import { BUTTON_PRIMARY } from "@/lib/ui-tokens";
 import { cn } from "@/lib/utils";
 import type { AnalyticsPeriod } from "@/types/analytics";
 
@@ -36,12 +37,12 @@ export function AnalyticsHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <p className="text-sm text-gray-400 dark:text-gray-500">Ваши результаты, прогресс и продуктивность</p>
-        <p className="mt-2 text-xs font-medium text-gray-400 dark:text-gray-500">{periodLabel}</p>
+        <p className="text-sm text-gray-400 dark:text-ink-faint">Ваши результаты, прогресс и продуктивность</p>
+        <p className="mt-2 text-xs font-medium text-gray-400 dark:text-ink-faint">{periodLabel}</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
           {PERIOD_OPTIONS.map((option) => (
             <button
               key={option.key}
@@ -51,8 +52,8 @@ export function AnalyticsHeader({
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 period === option.key
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                  : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                  ? "bg-accent/10 text-accent"
+                  : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2",
               )}
             >
               {option.label}
@@ -63,7 +64,7 @@ export function AnalyticsHeader({
         <button
           type="button"
           onClick={onCustomRange}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2 text-xs font-medium text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2 text-xs font-medium text-gray-500 shadow-sm hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:text-ink-faint dark:hover:bg-surface-2 dark:shadow-none"
         >
           <CalendarRange size={14} />
           Свой диапазон
@@ -74,10 +75,10 @@ export function AnalyticsHeader({
           onClick={onToggleCompare}
           aria-pressed={compareEnabled}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium shadow-sm transition-colors",
+            "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium shadow-sm transition-colors dark:shadow-none",
             compareEnabled
-              ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-400"
-              : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800",
+              ? "border-accent/40 bg-accent/10 text-accent"
+              : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:text-ink-faint dark:hover:bg-surface-2",
           )}
         >
           <Scale size={14} />
@@ -87,7 +88,7 @@ export function AnalyticsHeader({
         <button
           type="button"
           onClick={onExport}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-700"
+          className={cn(BUTTON_PRIMARY, "rounded-xl px-3 py-2 text-xs")}
         >
           <Download size={14} />
           Экспорт отчёта
@@ -97,7 +98,7 @@ export function AnalyticsHeader({
           type="button"
           onClick={onMoreSettings}
           aria-label="Дополнительные настройки"
-          className="rounded-xl border border-gray-100 bg-white p-2 text-gray-400 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+          className="rounded-xl border border-gray-100 bg-white p-2 text-gray-400 shadow-sm hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:hover:bg-surface-2 dark:shadow-none"
         >
           <MoreHorizontal size={16} />
         </button>

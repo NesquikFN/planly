@@ -39,19 +39,19 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-950">
+      <div className="min-h-screen bg-[#FAFAFA] dark:bg-canvas">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="flex min-h-screen flex-col lg:pl-64">
           <Header userName={USER_NAME} onMenuClick={() => setSidebarOpen(true)} title="Проект не найден" enableTaskSearch={false} />
           <main className="flex flex-1 flex-col items-center justify-center gap-3 px-4 pb-16 text-center">
-            <FolderX size={32} className="text-gray-300 dark:text-gray-600" />
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <FolderX size={32} className="text-gray-300 dark:text-ink-faint" />
+            <p className="text-sm font-medium text-gray-500 dark:text-ink-faint">
               Такого проекта нет — возможно, он был удалён или перемещён в архив.
             </p>
             <button
               type="button"
               onClick={() => router.push("/projects")}
-              className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90"
             >
               Вернуться к проектам
             </button>
@@ -62,7 +62,7 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-950">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-canvas">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex min-h-screen flex-col lg:pl-64">

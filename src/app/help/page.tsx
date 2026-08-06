@@ -64,7 +64,7 @@ export default function HelpPage() {
   function closeDialog() { setDialog(null); setSelectedGuide(null); }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#FAFAFA] dark:bg-gray-950">
+    <div className="h-screen overflow-hidden bg-[#FAFAFA] dark:bg-canvas">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex h-screen flex-col lg:pl-64">
@@ -79,7 +79,7 @@ export default function HelpPage() {
         <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-8 sm:px-6 lg:px-8">
           <HelpHero ref={searchInputRef} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-          {isEmptySearch && <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">Ничего не найдено. Попробуйте изменить запрос или очистить поле поиска.</div>}
+          {isEmptySearch && <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-5 py-10 text-center text-sm text-gray-500 dark:border-white/8 dark:bg-surface dark:text-ink-faint">Ничего не найдено. Попробуйте изменить запрос или очистить поле поиска.</div>}
 
           <HelpQuickActions actions={visibleActions} onAction={handleQuickAction} />
 
@@ -94,10 +94,10 @@ export default function HelpPage() {
       </div>
 
       <HelpDialog open={dialog !== null} onClose={closeDialog} onBack={dialog === "guide" ? () => { setDialog(null); setSelectedGuide(null); guidesRef.current?.scrollIntoView({ behavior: "smooth" }); } : undefined} title={dialog === "onboarding" ? "Начать работу с Planly" : dialog === "shortcuts" ? "Горячие клавиши" : dialog === "videos" ? "Видеоинструкции" : selectedGuide?.title ?? "Руководство"}>
-        {dialog === "onboarding" && <ol className="space-y-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300"><li><strong className="text-gray-900 dark:text-gray-50">1.</strong> Добавьте первую задачу на главной странице.</li><li><strong className="text-gray-900 dark:text-gray-50">2.</strong> Укажите дату — задача появится в календаре.</li><li><strong className="text-gray-900 dark:text-gray-50">3.</strong> Настройте тему и рабочий ритм в настройках.</li></ol>}
-        {dialog === "shortcuts" && <dl className="divide-y divide-gray-100 text-sm dark:divide-gray-800"><div className="flex justify-between py-3"><dt className="text-gray-600 dark:text-gray-300">Открыть поиск</dt><dd className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">/</dd></div><div className="flex justify-between py-3"><dt className="text-gray-600 dark:text-gray-300">Создать задачу</dt><dd className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">N</dd></div><div className="flex justify-between py-3"><dt className="text-gray-600 dark:text-gray-300">Закрыть окно</dt><dd className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">Esc</dd></div></dl>}
-        {dialog === "videos" && <ul className="space-y-3">{["Первые шаги в Planly", "Планирование недели", "Работа с календарём"].map((title, index) => <li key={title} className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">Видео {index + 1}: {title}<span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">Демонстрационный материал, воспроизведение не подключено.</span></li>)}</ul>}
-        {dialog === "guide" && selectedGuide && <ol className="space-y-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{(GUIDE_TEXT[selectedGuide.key] ?? []).map((step) => <li key={step} className="rounded-xl bg-gray-50 p-3 dark:bg-gray-800">{step}</li>)}</ol>}
+        {dialog === "onboarding" && <ol className="space-y-3 text-sm leading-relaxed text-gray-600 dark:text-ink-dim"><li><strong className="text-gray-900 dark:text-ink">1.</strong> Добавьте первую задачу на главной странице.</li><li><strong className="text-gray-900 dark:text-ink">2.</strong> Укажите дату — задача появится в календаре.</li><li><strong className="text-gray-900 dark:text-ink">3.</strong> Настройте тему и рабочий ритм в настройках.</li></ol>}
+        {dialog === "shortcuts" && <dl className="divide-y divide-gray-100 text-sm dark:divide-white/8"><div className="flex justify-between py-3"><dt className="text-gray-600 dark:text-ink-dim">Открыть поиск</dt><dd className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-surface-2 dark:text-ink-dim">/</dd></div><div className="flex justify-between py-3"><dt className="text-gray-600 dark:text-ink-dim">Создать задачу</dt><dd className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-surface-2 dark:text-ink-dim">N</dd></div><div className="flex justify-between py-3"><dt className="text-gray-600 dark:text-ink-dim">Закрыть окно</dt><dd className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-700 dark:bg-surface-2 dark:text-ink-dim">Esc</dd></div></dl>}
+        {dialog === "videos" && <ul className="space-y-3">{["Первые шаги в Planly", "Планирование недели", "Работа с календарём"].map((title, index) => <li key={title} className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim">Видео {index + 1}: {title}<span className="mt-1 block text-xs text-gray-500 dark:text-ink-faint">Демонстрационный материал, воспроизведение не подключено.</span></li>)}</ul>}
+        {dialog === "guide" && selectedGuide && <ol className="space-y-3 text-sm leading-relaxed text-gray-600 dark:text-ink-dim">{(GUIDE_TEXT[selectedGuide.key] ?? []).map((step) => <li key={step} className="rounded-xl bg-gray-50 p-3 dark:bg-surface-2">{step}</li>)}</ol>}
       </HelpDialog>
     </div>
   );

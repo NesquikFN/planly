@@ -141,7 +141,7 @@ export function ProjectNotesTab({ project, editable }: ProjectNotesTabProps) {
                 Прикрепить заметку
               </>
             }
-            triggerClassName="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            triggerClassName="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
             align="right"
             items={unlinkedNotes.map((note) => ({
               key: note.id,
@@ -170,13 +170,13 @@ export function ProjectNotesTab({ project, editable }: ProjectNotesTabProps) {
 
         <div className="flex min-h-0 flex-col gap-2">
           {activeNote && activeNoteIsLinked && (
-            <div className="flex shrink-0 items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+            <div className="flex shrink-0 items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:border-white/8 dark:bg-surface dark:text-ink-faint">
               <span>Прикреплена к проекту «{project.name}»</span>
               {editable && (
                 <button
                   type="button"
                   onClick={() => handleDetach(activeNote.id)}
-                  className="inline-flex items-center gap-1 font-medium text-gray-600 hover:text-red-500 dark:text-gray-300"
+                  className="inline-flex items-center gap-1 font-medium text-gray-600 hover:text-red-500 dark:text-ink-dim"
                 >
                   <Unlink size={12} />
                   Открепить

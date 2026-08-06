@@ -22,27 +22,27 @@ export function IntegrationSettings({ value, onToggle, onStub }: IntegrationSett
         return (
           <section key={integration.key} className={settingsCard}>
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-500 dark:bg-surface-2 dark:text-ink-faint">
                 <Icon size={18} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{integration.name}</p>
+                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-ink">{integration.name}</p>
                   <span
                     className={cn(
                       "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
                       connected
                         ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                        : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500",
+                        : "bg-gray-100 text-gray-400 dark:bg-surface-2 dark:text-ink-faint",
                     )}
                   >
                     {connected ? "Подключено" : "Не подключено"}
                   </span>
                 </div>
-                <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{integration.description}</p>
+                <p className="mt-0.5 text-xs text-gray-400 dark:text-ink-faint">{integration.description}</p>
 
                 {connected && integration.lastSync && (
-                  <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-400 dark:text-gray-500">
+                  <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-400 dark:text-ink-faint">
                     <span>Синхронизация: {integration.lastSync}</span>
                     {integration.syncedData && <span>· {integration.syncedData}</span>}
                   </div>
@@ -56,7 +56,7 @@ export function IntegrationSettings({ value, onToggle, onStub }: IntegrationSett
                   <button
                     type="button"
                     onClick={() => onStub(`Синхронизация «${integration.name}» запущена.`)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
                   >
                     <RefreshCw size={12} />
                     Синхронизировать
@@ -64,7 +64,7 @@ export function IntegrationSettings({ value, onToggle, onStub }: IntegrationSett
                   <button
                     type="button"
                     onClick={() => onStub(`Настройки «${integration.name}» появятся в одном из следующих обновлений.`)}
-                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
                   >
                     Настроить
                   </button>
@@ -80,7 +80,7 @@ export function IntegrationSettings({ value, onToggle, onStub }: IntegrationSett
                 <button
                   type="button"
                   onClick={() => onToggle(integration.key)}
-                  className="rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                  className="rounded-lg bg-accent px-3.5 py-1.5 text-xs font-medium text-white hover:bg-accent/90"
                 >
                   Подключить
                 </button>

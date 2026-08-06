@@ -154,7 +154,7 @@ function RemindersPageContent() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#FAFAFA] dark:bg-gray-950">
+    <div className="h-screen overflow-hidden bg-[#FAFAFA] dark:bg-canvas">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex h-screen flex-col lg:pl-64">

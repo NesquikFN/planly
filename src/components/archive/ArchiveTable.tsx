@@ -7,7 +7,7 @@ import { settingsCard } from "@/lib/settings-form-styles";
 import { cn } from "@/lib/utils";
 import type { ArchiveItem, ArchiveReason } from "@/types/archive";
 
-const checkboxClass = "h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-0 dark:border-gray-600 dark:bg-gray-800";
+const checkboxClass = "h-4 w-4 shrink-0 rounded border-gray-300 accent-accent focus:ring-0 dark:border-white/8 dark:bg-surface-2";
 
 // Neutral, non-alarming states — "completed" and "deleted" both just describe
 // how the item got here, neither is a warning. Records without a reason
@@ -19,11 +19,11 @@ const REASON_BADGE: Record<ArchiveReason | "unknown", { label: string; className
   },
   deleted: {
     label: "Удалена",
-    className: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+    className: "bg-gray-100 text-gray-500 dark:bg-surface-2 dark:text-ink-faint",
   },
   unknown: {
     label: "В архиве",
-    className: "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500",
+    className: "bg-gray-100 text-gray-400 dark:bg-surface-2 dark:text-ink-faint",
   },
 };
 
@@ -50,7 +50,7 @@ export function ArchiveTable({ items, selectedIds, onToggleSelect, onToggleSelec
 
   if (items.length === 0) {
     return (
-      <div className={cn(settingsCard, "text-center text-sm text-gray-400 dark:text-gray-500")}>
+      <div className={cn(settingsCard, "text-center text-sm text-gray-400 dark:text-ink-faint")}>
         Ничего не найдено по текущим фильтрам
       </div>
     );
@@ -60,7 +60,7 @@ export function ArchiveTable({ items, selectedIds, onToggleSelect, onToggleSelec
     <div className={cn(settingsCard, "overflow-x-auto p-0")}>
       <table className="w-full min-w-[680px] text-left text-sm">
         <thead>
-          <tr className="border-b border-gray-100 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+          <tr className="border-b border-gray-100 text-xs text-gray-400 dark:border-white/8 dark:text-ink-faint">
             <th className="w-10 px-4 py-3">
               <input type="checkbox" checked={allSelected} onChange={onToggleSelectAll} aria-label="Выбрать всё" className={checkboxClass} />
             </th>
@@ -73,13 +73,13 @@ export function ArchiveTable({ items, selectedIds, onToggleSelect, onToggleSelec
             <th className="w-10 px-4 py-3" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+        <tbody className="divide-y divide-gray-100 dark:divide-white/8">
           {items.map((item) => {
             const Icon = resolveArchiveIcon(item);
             const isSelected = selectedIds.has(item.id);
 
             return (
-              <tr key={item.id} className={cn(isSelected && "bg-blue-50/40 dark:bg-blue-500/5")}>
+              <tr key={item.id} className={cn(isSelected && "bg-accent/5")}>
                 <td className="px-4 py-3">
                   <input
                     type="checkbox"
@@ -91,26 +91,26 @@ export function ArchiveTable({ items, selectedIds, onToggleSelect, onToggleSelec
                 </td>
                 <td className="px-2 py-3">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-surface-2 dark:text-ink-faint">
                       <Icon size={15} />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-gray-900 dark:text-gray-50">{item.title}</p>
-                      {item.preview && <p className="truncate text-xs text-gray-400 dark:text-gray-500">{item.preview}</p>}
+                      <p className="truncate font-medium text-gray-900 dark:text-ink">{item.title}</p>
+                      {item.preview && <p className="truncate text-xs text-gray-400 dark:text-ink-faint">{item.preview}</p>}
                     </div>
                   </div>
                 </td>
-                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{ARCHIVE_TYPE_LABELS[item.entityType]}</td>
+                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-ink-faint">{ARCHIVE_TYPE_LABELS[item.entityType]}</td>
                 <td className="whitespace-nowrap px-2 py-3">
                   <ReasonBadge reason={item.reason} />
                 </td>
-                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{item.sourceModule}</td>
-                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{formatDeletedAtLabel(item.deletedAt)}</td>
-                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-gray-400">{formatByteSize(estimateItemBytes(item))}</td>
+                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-ink-faint">{item.sourceModule}</td>
+                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-ink-faint">{formatDeletedAtLabel(item.deletedAt)}</td>
+                <td className="whitespace-nowrap px-2 py-3 text-gray-500 dark:text-ink-faint">{formatByteSize(estimateItemBytes(item))}</td>
                 <td className="px-2 py-3 text-right">
                   <DropdownMenu
                     trigger={<MoreVertical size={16} />}
-                    triggerClassName="rounded-lg p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800"
+                    triggerClassName="rounded-lg p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-ink-faint dark:hover:bg-surface-2"
                     triggerAriaLabel="Действия"
                     items={[
                       { key: "restore", label: "Восстановить", onSelect: () => onRestore(item) },

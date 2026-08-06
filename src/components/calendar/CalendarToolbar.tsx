@@ -1,10 +1,10 @@
 "use client";
 
-import { ChevronDown, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useCalendarStore } from "@/hooks/useCalendarStore";
 import { FilterPanel } from "@/components/calendar/FilterPanel";
 import type { CalendarViewMode } from "@/types/calendar";
-import { calendarButtonBase, calendarButtonIdle, calendarButtonSelected, calendarIconButton } from "@/lib/calendar-button-styles";
+import { calendarButtonBase, calendarButtonIdle, calendarIconButton } from "@/lib/calendar-button-styles";
 import { cn } from "@/lib/utils";
 
 const VIEW_MODE_LABELS: Record<CalendarViewMode, string> = {
@@ -23,18 +23,23 @@ const NAV_LABELS: Record<CalendarViewMode, { prev: string; next: string }> = {
 
 const VIEW_MODES: CalendarViewMode[] = ["day", "week", "month", "agenda"];
 
+// Calm, minimal toolbar: period + navigation on the left, view switcher +
+// filter + create on the right. No standing filter pills — calendar
+// visibility lives entirely in FilterPanel's popover (see brief: filters
+// shouldn't be permanently on screen).
 export function CalendarToolbar() {
-  const { periodLabel, goToToday, goToPrevious, goToNext, viewMode, setViewMode, openCreateModal } =
-    useCalendarStore();
+  const { periodLabel, goToToday, goToPrevious, goToNext, viewMode, setViewMode, openCreateModal } = useCalendarStore();
   const navLabels = NAV_LABELS[viewMode];
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 dark:border-gray-800 sm:p-5">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-gray-100 p-4 dark:border-white/[0.06] sm:px-5 sm:py-4">
       <div className="flex items-center gap-3">
+        <span className="text-lg font-semibold text-gray-900 dark:text-ink">{periodLabel}</span>
+
         <button
           type="button"
           onClick={goToToday}
-          className={cn(calendarButtonBase, calendarButtonIdle, "border-gray-200 px-3 py-1.5 dark:border-gray-700")}
+          className={cn(calendarButtonBase, calendarButtonIdle, "border-gray-200 px-3 py-1.5 dark:border-white/8")}
         >
           Сегодня
         </button>
@@ -47,15 +52,10 @@ export function CalendarToolbar() {
             <ChevronRight size={18} />
           </button>
         </div>
-
-        <span className="inline-flex items-center gap-1 text-base font-semibold text-gray-900 dark:text-gray-50">
-          {periodLabel}
-          <ChevronDown size={15} className="text-gray-400 dark:text-gray-500" />
-        </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-lg bg-gray-50 p-1 text-sm dark:bg-gray-800">
+        <div className="flex items-center rounded-lg bg-gray-50 p-1 text-sm dark:bg-surface-2">
           {VIEW_MODES.map((mode) => (
             <button
               key={mode}
@@ -65,7 +65,9 @@ export function CalendarToolbar() {
               className={cn(
                 calendarButtonBase,
                 "px-3 py-1.5",
-                viewMode === mode ? calendarButtonSelected : "border border-transparent hover:bg-white dark:hover:bg-gray-900",
+                viewMode === mode
+                  ? "border border-gray-200 bg-white text-gray-900 dark:border-white/8 dark:bg-surface dark:text-ink"
+                  : "border border-transparent hover:bg-white dark:hover:bg-surface",
               )}
             >
               {VIEW_MODE_LABELS[mode]}
@@ -78,11 +80,10 @@ export function CalendarToolbar() {
         <button
           type="button"
           onClick={() => openCreateModal()}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-blue-700 active:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-1"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-accent/90 active:bg-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-canvas"
         >
           <Plus size={16} />
-          Добавить
-          <ChevronDown size={14} className="opacity-70" />
+          Добавить событие
         </button>
       </div>
     </div>

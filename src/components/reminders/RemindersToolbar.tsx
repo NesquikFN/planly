@@ -48,7 +48,7 @@ export function RemindersToolbar({
       <div className="relative min-w-[220px] flex-1">
         <Search
           size={18}
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-ink-faint"
         />
         <input
           ref={searchInputRef}
@@ -56,7 +56,7 @@ export function RemindersToolbar({
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Поиск напоминаний..."
-          className="w-full rounded-2xl border border-gray-100 bg-white py-3 pl-11 pr-4 text-sm text-gray-700 shadow-sm placeholder:text-gray-400 focus:outline-none dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:placeholder:text-gray-500"
+          className="w-full rounded-2xl border border-gray-100 bg-white py-3 pl-11 pr-4 text-sm text-gray-700 shadow-sm placeholder:text-gray-400 focus:outline-none dark:border-white/8 dark:bg-surface dark:text-ink-dim dark:placeholder:text-ink-faint dark:shadow-none"
         />
       </div>
 
@@ -68,7 +68,7 @@ export function RemindersToolbar({
               {priorityFilter ? PRIORITY_OPTIONS.find((option) => option.key === priorityFilter)?.label : "Фильтр"}
             </>
           }
-          triggerClassName="inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800"
+          triggerClassName="inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:text-ink-faint dark:hover:bg-surface-2 dark:shadow-none"
           items={[
             { key: "all", label: "Все приоритеты", active: priorityFilter === null, onSelect: () => onPriorityFilterChange(null) },
             ...PRIORITY_OPTIONS.map((option) => ({
@@ -87,7 +87,7 @@ export function RemindersToolbar({
               {sortLabel}
             </>
           }
-          triggerClassName="inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800"
+          triggerClassName="inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:text-ink-faint dark:hover:bg-surface-2 dark:shadow-none"
           items={sortOptions.map((option) => ({
             key: option.key,
             label: option.label,
@@ -96,7 +96,7 @@ export function RemindersToolbar({
           }))}
         />
 
-        <div className="flex items-center rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
           <button
             type="button"
             onClick={() => onViewModeChange("list")}
@@ -105,8 +105,8 @@ export function RemindersToolbar({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
               viewMode === "list"
-                ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
-                : "text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800",
+                ? "bg-gray-100 text-gray-900 dark:bg-surface-2 dark:text-ink"
+                : "text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2",
             )}
           >
             <LayoutList size={15} />
@@ -120,8 +120,8 @@ export function RemindersToolbar({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
               viewMode === "schedule"
-                ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
-                : "text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800",
+                ? "bg-gray-100 text-gray-900 dark:bg-surface-2 dark:text-ink"
+                : "text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2",
             )}
           >
             <Rows3 size={15} />
@@ -133,7 +133,7 @@ export function RemindersToolbar({
           type="button"
           onClick={onMoreSettings}
           aria-label="Дополнительные настройки"
-          className="rounded-xl border border-gray-100 bg-white p-2.5 text-gray-400 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+          className="rounded-xl border border-gray-100 bg-white p-2.5 text-gray-400 shadow-sm hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:hover:bg-surface-2 dark:shadow-none"
         >
           <MoreHorizontal size={17} />
         </button>

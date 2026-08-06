@@ -5,12 +5,13 @@ import { LayoutGrid, List, Plus, Search } from "lucide-react";
 import { ProjectKanbanCard } from "@/components/projects/detail/ProjectKanbanCard";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { PROJECT_TASK_STATUSES, PROJECT_TASK_STATUS_LABELS, getMemberById, groupTasksByStatus } from "@/lib/projects";
+import { BUTTON_PRIMARY } from "@/lib/ui-tokens";
 import { cn } from "@/lib/utils";
 import type { Project, ProjectTask, ProjectTaskPriority, ProjectTaskStatus } from "@/types/project";
 
 const COLUMN_ACCENT: Record<ProjectTaskStatus, string> = {
-  todo: "bg-gray-300 dark:bg-gray-600",
-  inProgress: "bg-blue-400",
+  todo: "bg-gray-300 dark:bg-white/20",
+  inProgress: "bg-accent",
   review: "bg-amber-400",
   done: "bg-emerald-400",
 };
@@ -77,8 +78,8 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Задачи проекта</h2>
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-ink">Задачи проекта</h2>
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-surface-2 dark:text-ink-faint">
             {filteredTasks.length}
           </span>
         </div>
@@ -87,7 +88,7 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
           <button
             type="button"
             onClick={() => setComposerOpen((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className={cn(BUTTON_PRIMARY, "px-3.5 py-2")}
           >
             <Plus size={15} />
             Новая задача
@@ -103,9 +104,9 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
             value={newTaskTitle}
             onChange={(event) => setNewTaskTitle(event.target.value)}
             placeholder="Название задачи..."
-            className="w-full max-w-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+            className="w-full max-w-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim dark:focus:border-white/20"
           />
-          <button type="submit" className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          <button type="submit" className={cn(BUTTON_PRIMARY, "px-3 py-2")}>
             Добавить
           </button>
         </form>
@@ -113,19 +114,19 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[180px] flex-1">
-          <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+          <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-ink-faint" />
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Поиск задач..."
-            className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-2 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+            className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-2 text-xs text-gray-700 focus:outline-none dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim dark:focus:border-white/20"
           />
         </div>
 
         <DropdownMenu
-          trigger={<span className={assigneeFilter ? "text-blue-600 dark:text-blue-400" : undefined}>{assigneeLabel} ▾</span>}
-          triggerClassName="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          trigger={<span className={assigneeFilter ? "text-accent" : undefined}>{assigneeLabel} ▾</span>}
+          triggerClassName="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
           items={[
             { key: "all", label: "Все исполнители", active: !assigneeFilter, onSelect: () => setAssigneeFilter(null) },
             ...project.members.map((member) => ({
@@ -138,8 +139,8 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
         />
 
         <DropdownMenu
-          trigger={<span className={priorityFilter ? "text-blue-600 dark:text-blue-400" : undefined}>{priorityLabel} ▾</span>}
-          triggerClassName="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          trigger={<span className={priorityFilter ? "text-accent" : undefined}>{priorityLabel} ▾</span>}
+          triggerClassName="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
           items={[
             { key: "all", label: "Любой приоритет", active: !priorityFilter, onSelect: () => setPriorityFilter(null) },
             ...(Object.keys(PRIORITY_LABELS) as ProjectTaskPriority[]).map((priority) => ({
@@ -151,13 +152,13 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
           ]}
         />
 
-        <div className="ml-auto flex items-center rounded-lg border border-gray-200 p-0.5 dark:border-gray-700">
+        <div className="ml-auto flex items-center rounded-lg border border-gray-200 p-0.5 dark:border-white/8">
           <button
             type="button"
             onClick={() => setView("kanban")}
             aria-pressed={view === "kanban"}
             aria-label="Kanban"
-            className={cn("rounded-md p-1.5", view === "kanban" ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50" : "text-gray-400")}
+            className={cn("rounded-md p-1.5", view === "kanban" ? "bg-gray-100 text-gray-900 dark:bg-surface-2 dark:text-ink" : "text-gray-400")}
           >
             <LayoutGrid size={14} />
           </button>
@@ -166,7 +167,7 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
             onClick={() => setView("list")}
             aria-pressed={view === "list"}
             aria-label="Список"
-            className={cn("rounded-md p-1.5", view === "list" ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50" : "text-gray-400")}
+            className={cn("rounded-md p-1.5", view === "list" ? "bg-gray-100 text-gray-900 dark:bg-surface-2 dark:text-ink" : "text-gray-400")}
           >
             <List size={14} />
           </button>
@@ -185,14 +186,18 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
               onDragLeave={() => setDragOverColumn((current) => (current === status ? null : current))}
               onDrop={(event) => handleDrop(event, status)}
               className={cn(
-                "flex min-h-[16rem] flex-col rounded-2xl border border-gray-100 bg-gray-50/60 p-3 transition-colors dark:border-gray-800 dark:bg-gray-900/40",
-                dragOverColumn === status && "border-blue-300 bg-blue-50/50 dark:border-blue-500/40 dark:bg-blue-500/5",
+                "flex min-h-[16rem] flex-col gap-3 rounded-xl p-1.5 transition-colors",
+                dragOverColumn === status && "bg-accent/[0.04] ring-1 ring-accent/25",
               )}
             >
-              <div className="flex items-center gap-2 px-1 pb-2">
-                <span className={cn("h-2 w-2 rounded-full", COLUMN_ACCENT[status])} />
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">{PROJECT_TASK_STATUS_LABELS[status]}</h3>
-                <span className="text-xs text-gray-400 dark:text-gray-500">{groups[status].length}</span>
+              <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-1 pb-2 dark:border-white/8">
+                <div className="flex items-center gap-2">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", COLUMN_ACCENT[status])} />
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-ink-faint">
+                    {PROJECT_TASK_STATUS_LABELS[status]}
+                  </h3>
+                </div>
+                <span className="text-xs tabular-nums text-gray-400 dark:text-ink-faint">{groups[status].length}</span>
               </div>
 
               <div className="flex flex-1 flex-col gap-2">
@@ -211,7 +216,7 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
                   />
                 ))}
                 {groups[status].length === 0 && (
-                  <p className="rounded-xl border border-dashed border-gray-200 px-2 py-4 text-center text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+                  <p className="rounded-xl border border-dashed border-gray-200 px-2 py-4 text-center text-xs text-gray-400 dark:border-white/8 dark:text-ink-faint">
                     {hasFilters ? "Нет задач по фильтру" : "Перетащите карточку сюда"}
                   </p>
                 )}
@@ -222,7 +227,7 @@ export function ProjectKanbanBoard({ project, onMoveTask, onAddTask, onUpdateTas
       ) : (
         <div className="flex flex-col gap-2">
           {filteredTasks.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-gray-200 px-2 py-6 text-center text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+            <p className="rounded-xl border border-dashed border-gray-200 px-2 py-6 text-center text-xs text-gray-400 dark:border-white/8 dark:text-ink-faint">
               Нет задач по фильтру
             </p>
           ) : (

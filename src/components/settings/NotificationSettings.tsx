@@ -72,9 +72,9 @@ export function NotificationSettings({ value, onChange }: NotificationSettingsPr
           {CHANNEL_META.map(({ key, label, icon: Icon }) => (
             <div
               key={key}
-              className="flex items-center justify-between gap-2 rounded-xl border border-gray-100 p-3 dark:border-gray-800"
+              className="flex items-center justify-between gap-2 rounded-xl border border-gray-100 p-3 dark:border-white/8"
             >
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-ink-dim">
                 <Icon size={15} className="text-gray-400" />
                 {label}
               </span>
@@ -89,13 +89,13 @@ export function NotificationSettings({ value, onChange }: NotificationSettingsPr
         <div className="mt-3 overflow-x-auto">
           <div className="grid min-w-[420px] grid-cols-[1fr_repeat(3,64px)] items-center gap-y-2 text-xs">
             <span />
-            <span className="text-center font-medium text-gray-400 dark:text-gray-500">В прил.</span>
-            <span className="text-center font-medium text-gray-400 dark:text-gray-500">Email</span>
-            <span className="text-center font-medium text-gray-400 dark:text-gray-500">Push</span>
+            <span className="text-center font-medium text-gray-400 dark:text-ink-faint">В прил.</span>
+            <span className="text-center font-medium text-gray-400 dark:text-ink-faint">Email</span>
+            <span className="text-center font-medium text-gray-400 dark:text-ink-faint">Push</span>
 
             {(Object.keys(TYPE_LABELS) as NotificationTypeKey[]).map((type) => (
               <Fragment key={type}>
-                <span className="py-1.5 text-sm text-gray-600 dark:text-gray-300">{TYPE_LABELS[type]}</span>
+                <span className="py-1.5 text-sm text-gray-600 dark:text-ink-dim">{TYPE_LABELS[type]}</span>
                 {(["inApp", "email", "push"] as const).map((channel) => (
                   <span key={`${type}-${channel}`} className="flex justify-center">
                     <Switch checked={value.typeChannels[type][channel]} onChange={() => toggleTypeChannel(type, channel)} />
@@ -134,8 +134,8 @@ export function NotificationSettings({ value, onChange }: NotificationSettingsPr
                 className={cn(
                   "h-8 w-10 rounded-lg text-xs font-medium transition-colors",
                   value.dndDays.includes(day.key)
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "bg-gray-50 text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                    ? "bg-accent/10 text-accent"
+                    : "bg-gray-50 text-gray-400 hover:bg-gray-100 dark:bg-surface-2 dark:hover:bg-surface-2",
                 )}
               >
                 {day.label}
@@ -147,7 +147,7 @@ export function NotificationSettings({ value, onChange }: NotificationSettingsPr
 
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Предварительные напоминания</h3>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Можно выбрать несколько вариантов по умолчанию</p>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-ink-faint">Можно выбрать несколько вариантов по умолчанию</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {LEAD_TIME_OPTIONS.map((option) => (
             <button
@@ -158,8 +158,8 @@ export function NotificationSettings({ value, onChange }: NotificationSettingsPr
               className={cn(
                 "rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors",
                 value.leadTimes.includes(option.key)
-                  ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-400"
-                  : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800",
+                  ? "border-accent/30 bg-accent/10 text-accent"
+                  : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-white/8 dark:text-ink-faint dark:hover:bg-surface-2",
               )}
             >
               {option.label}

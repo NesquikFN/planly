@@ -23,7 +23,7 @@ export function PrivacySettings({ value, onChange, onViewData }: PrivacySettings
     <div className="space-y-6">
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Приватность</h3>
-        <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
           <Switch checked={value.showActivityStatus} onChange={(c) => onChange({ showActivityStatus: c })} label="Показывать статус активности" />
           <Switch checked={value.showLastSeen} onChange={(c) => onChange({ showLastSeen: c })} label="Показывать время последнего посещения" />
           <Switch checked={value.searchableByEmail} onChange={(c) => onChange({ searchableByEmail: c })} label="Разрешать поиск профиля по email" />
@@ -46,8 +46,8 @@ export function PrivacySettings({ value, onChange, onViewData }: PrivacySettings
               className={cn(
                 "rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
                 value.visibility === option.key
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                  : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                  ? "bg-accent/10 text-accent"
+                  : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2",
               )}
             >
               {option.label}
@@ -58,7 +58,7 @@ export function PrivacySettings({ value, onChange, onViewData }: PrivacySettings
         <button
           type="button"
           onClick={onViewData}
-          className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
         >
           <Eye size={14} />
           Посмотреть, какие данные хранит Planly

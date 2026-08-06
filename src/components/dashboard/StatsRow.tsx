@@ -22,7 +22,7 @@ export function StatsRow() {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
       {cards.map((card) => (
         <StatCard
           key={card.key}

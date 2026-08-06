@@ -21,11 +21,11 @@ export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, 
   const styles = calendarColorStyles[project.color];
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:shadow-none dark:border-white/8 dark:bg-surface sm:p-6">
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-gray-600 dark:text-ink-faint dark:hover:text-ink-dim"
       >
         <ArrowLeft size={15} />
         Все проекты
@@ -39,18 +39,18 @@ export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, 
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-xl font-semibold text-gray-900 dark:text-gray-50 sm:text-2xl">{project.name}</h1>
+              <h1 className="truncate text-xl font-semibold text-gray-900 dark:text-ink sm:text-2xl">{project.name}</h1>
               <button
                 type="button"
                 onClick={onToggleStar}
                 aria-pressed={project.starred}
                 aria-label={project.starred ? "Убрать из избранного" : "Добавить в избранное"}
-                className="rounded-lg p-1 text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800"
+                className="rounded-lg p-1 text-gray-300 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
               >
                 <Star size={18} className={project.starred ? "fill-amber-400 text-amber-400" : undefined} />
               </button>
             </div>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">{project.description}</p>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-ink-faint">{project.description}</p>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", PROJECT_STATUS_BADGE[project.status])}>
@@ -62,7 +62,7 @@ export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, 
               {project.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                  className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:bg-surface-2 dark:text-ink-faint"
                 >
                   #{tag}
                 </span>
@@ -75,7 +75,7 @@ export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, 
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
           >
             <Pencil size={14} />
             Изменить
@@ -84,7 +84,7 @@ export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, 
             type="button"
             onClick={onDeleteRequest}
             aria-label="Удалить проект"
-            className="rounded-xl border border-gray-200 p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:border-gray-700 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            className="rounded-xl border border-gray-200 p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:border-white/8 dark:hover:bg-red-500/10 dark:hover:text-red-400"
           >
             <Trash2 size={16} />
           </button>
@@ -93,16 +93,16 @@ export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, 
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
-          <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
+          <div className="flex items-center justify-between text-xs text-gray-400 dark:text-ink-faint">
             <span>Прогресс</span>
-            <span className="font-medium text-gray-600 dark:text-gray-300">{project.progress}%</span>
+            <span className="font-medium text-gray-600 dark:text-ink-dim">{project.progress}%</span>
           </div>
-          <div className="mt-1.5 h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+          <div className="mt-1.5 h-1.5 w-full rounded-full bg-gray-100 dark:bg-surface-2">
             <div className={cn("h-1.5 rounded-full", styles.swatch)} style={{ width: `${project.progress}%` }} />
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-ink-faint">
           <ListChecks size={15} className="shrink-0" />
           {project.tasksDone} из {project.tasksTotal} задач выполнено
         </div>
@@ -110,7 +110,7 @@ export function ProjectDetailHeader({ project, isOverdue, onBack, onToggleStar, 
         <div
           className={cn(
             "flex items-center gap-1.5 text-sm",
-            isOverdue ? "font-medium text-red-500 dark:text-red-400" : "text-gray-500 dark:text-gray-400",
+            isOverdue ? "font-medium text-red-500 dark:text-red-400" : "text-gray-500 dark:text-ink-faint",
           )}
         >
           {isOverdue ? <AlertTriangle size={15} className="shrink-0" /> : <CalendarDays size={15} className="shrink-0" />}

@@ -24,7 +24,7 @@ export function RemindersCalendar({ today, selectedDateKey, onSelectDate, datesW
   return (
     <div>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{formatMonthYear(month)}</span>
+        <span className="text-sm font-medium text-gray-900 dark:text-ink">{formatMonthYear(month)}</span>
         <div className="flex items-center gap-0.5">
           <button
             type="button"
@@ -47,7 +47,7 @@ export function RemindersCalendar({ today, selectedDateKey, onSelectDate, datesW
 
       <div className="mt-3 grid grid-cols-7 gap-y-1 text-center">
         {WEEKDAY_LABELS.map((label) => (
-          <span key={label} className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+          <span key={label} className="text-[11px] font-medium text-gray-400 dark:text-ink-faint">
             {label}
           </span>
         ))}
@@ -71,18 +71,18 @@ export function RemindersCalendar({ today, selectedDateKey, onSelectDate, datesW
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-sm transition-colors duration-150",
                   isToday
-                    ? "bg-blue-600 font-semibold text-white"
+                    ? "bg-accent font-semibold text-white"
                     : isSelected
-                      ? "bg-gray-200 font-semibold text-gray-900 dark:bg-gray-700 dark:text-gray-50"
+                      ? "bg-gray-200 font-semibold text-gray-900 dark:bg-surface-2 dark:text-ink"
                       : isCurrentMonth
-                        ? "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                        : "text-gray-300 hover:bg-gray-100 dark:text-gray-600 dark:hover:bg-gray-800",
+                        ? "text-gray-700 hover:bg-gray-100 dark:text-ink-dim dark:hover:bg-surface-2"
+                        : "text-gray-300 hover:bg-gray-100 dark:text-ink-faint dark:hover:bg-surface-2",
                 )}
               >
                 {day.getDate()}
               </span>
               {hasReminders && !isToday && (
-                <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-400" />
+                <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-gray-400 dark:bg-ink-faint" />
               )}
             </button>
           );

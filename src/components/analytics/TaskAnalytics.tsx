@@ -39,10 +39,10 @@ export function TaskAnalytics({ data, onOpenTasks }: TaskAnalyticsProps) {
   });
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Выполнение задач</h2>
-        <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-ink">Выполнение задач</h2>
+        <span className="text-xs font-medium text-gray-400 dark:text-ink-faint">
           {data.completionPercent !== null ? `Процент выполнения — ${data.completionPercent}%` : "Нет задач с датой в периоде"}
         </span>
       </div>
@@ -50,7 +50,7 @@ export function TaskAnalytics({ data, onOpenTasks }: TaskAnalyticsProps) {
       <div className="mt-4 flex flex-col items-center gap-6 sm:flex-row">
         <div className="relative flex h-32 w-32 shrink-0 items-center justify-center">
           <svg viewBox="0 0 104 104" className="h-32 w-32 -rotate-90">
-            <circle cx="52" cy="52" r={RADIUS} fill="none" strokeWidth="12" className="stroke-gray-100 dark:stroke-gray-800" />
+            <circle cx="52" cy="52" r={RADIUS} fill="none" strokeWidth="12" className="stroke-gray-100 dark:stroke-white/10" />
             {total > 0 &&
               arcs.map((arc) => (
                 <circle
@@ -67,8 +67,8 @@ export function TaskAnalytics({ data, onOpenTasks }: TaskAnalyticsProps) {
               ))}
           </svg>
           <div className="absolute flex flex-col items-center">
-            <span className="text-xl font-semibold text-gray-900 dark:text-gray-50">{total}</span>
-            <span className="text-[11px] text-gray-400 dark:text-gray-500">всего</span>
+            <span className="text-xl font-semibold text-gray-900 dark:text-ink">{total}</span>
+            <span className="text-[11px] text-gray-400 dark:text-ink-faint">всего</span>
           </div>
         </div>
 
@@ -76,25 +76,25 @@ export function TaskAnalytics({ data, onOpenTasks }: TaskAnalyticsProps) {
           {segments.map((segment) => (
             <div key={segment.key} className="flex items-center gap-2 text-sm">
               <span className={`h-2 w-2 shrink-0 rounded-full ${segment.dot}`} />
-              <span className="text-gray-500 dark:text-gray-400">{segment.label}</span>
-              <span className="ml-auto font-medium text-gray-900 dark:text-gray-50">{segment.value}</span>
+              <span className="text-gray-500 dark:text-ink-faint">{segment.label}</span>
+              <span className="ml-auto font-medium text-gray-900 dark:text-ink">{segment.value}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="mt-5 space-y-3 border-t border-gray-100 pt-4 dark:border-gray-800">
-        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">По приоритету</p>
+      <div className="mt-5 space-y-3 border-t border-gray-100 pt-4 dark:border-white/8">
+        <p className="text-xs font-medium text-gray-500 dark:text-ink-faint">По приоритету</p>
         {data.priorityBreakdown.map((item) => {
           const percent = data.totalWithDueDate > 0 ? Math.round((item.count / data.totalWithDueDate) * 100) : 0;
           return (
             <div key={item.key}>
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-gray-600 dark:text-gray-300">{item.label}</span>
-                <span className="text-gray-400 dark:text-gray-500">{item.count}</span>
+                <span className="font-medium text-gray-600 dark:text-ink-dim">{item.label}</span>
+                <span className="text-gray-400 dark:text-ink-faint">{item.count}</span>
               </div>
-              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                <div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-surface-2">
+                <div className="h-full rounded-full bg-accent" style={{ width: `${percent}%` }} />
               </div>
             </div>
           );
@@ -104,7 +104,7 @@ export function TaskAnalytics({ data, onOpenTasks }: TaskAnalyticsProps) {
       <button
         type="button"
         onClick={onOpenTasks}
-        className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+        className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
       >
         Посмотреть все задачи
         <ArrowRight size={13} />

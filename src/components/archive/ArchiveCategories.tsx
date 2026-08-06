@@ -29,8 +29,8 @@ export function ArchiveCategories({ categories, summaries, activeType, onSelectT
               onClick={() => onSelectType(category.key)}
               aria-pressed={isActive}
               className={cn(
-                "rounded-2xl border bg-white p-4 text-left shadow-sm transition-colors dark:bg-gray-900",
-                isActive ? "border-blue-300 dark:border-blue-500/60" : "border-gray-100 dark:border-gray-800",
+                "rounded-2xl border bg-white p-4 text-left shadow-sm transition-colors dark:bg-surface",
+                isActive ? "border-accent/40" : "border-gray-100 dark:border-white/8",
               )}
             >
               <div className="flex items-center justify-between">
@@ -38,16 +38,16 @@ export function ArchiveCategories({ categories, summaries, activeType, onSelectT
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-lg",
                     isActive
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                      : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+                      ? "bg-accent/10 text-accent"
+                      : "bg-gray-100 text-gray-500 dark:bg-surface-2 dark:text-ink-faint",
                   )}
                 >
                   <Icon size={16} />
                 </div>
-                <span className="text-[11px] text-gray-400 dark:text-gray-500">{summary.sizeLabel}</span>
+                <span className="text-[11px] text-gray-400 dark:text-ink-faint">{summary.sizeLabel}</span>
               </div>
-              <p className="mt-3 truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{category.label}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">{summary.count} элементов</p>
+              <p className="mt-3 truncate text-sm font-semibold text-gray-900 dark:text-ink">{category.label}</p>
+              <p className="text-xs text-gray-400 dark:text-ink-faint">{summary.count} элементов</p>
             </button>
           );
         })}

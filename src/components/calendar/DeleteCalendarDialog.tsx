@@ -40,15 +40,15 @@ export function DeleteCalendarDialog() {
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/20" onClick={cancelDeleteCalendar} aria-hidden="true" />
 
-      <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50">Удалить календарь «{calendar.name}»?</h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Выберите, что сделать с его событиями.</p>
+      <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-ink">Удалить календарь «{calendar.name}»?</h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-ink-faint">Выберите, что сделать с его событиями.</p>
 
         <div className="mt-4 space-y-2">
           <label
             className={cn(
               "flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm",
-              choice === "withEvents" ? "border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800" : "border-gray-200 dark:border-gray-700",
+              choice === "withEvents" ? "border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-surface-2" : "border-gray-200 dark:border-white/8",
             )}
           >
             <input
@@ -59,15 +59,15 @@ export function DeleteCalendarDialog() {
               className="mt-0.5 accent-gray-700 dark:accent-gray-400"
             />
             <span>
-              <span className="block font-medium text-gray-900 dark:text-gray-50">Удалить календарь вместе с событиями</span>
-              <span className="block text-xs text-gray-500 dark:text-gray-400">Все его события будут удалены безвозвратно.</span>
+              <span className="block font-medium text-gray-900 dark:text-ink">Удалить календарь вместе с событиями</span>
+              <span className="block text-xs text-gray-500 dark:text-ink-faint">Все его события будут удалены безвозвратно.</span>
             </span>
           </label>
 
           <label
             className={cn(
               "flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm",
-              choice === "moveEvents" ? "border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800" : "border-gray-200 dark:border-gray-700",
+              choice === "moveEvents" ? "border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-surface-2" : "border-gray-200 dark:border-white/8",
               otherCalendars.length === 0 && "opacity-40",
             )}
           >
@@ -80,12 +80,12 @@ export function DeleteCalendarDialog() {
               className="mt-0.5 accent-gray-700 dark:accent-gray-400"
             />
             <span className="min-w-0 flex-1">
-              <span className="block font-medium text-gray-900 dark:text-gray-50">Перенести события в другой календарь</span>
+              <span className="block font-medium text-gray-900 dark:text-ink">Перенести события в другой календарь</span>
               {choice === "moveEvents" && otherCalendars.length > 0 && (
                 <select
                   value={targetId}
                   onChange={(event) => setTargetId(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-700 focus:outline-none dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim"
                 >
                   {otherCalendars.map((cal) => (
                     <option key={cal.id} value={cal.id}>
@@ -102,7 +102,7 @@ export function DeleteCalendarDialog() {
           <button
             type="button"
             onClick={cancelDeleteCalendar}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
           >
             Отмена
           </button>

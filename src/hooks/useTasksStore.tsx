@@ -6,7 +6,6 @@ import { readStorage, writeStorage } from "@/lib/storage";
 import { matchesFilter, sortTasks, type FilterKey, type SortKey } from "@/lib/filters";
 import { createTaskFromText } from "@/lib/task-parser";
 import { computeTaskPriority, formatTaskDueLabel } from "@/lib/task-date";
-import { buildNextOccurrence } from "@/lib/task-recurrence";
 import { addDays, getLocalDateKey } from "@/lib/date-utils";
 import { pickAutoFocusTask } from "@/lib/focus";
 import { recordDailyActivity } from "@/lib/streak";
@@ -318,10 +317,10 @@ export function TasksProvider({ children }: { children: ReactNode }) {
 
   // Marks a task done and archives it in the same update — no grace period,
   // no undo timer. The task disappears from the active list and shows up in
-  // Archive with reason "completed" immediately. Recurring tasks: completing
-  // one occurrence archives it like any other task, but the recurrence rule
-  // survives by spawning the next occurrence as its own row — never hundreds
-  // in advance, only ever the single next date.
+  // Archive with reason "completed" immediately. Completion never creates
+  // another task: repetition is no longer a Task concept (it lives on
+  // Calendar event series instead — see EventRecurrence in types/calendar.ts
+  // and useCalendarStore). `target.recurrence` (legacy) is read nowhere here.
   const toggleComplete = useCallback(
     (id: string) => {
       if (!userId) return;
@@ -333,24 +332,9 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       if (!target || target.completed) return;
       pendingTaskIdsRef.current.add(id);
 
-      const isRecurring = Boolean(
-        target.recurrence &&
-        target.recurrence.rule !== "none" &&
-        target.recurrence.weekdays.length > 0,
-      );
-
       const completedSnapshot: Task = { ...target, completed: true, completedAt: new Date().toISOString() };
-      // buildNextOccurrence is the ONLY place a next occurrence is computed —
-      // Delete never calls it, and nothing else in this file does either.
-      const nextOccurrence = isRecurring ? buildNextOccurrence(completedSnapshot, today, generateTaskId) : null;
 
-      debugLog("complete", {
-        taskId: id,
-        recurrence: target.recurrence,
-        isRecurring,
-        nextOccurrenceId: nextOccurrence?.id ?? null,
-        nextOccurrenceDate: nextOccurrence?.date ?? null,
-      });
+      debugLog("complete", { taskId: id });
 
       const archiveItem = archiveStore.addItem({
         entityType: "task",
@@ -362,10 +346,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         originalData: completedSnapshot,
       });
 
-      setRawTasks((prev) => {
-        const withoutCompleted = prev.filter((task) => task.id !== id);
-        return nextOccurrence ? [nextOccurrence, ...withoutCompleted] : withoutCompleted;
-      });
+      setRawTasks((prev) => prev.filter((task) => task.id !== id));
 
       (async () => {
         try {
@@ -373,12 +354,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
           await tasksRepository.deleteTask(userId, id);
         } catch (err) {
           // Completion didn't actually persist — put everything back exactly as it was.
-          // Never reaches create-next below: an occurrence is only ever
-          // created after the current one is confirmed gone.
-          setRawTasks((prev) => {
-            const withoutNext = nextOccurrence ? prev.filter((task) => task.id !== nextOccurrence.id) : prev;
-            return withoutNext.some((task) => task.id === target.id) ? withoutNext : [target, ...withoutNext];
-          });
+          setRawTasks((prev) => (prev.some((task) => task.id === target.id) ? prev : [target, ...prev]));
           archiveStore.removeItem(archiveItem.id);
           setError(reportError("Не удалось сохранить изменения", err));
           pendingTaskIdsRef.current.delete(id);
@@ -393,20 +369,10 @@ export function TasksProvider({ children }: { children: ReactNode }) {
           describeAuthError(err);
         }
 
-        if (nextOccurrence) {
-          try {
-            debugLog("complete:create-next", { taskId: nextOccurrence.id, date: nextOccurrence.date, source: "toggleComplete" });
-            await tasksRepository.createTask(userId, nextOccurrence);
-          } catch (err) {
-            // Completion stands; only the next occurrence failed to persist — drop the local-only copy so it can't duplicate on retry.
-            setRawTasks((prev) => prev.filter((task) => task.id !== nextOccurrence.id));
-            setError(reportError("Не удалось создать повторяющуюся задачу", err));
-          }
-        }
         pendingTaskIdsRef.current.delete(id);
       })();
     },
-    [tasks, archiveStore, today, userId],
+    [tasks, archiveStore, userId],
   );
 
   // Kept for CompletedTasksList's "Вернуть" — resets a still-present task
@@ -460,11 +426,10 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     [today, userId],
   );
 
-  // Plain delete — regardless of recurrence, this only ever removes the one
-  // targeted row. It never calls toggleComplete, never calls
-  // buildNextOccurrence, never archives with reason "completed", and never
-  // creates a next occurrence: recurrence generation lives exclusively in
-  // toggleComplete above.
+  // Plain delete — only ever removes the one targeted row. It never calls
+  // toggleComplete, never archives with reason "completed", and never
+  // creates any other task: Tasks have no recurrence-generation path at all
+  // anymore (see toggleComplete above).
   const deleteTask = useCallback(
     (id: string) => {
       if (!userId) return;

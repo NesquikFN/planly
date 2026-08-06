@@ -6,13 +6,13 @@ import { PlanlyDatePicker } from "@/components/ui/PlanlyDatePicker";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { CALENDAR_COLORS } from "@/lib/calendar-constants";
 import { PROJECT_PRIORITY_LABELS, PROJECT_STATUS_LABELS } from "@/lib/projects";
+import { BUTTON_PRIMARY, INPUT, LABEL } from "@/lib/ui-tokens";
 import { cn } from "@/lib/utils";
 import type { CalendarColor } from "@/types/calendar";
 import type { Project, ProjectFormValues, ProjectPriority, ProjectStatus } from "@/types/project";
 
-const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200";
-const labelClass = "mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400";
+const inputClass = INPUT;
+const labelClass = LABEL;
 
 function emptyValues(): ProjectFormValues {
   return { name: "", description: "", color: "blue", status: "active", priority: "medium", deadlineKey: "", tags: "" };
@@ -56,16 +56,16 @@ export function ProjectFormModal({ open, mode, initial, onClose, onSubmit }: Pro
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/20" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative w-full max-w-lg rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="relative w-full max-w-lg rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:shadow-none dark:border-white/8 dark:bg-surface">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-ink">
             {mode === "edit" ? "Изменить проект" : "Новый проект"}
           </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Закрыть"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2"
           >
             <X size={18} />
           </button>
@@ -114,7 +114,7 @@ export function ProjectFormModal({ open, mode, initial, onClose, onSubmit }: Pro
                   className={cn(
                     "h-6 w-6 rounded-full transition-shadow",
                     calendarColorStyles[color].swatch,
-                    values.color === color && "ring-2 ring-gray-400 ring-offset-2 dark:ring-gray-500 dark:ring-offset-gray-900",
+                    values.color === color && "ring-2 ring-gray-400 ring-offset-2 dark:ring-white/20 dark:ring-offset-surface",
                   )}
                 />
               ))}
@@ -173,14 +173,11 @@ export function ProjectFormModal({ open, mode, initial, onClose, onSubmit }: Pro
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               Отмена
             </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
+            <button type="submit" className={cn(BUTTON_PRIMARY, "px-4 py-2")}>
               {mode === "edit" ? "Сохранить" : "Создать проект"}
             </button>
           </div>

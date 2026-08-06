@@ -76,22 +76,22 @@ export function ProductivityChart({ chart, previousChart, compareEnabled }: Prod
 
   if (data.length === 0) {
     return (
-      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Динамика продуктивности</h2>
-        <p className="mt-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">Нет данных за выбранный период</p>
+      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-ink">Динамика продуктивности</h2>
+        <p className="mt-6 py-10 text-center text-sm text-gray-400 dark:text-ink-faint">Нет данных за выбранный период</p>
       </section>
     );
   }
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Динамика продуктивности</h2>
-          <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Ваш результат по реальным задачам и событиям</p>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-ink">Динамика продуктивности</h2>
+          <p className="mt-0.5 text-xs text-gray-400 dark:text-ink-faint">Ваш результат по реальным задачам и событиям</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1 rounded-xl border border-gray-100 bg-gray-50 p-1 dark:border-gray-800 dark:bg-gray-800/60">
+        <div className="flex flex-wrap items-center gap-1 rounded-xl border border-gray-100 bg-gray-50 p-1 dark:border-white/8 dark:bg-surface-2/60">
           {METRIC_OPTIONS.map((option) => (
             <button
               key={option.key}
@@ -101,8 +101,8 @@ export function ProductivityChart({ chart, previousChart, compareEnabled }: Prod
               className={cn(
                 "rounded-lg px-2.5 py-1 text-xs font-medium transition-colors",
                 metric === option.key
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-gray-50"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                  ? "bg-white text-gray-900 shadow-sm dark:bg-surface dark:text-ink dark:shadow-none"
+                  : "text-gray-500 hover:text-gray-700 dark:text-ink-faint dark:hover:text-ink-dim",
               )}
             >
               {option.label}
@@ -112,13 +112,13 @@ export function ProductivityChart({ chart, previousChart, compareEnabled }: Prod
       </div>
 
       {showCompare && (
-        <div className="mt-3 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+        <div className="mt-3 flex items-center gap-4 text-xs text-gray-400 dark:text-ink-faint">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-0.5 w-4 rounded-full bg-blue-600" />
+            <span className="h-0.5 w-4 rounded-full bg-accent" />
             Текущий период
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-0.5 w-4 rounded-full bg-gray-300 dark:bg-gray-600" />
+            <span className="h-0.5 w-4 rounded-full bg-gray-300 dark:bg-white/20" />
             Прошлый период
           </span>
         </div>
@@ -128,18 +128,18 @@ export function ProductivityChart({ chart, previousChart, compareEnabled }: Prod
         <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-52 w-full" preserveAspectRatio="none">
           <defs>
             <linearGradient id="productivity-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
+              <stop offset="0%" stopColor="#ff5a1f" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#ff5a1f" stopOpacity="0" />
             </linearGradient>
           </defs>
 
           <path d={areaPath} fill="url(#productivity-area)" />
 
           {showCompare && (
-            <polyline points={comparePoints} fill="none" stroke="currentColor" strokeWidth={2} className="text-gray-300 dark:text-gray-600" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={comparePoints} fill="none" stroke="currentColor" strokeWidth={2} className="text-gray-300 dark:text-ink-faint" strokeLinecap="round" strokeLinejoin="round" />
           )}
 
-          <polyline points={currentPoints} fill="none" stroke="#4f46e5" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={currentPoints} fill="none" stroke="#ff5a1f" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
 
           {values.map((value, index) => (
             <circle
@@ -147,7 +147,7 @@ export function ProductivityChart({ chart, previousChart, compareEnabled }: Prod
               cx={index * step}
               cy={toY(value)}
               r={hoverIndex === index ? 5 : 3}
-              fill="#4f46e5"
+              fill="#ff5a1f"
               className="transition-all"
             />
           ))}
@@ -161,7 +161,7 @@ export function ProductivityChart({ chart, previousChart, compareEnabled }: Prod
               stroke="currentColor"
               strokeWidth={1}
               strokeDasharray="3 3"
-              className="text-gray-200 dark:text-gray-700"
+              className="text-gray-200 dark:text-ink-faint"
             />
           )}
 
@@ -182,18 +182,18 @@ export function ProductivityChart({ chart, previousChart, compareEnabled }: Prod
 
         {hovered && (
           <div
-            className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-xl border border-gray-100 bg-white p-3 text-xs shadow-sm dark:border-gray-800 dark:bg-gray-900"
+            className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-xl border border-gray-100 bg-white p-3 text-xs shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none"
             style={{ left: `${tooltipLeftPercent}%` }}
           >
-            <p className="font-semibold text-gray-900 dark:text-gray-50">{hovered.label}</p>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">Задач выполнено: {hovered.tasksCompleted}</p>
-            <p className="text-gray-500 dark:text-gray-400">В календаре: {formatFocus(hovered.eventMinutes)}</p>
-            <p className="text-gray-500 dark:text-gray-400">Вовремя: {hovered.onTimeRate !== null ? `${hovered.onTimeRate}%` : "нет данных"}</p>
+            <p className="font-semibold text-gray-900 dark:text-ink">{hovered.label}</p>
+            <p className="mt-1 text-gray-500 dark:text-ink-faint">Задач выполнено: {hovered.tasksCompleted}</p>
+            <p className="text-gray-500 dark:text-ink-faint">В календаре: {formatFocus(hovered.eventMinutes)}</p>
+            <p className="text-gray-500 dark:text-ink-faint">Вовремя: {hovered.onTimeRate !== null ? `${hovered.onTimeRate}%` : "нет данных"}</p>
           </div>
         )}
       </div>
 
-      <div className="mt-1 flex justify-between text-xs text-gray-400 dark:text-gray-500">
+      <div className="mt-1 flex justify-between text-xs text-gray-400 dark:text-ink-faint">
         {data.map((point) => (
           <span key={point.dateKey}>{point.label}</span>
         ))}

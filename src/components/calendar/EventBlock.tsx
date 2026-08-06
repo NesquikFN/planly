@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckSquare, Square } from "lucide-react";
+import { CheckSquare, Repeat, Square } from "lucide-react";
 import type { CalendarEntry } from "@/lib/calendar-entries";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { HOUR_HEIGHT, DAY_START_HOUR, DAY_END_HOUR, MIN_DURATION_MINUTES } from "@/lib/calendar-constants";
@@ -205,12 +205,9 @@ export function EventBlock({
         className={cn(
           "group absolute inset-x-1 cursor-grab select-none overflow-hidden rounded-lg border px-2 py-1 text-left text-xs shadow-sm active:cursor-grabbing",
           !isDragging && "transition-[top,height,box-shadow,transform,background-color] duration-150 ease-out",
-          styles.block,
-          styles.hoverBlock,
-          styles.border,
-          styles.text,
-          isSelected && `ring-2 ring-offset-1 dark:ring-offset-gray-900 ${styles.ring}`,
-          isDragging ? "z-20 scale-[1.02] opacity-40 shadow-lg" : "shadow-sm",
+          "border-gray-100 bg-white text-gray-700 hover:bg-gray-50 dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim dark:hover:bg-surface",
+          isSelected && "ring-1 ring-accent ring-offset-1 dark:ring-offset-canvas",
+          isDragging ? "z-20 scale-[1.02] opacity-40 shadow-lg" : "shadow-sm dark:shadow-none",
         )}
         style={{ top: topPx, height: heightPx, touchAction: "none" }}
       >
@@ -232,10 +229,11 @@ export function EventBlock({
             <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", styles.dot)} />
           )}
           <span className="truncate">{entry.title}</span>
+          {entry.isRecurring && <Repeat size={10} className="shrink-0 opacity-60" />}
           {entry.important && <span className="shrink-0 text-amber-500">★</span>}
         </p>
         {heightPx > 32 && (
-          <p className="truncate text-[11px] opacity-80">
+          <p className="truncate text-[11px] opacity-70">
             {minutesToTime(displayStart)} – {minutesToTime(displayEnd)}
           </p>
         )}
@@ -254,12 +252,7 @@ export function EventBlock({
       {showGhost &&
         createPortal(
           <div
-            className={cn(
-              "pointer-events-none fixed z-50 overflow-hidden rounded-lg border px-2 py-1 text-left text-xs shadow-lg",
-              styles.block,
-              styles.border,
-              styles.text,
-            )}
+            className="pointer-events-none fixed z-50 overflow-hidden rounded-lg border border-gray-100 bg-white px-2 py-1 text-left text-xs text-gray-700 shadow-lg dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim"
             style={{
               left: preview.clientX - preview.grabOffsetX,
               top: preview.clientY - preview.grabOffsetY,

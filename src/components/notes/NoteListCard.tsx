@@ -76,10 +76,18 @@ function NoteListCardImpl({
         }
       }}
       className={cn(
-        "notes-item-enter group relative w-full rounded-2xl border p-4 text-left shadow-sm transition-all duration-200",
-        active
-          ? "border-blue-300 bg-blue-50/60 shadow-blue-500/5 dark:border-blue-500/60 dark:bg-blue-500/10"
-          : "border-gray-100 bg-white hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:hover:bg-gray-800/60",
+        "notes-item-enter group relative w-full p-3 text-left transition-colors duration-150",
+        variant === "grid"
+          ? cn(
+              "rounded-xl border",
+              active
+                ? "border-accent/40 bg-accent/5"
+                : "border-gray-100 bg-white hover:border-gray-200 dark:border-white/8 dark:bg-surface dark:hover:border-white/10",
+            )
+          : cn(
+              "rounded-lg border-l-2",
+              active ? "border-l-accent bg-accent/5" : "border-l-transparent hover:bg-gray-50 dark:hover:bg-white/[0.03]",
+            ),
         variant === "grid" ? "flex flex-col gap-3" : "flex items-start gap-3",
       )}
     >
@@ -89,8 +97,8 @@ function NoteListCardImpl({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="relative flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-50">
-            {note.pinned && <Pin size={12} className="shrink-0 fill-gray-400 text-gray-400 dark:fill-gray-500 dark:text-gray-500" />}
+          <h3 className="relative flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-gray-900 dark:text-ink">
+            {note.pinned && <Pin size={12} className="shrink-0 fill-gray-400 text-gray-400 dark:fill-ink-faint dark:text-ink-faint" />}
             <span className="truncate">
               <HighlightText text={note.title} query={highlightQuery} />
             </span>
@@ -105,9 +113,9 @@ function NoteListCardImpl({
               }}
               aria-pressed={note.pinned}
               aria-label={note.pinned ? "Открепить" : "Закрепить"}
-              className="rounded-lg p-1 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-600 dark:hover:bg-gray-800"
+              className="rounded-lg p-1 text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
-              <Pin size={14} className={note.pinned ? "fill-gray-500 text-gray-500 dark:fill-gray-400 dark:text-gray-400" : undefined} />
+              <Pin size={14} className={note.pinned ? "fill-gray-500 text-gray-500 dark:fill-ink-dim dark:text-ink-faint" : undefined} />
             </button>
             <button
               type="button"
@@ -118,14 +126,14 @@ function NoteListCardImpl({
               }}
               aria-pressed={note.starred}
               aria-label={note.starred ? "Убрать из избранного" : "Добавить в избранное"}
-              className="rounded-lg p-1 text-gray-300 transition-colors hover:bg-gray-100 hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-600 dark:hover:bg-gray-800"
+              className="rounded-lg p-1 text-gray-300 transition-colors hover:bg-gray-100 hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               <Star size={15} className={note.starred ? "fill-amber-400 text-amber-400" : undefined} />
             </button>
           </div>
         </div>
 
-        <p className="relative mt-0.5 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+        <p className="relative mt-0.5 line-clamp-2 text-xs text-gray-500 dark:text-ink-faint">
           <HighlightText text={excerpt} query={highlightQuery} />
         </p>
 
@@ -133,7 +141,7 @@ function NoteListCardImpl({
           {primaryTag && primaryTagColor && (
             <span className={cn("text-xs font-medium", calendarColorStyles[primaryTagColor].text)}>#{primaryTag}</span>
           )}
-          <span className="truncate text-xs text-gray-400 dark:text-gray-500">{dateLabel}</span>
+          <span className="truncate text-xs text-gray-400 dark:text-ink-faint">{dateLabel}</span>
         </div>
       </div>
 

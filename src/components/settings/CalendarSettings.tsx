@@ -37,8 +37,8 @@ export function CalendarSettings({ value, onChange }: CalendarSettingsProps) {
               className={cn(
                 "rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors",
                 value.defaultView === option.key
-                  ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-400"
-                  : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800",
+                  ? "border-accent/30 bg-accent/10 text-accent"
+                  : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-white/8 dark:text-ink-faint dark:hover:bg-surface-2",
               )}
             >
               {option.label}
@@ -74,7 +74,7 @@ export function CalendarSettings({ value, onChange }: CalendarSettingsProps) {
           </label>
         </div>
 
-        <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-4 divide-y divide-gray-100 dark:divide-white/8">
           <Switch checked={value.showWeekNumbers} onChange={(c) => onChange({ showWeekNumbers: c })} label="Показывать номера недель" />
           <Switch checked={value.showWeekends} onChange={(c) => onChange({ showWeekends: c })} label="Показывать выходные" />
           <Switch checked={value.showCompletedTasks} onChange={(c) => onChange({ showCompletedTasks: c })} label="Показывать завершённые задачи в календаре" />
@@ -94,8 +94,8 @@ export function CalendarSettings({ value, onChange }: CalendarSettingsProps) {
                 aria-pressed={value.defaultEventColor === color}
                 aria-label={color}
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full ring-offset-2 dark:ring-offset-gray-900",
-                  value.defaultEventColor === color && "ring-2 ring-gray-300 dark:ring-gray-600",
+                  "flex h-8 w-8 items-center justify-center rounded-full ring-offset-2 dark:ring-offset-surface",
+                  value.defaultEventColor === color && "ring-2 ring-gray-300 dark:ring-white/20",
                 )}
               >
                 <span className={cn("h-6 w-6 rounded-full", calendarColorStyles[color].swatch)} />

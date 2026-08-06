@@ -63,7 +63,7 @@ export function RemindersInfoPanel({
 
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto">
-      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
         <RemindersCalendar
           today={today}
           selectedDateKey={selectedDateKey}
@@ -72,17 +72,17 @@ export function RemindersInfoPanel({
         />
       </section>
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Следующее напоминание</h3>
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Следующее напоминание</h3>
         {nextReminder ? (
-          <div className="mt-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/70">
+          <div className="mt-3 rounded-xl bg-gray-50 p-3 dark:bg-surface-2/70">
             <button
               type="button"
               onClick={() => onOpenReminder(nextReminder)}
-              className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
-              <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{nextReminder.title}</p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="truncate text-sm font-semibold text-gray-900 dark:text-ink">{nextReminder.title}</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-ink-faint">
                 {formatReminderDateLabel(nextReminder, today)}
                 {nextCountdown ? ` · ${nextCountdown}` : ""}
               </p>
@@ -99,50 +99,50 @@ export function RemindersInfoPanel({
               <SnoozeMenu
                 onSnooze={(option) => onSnooze(nextReminder.id, option)}
                 onPickDateTime={() => onOpenReminder(nextReminder)}
-                triggerClassName="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:bg-white hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                triggerClassName="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:bg-white hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 dark:text-ink-faint dark:hover:bg-surface-2 dark:hover:text-ink-dim"
               />
             </div>
           </div>
         ) : (
-          <div className="mt-3 flex items-center gap-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-500 dark:bg-gray-800/70 dark:text-gray-400">
-            <BellRing size={16} className="shrink-0 text-gray-400 dark:text-gray-500" />
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-500 dark:bg-surface-2/70 dark:text-ink-faint">
+            <BellRing size={16} className="shrink-0 text-gray-400 dark:text-ink-faint" />
             Нет активных напоминаний с датой.
           </div>
         )}
       </section>
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Прогресс недели</h3>
-        <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Прогресс недели</h3>
+        <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-surface-2">
           <div className="h-full bg-emerald-500" style={{ width: `${(completedCount / weekTotal) * 100}%` }} />
-          <div className="h-full bg-blue-400" style={{ width: `${(remainingCount / weekTotal) * 100}%` }} />
+          <div className="h-full bg-accent" style={{ width: `${(remainingCount / weekTotal) * 100}%` }} />
           <div className="h-full bg-red-500" style={{ width: `${(overdueCount / weekTotal) * 100}%` }} />
         </div>
         <div className="mt-3 flex items-center justify-between text-xs">
-          <span className="inline-flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+          <span className="inline-flex items-center gap-1.5 text-gray-500 dark:text-ink-faint">
             <Flag size={11} className="text-emerald-500" />
             Выполнено {completedCount}
           </span>
-          <span className="inline-flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-            <Flag size={11} className="text-blue-400" />
+          <span className="inline-flex items-center gap-1.5 text-gray-500 dark:text-ink-faint">
+            <Flag size={11} className="text-accent" />
             Осталось {remainingCount}
           </span>
-          <span className="inline-flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+          <span className="inline-flex items-center gap-1.5 text-gray-500 dark:text-ink-faint">
             <Flag size={11} className="text-red-500" />
             Просрочено {overdueCount}
           </span>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Быстрые действия</h3>
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Быстрые действия</h3>
         <div className="mt-2 space-y-1">
           {quickActions.map(({ key, label, icon: Icon, onClick }) => (
             <button
               key={key}
               type="button"
               onClick={onClick}
-              className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               <Icon size={16} />
               {label}

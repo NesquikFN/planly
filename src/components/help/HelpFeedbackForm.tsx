@@ -54,7 +54,7 @@ export function HelpFeedbackForm({ initialType = "Вопрос" }: HelpFeedbackF
   return (
     <section className={settingsCard}>
       <h3 className={settingsSectionTitle}>Обратная связь</h3>
-      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+      <p className="mt-1 text-xs text-gray-400 dark:text-ink-faint">
         Заявка сохраняется только в демо-режиме, без отправки на сервер
       </p>
 
@@ -128,7 +128,7 @@ export function HelpFeedbackForm({ initialType = "Вопрос" }: HelpFeedbackF
               }}
             />
             {attachedFile ? (
-              <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+              <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim">
                 <span className="truncate">{attachedFile.name} · {(attachedFile.size / 1024).toFixed(1)} КБ</span>
                 <button
                   type="button"
@@ -137,7 +137,7 @@ export function HelpFeedbackForm({ initialType = "Вопрос" }: HelpFeedbackF
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   aria-label="Убрать файл"
-                  className="shrink-0 rounded-md p-0.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="shrink-0 rounded-md p-0.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2"
                 >
                   <X size={14} />
                 </button>
@@ -146,7 +146,7 @@ export function HelpFeedbackForm({ initialType = "Вопрос" }: HelpFeedbackF
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 dark:border-white/8 dark:bg-surface-2 dark:text-ink-faint dark:hover:bg-surface-2"
               >
                 <Paperclip size={14} />
                 Прикрепить файл
@@ -160,7 +160,7 @@ export function HelpFeedbackForm({ initialType = "Вопрос" }: HelpFeedbackF
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 active:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-gray-900"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 active:bg-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-surface"
           >
             {isSubmitting ? "Отправляем…" : "Отправить"}
           </button>

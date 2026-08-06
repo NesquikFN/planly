@@ -78,7 +78,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-gray-950">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-canvas">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex min-h-screen flex-col lg:pl-64">

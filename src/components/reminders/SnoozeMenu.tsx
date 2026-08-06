@@ -21,7 +21,7 @@ export function SnoozeMenu({ onSnooze, onPickDateTime, triggerClassName }: Snooz
       }
       triggerClassName={
         triggerClassName ??
-        "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+        "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
       }
       items={[
         ...SNOOZE_OPTIONS.map((option) => ({

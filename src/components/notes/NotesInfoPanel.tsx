@@ -34,7 +34,7 @@ interface NotesInfoPanelProps {
 }
 
 const selectClassName =
-  "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200";
+  "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 focus:outline-none dark:border-white/8 dark:bg-surface-2 dark:text-ink-dim";
 
 export function NotesInfoPanel({
   note,
@@ -59,9 +59,9 @@ export function NotesInfoPanel({
 
   if (!note) {
     return (
-      <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white text-center dark:border-gray-800 dark:bg-gray-900">
-        <Paperclip size={22} className="text-gray-300 dark:text-gray-600" />
-        <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">Нет данных</p>
+      <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white text-center dark:border-white/8 dark:bg-surface">
+        <Paperclip size={22} className="text-gray-300 dark:text-ink-faint" />
+        <p className="mt-2 text-sm text-gray-400 dark:text-ink-faint">Нет данных</p>
       </div>
     );
   }
@@ -106,14 +106,14 @@ export function NotesInfoPanel({
     ? archivedLabel("reminder", note.links.reminderId) : undefined;
 
   return (
-    <div className="flex h-full flex-col gap-5 overflow-y-auto rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <div className="flex h-full flex-col gap-5 overflow-y-auto rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:shadow-none dark:border-white/8 dark:bg-surface">
       <section>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Вложения</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Вложения</h3>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+            className="text-xs font-medium text-accent hover:underline"
           >
             Добавить
           </button>
@@ -123,25 +123,25 @@ export function NotesInfoPanel({
         {note.attachments.length > 0 ? (
           <ul className="mt-2 space-y-2">
             {note.attachments.map((attachment) => (
-              <li key={attachment.id} className="flex items-center gap-2.5 rounded-xl px-1.5 py-1 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/70">
+              <li key={attachment.id} className="flex items-center gap-2.5 rounded-xl px-1.5 py-1 transition-colors hover:bg-gray-50 dark:hover:bg-surface-2/70">
                 {attachment.mimeType.startsWith("image/") ? (
                   <div className="h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                     {/* eslint-disable-next-line @next/next/no-img-element -- data URL, not an optimizable asset */}
                     <img src={attachment.dataUrl} alt="" className="h-full w-full object-cover" />
                   </div>
                 ) : (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-400 dark:bg-gray-800 dark:text-gray-500">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-400 dark:bg-surface-2 dark:text-ink-faint">
                     <File size={15} />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{attachment.name}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{formatFileSize(attachment.size)}</p>
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-ink">{attachment.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-ink-faint">{formatFileSize(attachment.size)}</p>
                 </div>
-                <button type="button" onClick={() => viewAttachment(attachment)} aria-label="Просмотреть" className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700">
+                <button type="button" onClick={() => viewAttachment(attachment)} aria-label="Просмотреть" className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-surface-2">
                   <Eye size={14} />
                 </button>
-                <button type="button" onClick={() => downloadAttachment(attachment)} aria-label="Скачать" className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700">
+                <button type="button" onClick={() => downloadAttachment(attachment)} aria-label="Скачать" className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-surface-2">
                   <Download size={14} />
                 </button>
                 <button
@@ -156,13 +156,13 @@ export function NotesInfoPanel({
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">Нет вложений</p>
+          <p className="mt-2 text-xs text-gray-400 dark:text-ink-faint">Нет вложений</p>
         )}
       </section>
 
-      <section className="border-t border-gray-100 pt-4 dark:border-gray-800">
+      <section className="border-t border-gray-100 pt-4 dark:border-white/8">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Теги</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Теги</h3>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {note.tags.map((tag) => (
@@ -204,11 +204,11 @@ export function NotesInfoPanel({
         )}
       </section>
 
-      <section className="border-t border-gray-100 pt-4 dark:border-gray-800">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Связано с</h3>
+      <section className="border-t border-gray-100 pt-4 dark:border-white/8">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Связано с</h3>
         <div className="mt-2 space-y-3">
           <div className="flex items-center gap-2.5">
-            <Folder size={15} className="shrink-0 text-gray-400 dark:text-gray-500" />
+            <Folder size={15} className="shrink-0 text-gray-400 dark:text-ink-faint" />
             <select
               value={note.links.projectId ?? ""}
               onChange={(event) => onSetLink(note.id, "projectId", event.target.value || undefined)}
@@ -224,7 +224,7 @@ export function NotesInfoPanel({
             </select>
           </div>
           <div className="flex items-center gap-2.5">
-            <ListChecks size={15} className="shrink-0 text-gray-400 dark:text-gray-500" />
+            <ListChecks size={15} className="shrink-0 text-gray-400 dark:text-ink-faint" />
             <select
               value={note.links.taskId ?? ""}
               onChange={(event) => onSetLink(note.id, "taskId", event.target.value || undefined)}
@@ -241,7 +241,7 @@ export function NotesInfoPanel({
             </select>
           </div>
           <div className="flex items-center gap-2.5">
-            <Calendar size={15} className="shrink-0 text-gray-400 dark:text-gray-500" />
+            <Calendar size={15} className="shrink-0 text-gray-400 dark:text-ink-faint" />
             <select
               value={note.links.eventId ?? ""}
               onChange={(event) => onSetLink(note.id, "eventId", event.target.value || undefined)}
@@ -257,7 +257,7 @@ export function NotesInfoPanel({
             </select>
           </div>
           <div className="flex items-center gap-2.5">
-            <Bell size={15} className="shrink-0 text-gray-400 dark:text-gray-500" />
+            <Bell size={15} className="shrink-0 text-gray-400 dark:text-ink-faint" />
             <select
               value={note.links.reminderId ?? ""}
               onChange={(event) => onSetLink(note.id, "reminderId", event.target.value || undefined)}
@@ -271,15 +271,15 @@ export function NotesInfoPanel({
         </div>
       </section>
 
-      <section className="border-t border-gray-100 pt-4 dark:border-gray-800">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Быстрые действия</h3>
+      <section className="border-t border-gray-100 pt-4 dark:border-white/8">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Быстрые действия</h3>
         <div className="mt-2 space-y-1">
           {quickActions.map(({ key, label, icon: Icon, onClick }) => (
             <button
               key={key}
               type="button"
               onClick={onClick}
-              className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               <Icon size={15} />
               {label}

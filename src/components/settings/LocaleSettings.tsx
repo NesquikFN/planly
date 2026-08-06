@@ -94,7 +94,7 @@ export function LocaleSettings({ value, onChange }: LocaleSettingsProps) {
 
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Предварительный просмотр</h3>
-        <p className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-50">
+        <p className="mt-2 text-lg font-medium text-gray-900 dark:text-ink">
           {dateLabel}, {timeLabel}
         </p>
       </section>

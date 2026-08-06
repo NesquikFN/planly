@@ -90,12 +90,12 @@ export function PlanlyDatePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         className={cn(
-          "flex w-full items-center gap-2 rounded-lg border bg-white px-3 py-2 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:pointer-events-none disabled:opacity-40 dark:bg-gray-800",
-          error ? "border-red-400 dark:border-red-500/60" : "border-gray-200 dark:border-gray-700",
+          "flex w-full items-center gap-2 rounded-lg border bg-white px-3 py-2 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:pointer-events-none disabled:opacity-40 dark:bg-surface-2",
+          error ? "border-red-400 dark:border-red-500/60" : "border-gray-200 dark:border-white/8",
         )}
       >
-        <CalendarIcon size={15} className="shrink-0 text-gray-400 dark:text-gray-500" />
-        <span className={cn("flex-1 truncate", selectedDate ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>
+        <CalendarIcon size={15} className="shrink-0 text-gray-400 dark:text-ink-faint" />
+        <span className={cn("flex-1 truncate", selectedDate ? "text-gray-700 dark:text-ink-dim" : "text-gray-400 dark:text-ink-faint")}>
           {selectedDate ? formatDateDMY(selectedDate) : placeholder}
         </span>
         {canClear && value && !disabled && (
@@ -125,10 +125,10 @@ export function PlanlyDatePicker({
         <div
           role="dialog"
           aria-label="Выбор даты"
-          className="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+          className="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-white/8 dark:bg-surface"
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-50">{formatMonthYear(viewMonth)}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-ink">{formatMonthYear(viewMonth)}</span>
             <div className="flex items-center gap-0.5">
               <button
                 type="button"
@@ -151,7 +151,7 @@ export function PlanlyDatePicker({
 
           <div className="mt-3 grid grid-cols-7 gap-y-1 text-center">
             {WEEKDAY_LABELS.map((label) => (
-              <span key={label} className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+              <span key={label} className="text-[11px] font-medium text-gray-400 dark:text-ink-faint">
                 {label}
               </span>
             ))}
@@ -173,12 +173,12 @@ export function PlanlyDatePicker({
                   className={cn(
                     "mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
                     isSelected
-                      ? "bg-blue-600 font-semibold text-white"
+                      ? "bg-accent font-semibold text-white"
                       : isToday
-                        ? "font-semibold text-blue-600 ring-1 ring-inset ring-blue-400 dark:text-blue-400 dark:ring-blue-500/60"
+                        ? "font-semibold text-accent ring-1 ring-inset ring-accent/50"
                         : isCurrentMonth
-                          ? "text-gray-700 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 dark:active:bg-gray-700"
-                          : "text-gray-300 hover:bg-gray-100 dark:text-gray-600 dark:hover:bg-gray-800",
+                          ? "text-gray-700 hover:bg-gray-100 active:bg-gray-200 dark:text-ink-dim dark:hover:bg-surface-2 dark:active:bg-surface"
+                          : "text-gray-300 hover:bg-gray-100 dark:text-ink-faint dark:hover:bg-surface-2",
                   )}
                 >
                   {day.getDate()}
@@ -191,7 +191,7 @@ export function PlanlyDatePicker({
             <button
               type="button"
               onClick={clear}
-              className="mt-2 w-full rounded-lg px-2 py-1.5 text-center text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="mt-2 w-full rounded-lg px-2 py-1.5 text-center text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               Очистить дату
             </button>

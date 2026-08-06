@@ -1,16 +1,19 @@
 "use client";
 
-import { Flag, MoreVertical } from "lucide-react";
+import { Flag, MoreVertical, Target } from "lucide-react";
 import { priorityStyles } from "@/lib/priority";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { useTasksStore } from "@/hooks/useTasksStore";
+import { cn } from "@/lib/utils";
 import type { Task } from "@/types/task";
 
 interface TaskRowProps {
   task: Task;
+  /** True when this is today's focus task (see useTasksStore's focusStatus) — marks the row instead of showing focus as its own card. */
+  isFocus?: boolean;
 }
 
-export function TaskRow({ task }: TaskRowProps) {
+export function TaskRow({ task, isFocus = false }: TaskRowProps) {
   const {
     toggleComplete,
     setManualFocus,
@@ -31,13 +34,19 @@ export function TaskRow({ task }: TaskRowProps) {
       }`}
     >
       <div className={isExiting ? "overflow-hidden" : undefined}>
-        <div className="flex items-center gap-3 py-3">
+        <div
+          className={cn(
+            "-mx-2 flex items-center gap-3 rounded-lg border-l-2 px-2 py-3 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-white/[0.03]",
+            isFocus ? "border-accent" : "border-transparent",
+          )}
+        >
+          {isFocus && <Target size={13} className="-ml-1 shrink-0 text-accent" aria-label="Фокус дня" />}
           <input
             type="checkbox"
             checked={task.completed}
             onChange={() => toggleComplete(task.id)}
             aria-label={`Отметить задачу «${task.title}» выполненной`}
-            className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-0 dark:border-gray-600"
+            className="h-4 w-4 shrink-0 rounded border-gray-300 accent-accent focus:ring-0 dark:border-white/20 dark:bg-transparent"
           />
           <span
             role="button"
@@ -51,7 +60,7 @@ export function TaskRow({ task }: TaskRowProps) {
             }}
             title="Выбрать как фокус дня"
             className={`flex-1 truncate text-sm font-medium ${
-              task.completed ? "text-gray-400 line-through dark:text-gray-500" : `cursor-pointer ${styles.title}`
+              task.completed ? "text-gray-400 line-through dark:text-ink-faint" : `cursor-pointer dark:text-ink ${styles.title}`
             }`}
           >
             {task.title}
@@ -62,17 +71,17 @@ export function TaskRow({ task }: TaskRowProps) {
           <Flag
             size={14}
             fill="currentColor"
-            className={`hidden shrink-0 sm:block ${task.completed ? "text-gray-200 dark:text-gray-700" : styles.flag}`}
+            className={`hidden shrink-0 sm:block ${task.completed ? "text-gray-200 dark:text-white/10" : styles.flag}`}
           />
           <span
-            className={`w-20 shrink-0 text-right text-sm ${task.completed ? "text-gray-300 dark:text-gray-600" : styles.due}`}
+            className={`w-20 shrink-0 text-right text-sm tabular-nums ${task.completed ? "text-gray-300 dark:text-ink-faint" : styles.due}`}
           >
             {task.dueLabel}
           </span>
 
           <DropdownMenu
             trigger={<MoreVertical size={16} />}
-            triggerClassName="shrink-0 rounded p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
+            triggerClassName="shrink-0 rounded p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-ink-faint dark:hover:bg-surface-2 dark:hover:text-ink-dim"
             triggerAriaLabel="Действия с задачей"
             items={[
               { key: "edit", label: "Редактировать", onSelect: () => startEditing(task.id) },

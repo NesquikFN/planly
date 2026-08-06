@@ -15,13 +15,13 @@ export function TodayCalendarCard() {
   const entries = entriesByDate.get(toISODate(today)) ?? [];
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Сегодня в календаре</h3>
+    <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-surface">
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Сегодня в календаре</h3>
 
       {entries.length === 0 ? (
-        <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">Сегодня событий нет</p>
+        <p className="mt-2.5 text-sm text-gray-400 dark:text-ink-faint">Сегодня событий нет</p>
       ) : (
-        <ul className="mt-3 space-y-3">
+        <ul className="mt-2.5 space-y-2.5">
           {entries.map((entry) => {
             const styles = calendarColorStyles[entry.color];
             return (
@@ -32,7 +32,7 @@ export function TodayCalendarCard() {
                     selectEntry(entry.id);
                     openEntryEditor(entry);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-lg text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="flex w-full items-center gap-2.5 rounded-lg text-left text-sm hover:bg-gray-50 dark:hover:bg-surface-2"
                 >
                   {entry.kind === "task" ? (
                     <span
@@ -42,17 +42,17 @@ export function TodayCalendarCard() {
                         domEvent.stopPropagation();
                         toggleEntryComplete(entry);
                       }}
-                      className="shrink-0 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                      className="shrink-0 text-gray-400 hover:text-gray-600 dark:text-ink-faint dark:hover:text-ink-dim"
                     >
                       {entry.completed ? <CheckSquare size={14} /> : <Square size={14} />}
                     </span>
                   ) : (
                     <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", styles.dot)} />
                   )}
-                  <span className="shrink-0 tabular-nums text-gray-400 dark:text-gray-500">
+                  <span className="shrink-0 tabular-nums text-gray-400 dark:text-ink-faint">
                     {entry.allDay ? "Весь день" : entry.startTime}
                   </span>
-                  <span className="truncate text-gray-700 dark:text-gray-200">{entry.title}</span>
+                  <span className="truncate text-gray-700 dark:text-ink-dim">{entry.title}</span>
                 </button>
               </li>
             );
@@ -66,7 +66,7 @@ export function TodayCalendarCard() {
           openTodayInDayView();
           router.push("/calendar");
         }}
-        className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline"
+        className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
       >
         Открыть календарь
         <ArrowRight size={14} />

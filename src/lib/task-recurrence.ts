@@ -63,7 +63,14 @@ export function computeNextOccurrenceDateKey(weekdays: number[], fromDate: Date)
   return null;
 }
 
-/** Builds the next Task occurrence from a just-completed recurring task, or null if it doesn't recur. */
+/**
+ * @deprecated Legacy — no longer called anywhere. Task completion (see
+ * useTasksStore's toggleComplete) used to call this to spawn the next
+ * occurrence as a new task row; that generation step has been removed
+ * (repetition now lives on Calendar event series, not Tasks). Kept only for
+ * reference/rollback safety alongside the still-legacy `Task.recurrence`
+ * field — safe to delete once old recurring tasks have been migrated.
+ */
 export function buildNextOccurrence(completed: Task, today: Date, generateId: () => string): Task | null {
   const recurrence = completed.recurrence;
   if (!recurrence || recurrence.rule === "none" || recurrence.weekdays.length === 0) return null;

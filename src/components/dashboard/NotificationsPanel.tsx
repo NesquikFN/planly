@@ -64,7 +64,7 @@ export function NotificationsPanel() {
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-label="Уведомления"
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 dark:text-gray-500 dark:hover:bg-gray-800"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 dark:text-ink-faint dark:hover:bg-surface-2"
       >
         <Bell size={18} />
         {unreadCount > 0 && (
@@ -73,12 +73,12 @@ export function NotificationsPanel() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex items-center justify-between border-b border-gray-100 p-3 dark:border-gray-800">
+        <div className="absolute right-0 top-full z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-white/8 dark:bg-surface">
+          <div className="flex items-center justify-between border-b border-gray-100 p-3 dark:border-white/8">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Уведомления</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Уведомления</h3>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-600 dark:bg-surface-2 dark:text-ink-dim">
                   {unreadCount}
                 </span>
               )}
@@ -87,7 +87,7 @@ export function NotificationsPanel() {
               <button
                 type="button"
                 onClick={markAllRead}
-                className="text-xs font-medium text-blue-600 hover:underline"
+                className="text-xs font-medium text-accent hover:underline"
               >
                 Отметить все прочитанными
               </button>
@@ -96,17 +96,17 @@ export function NotificationsPanel() {
 
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="p-6 text-center text-sm text-gray-400 dark:text-gray-500">Новых уведомлений нет</p>
+              <p className="p-6 text-center text-sm text-gray-400 dark:text-ink-faint">Новых уведомлений нет</p>
             ) : (
-              <ul className="divide-y divide-gray-50 dark:divide-gray-800">
+              <ul className="divide-y divide-gray-50 dark:divide-white/8">
                 {notifications.map((notification) => (
                   <li key={notification.id} className="group relative">
                     <button
                       type="button"
                       onClick={() => handleNotificationClick(notification)}
                       className={cn(
-                        "flex w-full items-start gap-2.5 px-3 py-2.5 pr-8 text-left hover:bg-gray-50 dark:hover:bg-gray-800",
-                        !notification.read && "bg-blue-50/40 dark:bg-blue-500/10",
+                        "flex w-full items-start gap-2.5 px-3 py-2.5 pr-8 text-left hover:bg-gray-50 dark:hover:bg-surface-2",
+                        !notification.read && "bg-accent/5 dark:bg-accent/10",
                       )}
                     >
                       <span
@@ -117,15 +117,15 @@ export function NotificationsPanel() {
                           className={cn(
                             "block truncate text-sm",
                             notification.read
-                              ? "font-medium text-gray-600 dark:text-gray-300"
-                              : "font-semibold text-gray-900 dark:text-gray-50",
+                              ? "font-medium text-gray-600 dark:text-ink-dim"
+                              : "font-semibold text-gray-900 dark:text-ink",
                           )}
                         >
                           {notification.title}
                         </span>
-                        <span className="block truncate text-xs text-gray-400 dark:text-gray-500">{notification.message}</span>
+                        <span className="block truncate text-xs text-gray-400 dark:text-ink-faint">{notification.message}</span>
                       </span>
-                      <span className="shrink-0 text-[11px] text-gray-300 dark:text-gray-600">
+                      <span className="shrink-0 text-[11px] text-gray-300 dark:text-ink-faint">
                         {formatNotificationTime(notification.createdAt)}
                       </span>
                     </button>
@@ -136,7 +136,7 @@ export function NotificationsPanel() {
                         removeNotification(notification.id);
                       }}
                       aria-label="Удалить уведомление"
-                      className="absolute right-2 top-2.5 rounded p-1 text-gray-300 opacity-0 hover:bg-gray-100 hover:text-gray-500 group-hover:opacity-100 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
+                      className="absolute right-2 top-2.5 rounded p-1 text-gray-300 opacity-0 hover:bg-gray-100 hover:text-gray-500 group-hover:opacity-100 dark:text-ink-faint dark:hover:bg-surface-2 dark:hover:text-gray-400"
                     >
                       <X size={13} />
                     </button>
@@ -147,11 +147,11 @@ export function NotificationsPanel() {
           </div>
 
           {hasRead && (
-            <div className="border-t border-gray-100 p-2 dark:border-gray-800">
+            <div className="border-t border-gray-100 p-2 dark:border-white/8">
               <button
                 type="button"
                 onClick={clearRead}
-                className="w-full rounded-lg px-2 py-1.5 text-center text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+                className="w-full rounded-lg px-2 py-1.5 text-center text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
               >
                 Очистить прочитанные
               </button>

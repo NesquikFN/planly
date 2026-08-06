@@ -17,44 +17,44 @@ function daysWord(count: number): string {
 }
 
 const INTENSITY_CLASSES = [
-  "bg-gray-100 dark:bg-gray-800",
-  "bg-blue-100 dark:bg-blue-500/20",
-  "bg-blue-300 dark:bg-blue-500/40",
-  "bg-blue-500 dark:bg-blue-500/70",
-  "bg-blue-700 dark:bg-blue-400",
+  "bg-gray-100 dark:bg-surface-2",
+  "bg-accent/20",
+  "bg-accent/40",
+  "bg-accent/70",
+  "bg-accent",
 ];
 
 export function ActivityHeatmap({ data }: { data: ActivityHeatmapData }) {
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">Регулярность</h2>
-        <span className="text-xs text-gray-400 dark:text-gray-500">{data.monthLabel}</span>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-ink">Регулярность</h2>
+        <span className="text-xs text-gray-400 dark:text-ink-faint">{data.monthLabel}</span>
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
-        <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5 dark:bg-gray-800/60">
+        <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5 dark:bg-surface-2/60">
           <Flame size={15} className="shrink-0 text-orange-500" />
           <div className="min-w-0">
-            <p className="text-xs text-gray-400 dark:text-gray-500">Активных подряд</p>
-            <p className="font-semibold text-gray-900 dark:text-gray-50">
+            <p className="text-xs text-gray-400 dark:text-ink-faint">Активных подряд</p>
+            <p className="font-semibold text-gray-900 dark:text-ink">
               {data.currentStreak} {daysWord(data.currentStreak)}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5 dark:bg-gray-800/60">
+        <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5 dark:bg-surface-2/60">
           <Trophy size={15} className="shrink-0 text-amber-500" />
           <div className="min-w-0">
-            <p className="text-xs text-gray-400 dark:text-gray-500">Лучший результат</p>
-            <p className="font-semibold text-gray-900 dark:text-gray-50">
+            <p className="text-xs text-gray-400 dark:text-ink-faint">Лучший результат</p>
+            <p className="font-semibold text-gray-900 dark:text-ink">
               {data.bestStreak} {daysWord(data.bestStreak)}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5 dark:bg-gray-800/60">
+        <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5 dark:bg-surface-2/60">
           <div className="min-w-0">
-            <p className="text-xs text-gray-400 dark:text-gray-500">В этом месяце</p>
-            <p className="font-semibold text-gray-900 dark:text-gray-50">
+            <p className="text-xs text-gray-400 dark:text-ink-faint">В этом месяце</p>
+            <p className="font-semibold text-gray-900 dark:text-ink">
               {data.activeDaysThisMonth} из {data.totalDaysThisMonth}
             </p>
           </div>
@@ -64,7 +64,7 @@ export function ActivityHeatmap({ data }: { data: ActivityHeatmapData }) {
       <div className="mt-4">
         <div className="grid grid-cols-7 gap-1.5 text-center">
           {WEEKDAY_LABELS.map((label) => (
-            <span key={label} className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
+            <span key={label} className="text-[10px] font-medium text-gray-400 dark:text-ink-faint">
               {label}
             </span>
           ))}
@@ -73,14 +73,14 @@ export function ActivityHeatmap({ data }: { data: ActivityHeatmapData }) {
               <span
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded-md text-[10px]",
-                  day.inCurrentMonth ? INTENSITY_CLASSES[day.intensity] : "bg-transparent text-gray-200 dark:text-gray-700",
-                  day.inCurrentMonth && day.intensity >= 3 ? "text-white" : "text-gray-500 dark:text-gray-400",
+                  day.inCurrentMonth ? INTENSITY_CLASSES[day.intensity] : "bg-transparent text-gray-200 dark:text-ink-faint",
+                  day.inCurrentMonth && day.intensity >= 3 ? "text-white" : "text-gray-500 dark:text-ink-faint",
                 )}
               >
                 {day.dayOfMonth}
               </span>
               {day.inCurrentMonth && (
-                <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-gray-100 bg-white px-2.5 py-1.5 text-[11px] text-gray-600 shadow-sm group-hover:block dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-gray-100 bg-white px-2.5 py-1.5 text-[11px] text-gray-600 shadow-sm group-hover:block dark:border-white/8 dark:bg-surface dark:text-ink-dim dark:shadow-none">
                   {day.tasksCompleted > 0
                     ? `${formatShortDate(fromISODate(day.dateKey))} — выполнено ${day.tasksCompleted} задач`
                     : `${formatShortDate(fromISODate(day.dateKey))} — активности не было`}

@@ -34,8 +34,8 @@ export function UpcomingEvents() {
       ) : (
         <>
           <ul className="mt-2 space-y-3">
-            {preview.map(({ event, dateLabel }) => (
-              <UpcomingItem key={event.id} title={event.title} dateLabel={dateLabel} calendarId={event.calendarId} />
+            {preview.map(({ entryId, event, dateLabel }) => (
+              <UpcomingItem key={entryId} title={event.title} dateLabel={dateLabel} calendarId={event.calendarId} />
             ))}
           </ul>
 
@@ -48,8 +48,8 @@ export function UpcomingEvents() {
             >
               <div className="overflow-hidden">
                 <ul className="mt-3 space-y-3">
-                  {rest.map(({ event, dateLabel }) => (
-                    <UpcomingItem key={event.id} title={event.title} dateLabel={dateLabel} calendarId={event.calendarId} />
+                  {rest.map(({ entryId, event, dateLabel }) => (
+                    <UpcomingItem key={entryId} title={event.title} dateLabel={dateLabel} calendarId={event.calendarId} />
                   ))}
                 </ul>
               </div>

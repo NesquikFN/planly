@@ -65,7 +65,7 @@ export function ProfileSettings() {
 
       {saveError && <p className="text-xs font-medium text-red-500 dark:text-red-400">{saveError}</p>}
 
-      <p className="flex items-start gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+      <p className="flex items-start gap-1.5 text-xs text-gray-400 dark:text-ink-faint">
         <Info size={13} className="mt-0.5 shrink-0" />
         Данные этого устройства привязаны к аккаунту. Облачная синхронизация рабочих данных будет подключена следующим этапом.
       </p>
@@ -74,9 +74,9 @@ export function ProfileSettings() {
         <div className="flex items-center gap-4">
           <Avatar name={draft.displayName} initials={getInitials(draft)} src={draft.avatarDataUrl} size={64} />
           <div className="min-w-0 flex-1">
-            <p className="text-base font-semibold text-gray-900 dark:text-gray-50">{draft.displayName}</p>
-            <p className="truncate text-sm text-gray-400 dark:text-gray-500">{draft.email}</p>
-            <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+            <p className="text-base font-semibold text-gray-900 dark:text-ink">{draft.displayName}</p>
+            <p className="truncate text-sm text-gray-400 dark:text-ink-faint">{draft.email}</p>
+            <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-surface-2 dark:text-ink-faint">
               Free Plan
             </span>
           </div>
@@ -85,7 +85,7 @@ export function ProfileSettings() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
             >
               <Camera size={13} />
               Изменить фото
@@ -97,7 +97,7 @@ export function ProfileSettings() {
                 updateDraft({ avatarDataUrl: null });
               }}
               disabled={!draft.avatarDataUrl}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/8 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               <Trash2 size={13} />
               Удалить фото
@@ -163,7 +163,7 @@ export function ProfileSettings() {
             rows={3}
             className={cn(settingsInput, "resize-none")}
           />
-          <span className="mt-1 block text-right text-xs text-gray-400 dark:text-gray-500">
+          <span className="mt-1 block text-right text-xs text-gray-400 dark:text-ink-faint">
             {draft.bio.length} / {BIO_MAX_LENGTH}
           </span>
         </label>
@@ -171,7 +171,7 @@ export function ProfileSettings() {
 
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Контактные данные</h3>
-        <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
           <Switch checked={draft.showEmail} onChange={(checked) => updateDraft({ showEmail: checked })} label="Показывать email в профиле" />
           <Switch checked={draft.showPhone} onChange={(checked) => updateDraft({ showPhone: checked })} label="Показывать телефон" />
           <Switch
@@ -194,8 +194,8 @@ export function ProfileSettings() {
               className={cn(
                 "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
                 draft.status === status.key
-                  ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-400"
-                  : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800",
+                  ? "border-accent/30 bg-accent/10 text-accent"
+                  : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-white/8 dark:text-ink-faint dark:hover:bg-surface-2",
               )}
             >
               <span className={cn("h-2 w-2 rounded-full", status.dot)} />

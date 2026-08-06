@@ -50,10 +50,10 @@ export function NoteEditor({
 }: NoteEditorProps) {
   if (!note) {
     return (
-      <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white text-center dark:border-gray-800 dark:bg-gray-900">
-        <FileText size={28} className="text-gray-300 dark:text-gray-600" />
-        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">Заметка не выбрана</p>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Выберите заметку из списка слева</p>
+      <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white text-center dark:border-white/8 dark:bg-surface">
+        <FileText size={28} className="text-gray-300 dark:text-ink-faint" />
+        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-ink-faint">Заметка не выбрана</p>
+        <p className="mt-1 text-sm text-gray-400 dark:text-ink-faint">Выберите заметку из списка слева</p>
       </div>
     );
   }
@@ -246,14 +246,14 @@ function NoteEditorBody({
     saveStatus === "pending" ? "Сохранение…" : saveStatus === "flash" ? "Уже сохранено ✓" : `Сохранено · ${formatNoteDateLabel(note.updatedAt, now)}`;
 
   return (
-    <div className="note-print-area flex h-full min-h-[32rem] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <div className="note-print-area flex h-full min-h-[32rem] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:shadow-none dark:border-white/8 dark:bg-surface">
       <div className="shrink-0 p-5 pb-0">
         <div className="flex items-start justify-between gap-3">
           <input
             value={titleDraft}
             onChange={(event) => handleTitleChange(event.target.value)}
             placeholder="Без названия"
-            className="min-w-0 flex-1 truncate border-none bg-transparent text-xl font-semibold text-gray-900 outline-none placeholder:text-gray-300 dark:text-gray-50 dark:placeholder:text-gray-700"
+            className="min-w-0 flex-1 truncate border-none bg-transparent text-xl font-semibold text-gray-900 outline-none placeholder:text-gray-300 dark:text-ink dark:placeholder:text-ink-faint"
           />
           <div className="flex shrink-0 items-center gap-1">
             <button
@@ -261,22 +261,22 @@ function NoteEditorBody({
               onClick={() => onTogglePin(note.id)}
               aria-pressed={note.pinned}
               aria-label={note.pinned ? "Открепить" : "Закрепить"}
-              className="rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-gray-50 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-600 dark:hover:bg-gray-800"
+              className="rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-gray-50 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
-              <Pin size={17} className={note.pinned ? "fill-gray-500 text-gray-500 dark:fill-gray-400 dark:text-gray-400" : undefined} />
+              <Pin size={17} className={note.pinned ? "fill-gray-500 text-gray-500 dark:fill-ink-dim dark:text-ink-faint" : undefined} />
             </button>
             <button
               type="button"
               onClick={() => onToggleStar(note.id)}
               aria-pressed={note.starred}
               aria-label={note.starred ? "Убрать из избранного" : "Добавить в избранное"}
-              className="rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-gray-50 hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-600 dark:hover:bg-gray-800"
+              className="rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-gray-50 hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               <Star size={18} className={note.starred ? "fill-amber-400 text-amber-400" : undefined} />
             </button>
             <DropdownMenu
               trigger={<MoreVertical size={18} />}
-              triggerClassName="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+              triggerClassName="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2"
               triggerAriaLabel="Действия с заметкой"
               items={menuItems}
             />
@@ -326,14 +326,14 @@ function NoteEditorBody({
               }}
               onBlur={commitTagDraft}
               placeholder="Тег…"
-              className="w-24 rounded-full border border-dashed border-gray-300 bg-transparent px-2.5 py-1 text-xs text-gray-600 focus:outline-none dark:border-gray-600 dark:text-gray-300"
+              className="w-24 rounded-full border border-dashed border-gray-300 bg-transparent px-2.5 py-1 text-xs text-gray-600 focus:outline-none dark:border-white/10 dark:text-ink-dim"
             />
           ) : (
             <button
               type="button"
               onClick={() => setAddingTag(true)}
               aria-label="Добавить тег"
-              className="rounded-full p-1.5 text-gray-400 transition-all hover:scale-105 hover:bg-gray-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+              className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               <Plus size={14} />
             </button>
@@ -398,8 +398,8 @@ function NoteEditorBody({
         className="note-content min-h-0 flex-1 overflow-y-auto p-5 scroll-smooth"
       />
 
-      <div className="shrink-0 border-t border-gray-100 px-5 py-3 dark:border-gray-800">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+      <div className="shrink-0 border-t border-gray-100 px-5 py-3 dark:border-white/8">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 dark:text-ink-faint">
           <span>{saveLabel}</span>
           <span aria-hidden="true">·</span>
           <span>{wordStats.words} слов, {wordStats.chars} симв.</span>

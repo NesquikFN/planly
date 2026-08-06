@@ -28,10 +28,10 @@ export function RemindersScheduleView({
 }: RemindersScheduleViewProps) {
   if (reminders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-800 dark:bg-gray-900">
-        <CalendarX2 size={28} className="text-gray-300 dark:text-gray-600" />
-        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">Ничего не найдено</p>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Попробуйте изменить фильтры или запрос поиска</p>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-white/8 dark:bg-surface">
+        <CalendarX2 size={28} className="text-gray-300 dark:text-ink-faint" />
+        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-ink-faint">Ничего не найдено</p>
+        <p className="mt-1 text-sm text-gray-400 dark:text-ink-faint">Попробуйте изменить фильтры или запрос поиска</p>
       </div>
     );
   }
@@ -54,7 +54,7 @@ export function RemindersScheduleView({
         return (
           <div key={reminder.id}>
             {showDivider && (
-              <p className="mb-1.5 mt-4 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400 first:mt-0 dark:text-gray-500">
+              <p className="mb-1.5 mt-4 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400 first:mt-0 dark:text-ink-faint">
                 {formatReminderDateLabel(reminder, today)}
               </p>
             )}

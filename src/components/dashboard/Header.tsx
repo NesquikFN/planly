@@ -45,7 +45,7 @@ export function Header({
           type="button"
           onClick={onMenuClick}
           aria-label="Открыть меню"
-          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden dark:text-gray-400 dark:hover:bg-gray-800"
+          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden dark:text-ink-faint dark:hover:bg-surface-2"
         >
           <Menu size={20} />
         </button>
@@ -56,16 +56,16 @@ export function Header({
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Поиск задач..."
-            className="w-full max-w-xs rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+            className="w-full max-w-xs rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none dark:border-white/8 dark:bg-surface-2 dark:text-ink dark:placeholder:text-ink-faint"
           />
         ) : title ? (
-          <h1 className="truncate text-xl font-semibold text-gray-900 sm:text-2xl dark:text-gray-50">{title}</h1>
+          <h1 className="truncate text-xl font-semibold text-gray-900 sm:text-2xl dark:text-ink">{title}</h1>
         ) : (
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-gray-900 sm:text-2xl dark:text-gray-50">
+            <h1 className="truncate text-xl font-semibold text-gray-900 sm:text-[26px] dark:text-ink">
               {greeting}, {displayName}! 👋
             </h1>
-            <p className="mt-0.5 text-sm text-gray-400 dark:text-gray-500">{dateLabel}</p>
+            <p className="mt-0.5 text-sm text-gray-400 dark:text-ink-faint">{dateLabel}</p>
           </div>
         )}
       </div>
@@ -75,7 +75,7 @@ export function Header({
           type="button"
           aria-label={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"}
           onClick={toggleTheme}
-          className="hidden h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 sm:flex dark:text-gray-500 dark:hover:bg-gray-800"
+          className="hidden h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 sm:flex dark:text-ink-faint dark:hover:bg-surface-2"
         >
           {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
         </button>
@@ -90,7 +90,7 @@ export function Header({
             if (searchOpen) setSearchQuery("");
             setSearchOpen(!searchOpen);
           }}
-          className="hidden h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 sm:flex dark:text-gray-500 dark:hover:bg-gray-800"
+          className="hidden h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 sm:flex dark:text-ink-faint dark:hover:bg-surface-2"
         >
           {showTaskSearchInput ? <X size={18} /> : <Search size={18} />}
         </button>

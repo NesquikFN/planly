@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { ArrowUpDown, Flag, LayoutGrid, List, Plus, Search, Tag as TagIcon } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { PROJECT_PRIORITY_LABELS, PROJECT_STATUS_LABELS } from "@/lib/projects";
+import { BUTTON_PRIMARY } from "@/lib/ui-tokens";
 import { cn } from "@/lib/utils";
 import type { ProjectPriority, ProjectStatus } from "@/types/project";
 
@@ -12,7 +13,7 @@ export type ProjectsViewMode = "grid" | "list";
 const sortLabels = ["По названию", "По прогрессу", "По сроку", "По задачам"] as const;
 
 const filterTriggerClass =
-  "inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800";
+  "inline-flex items-center gap-1.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-sm text-gray-500 shadow-sm dark:shadow-none hover:bg-gray-50 dark:border-white/8 dark:bg-surface dark:text-ink-faint dark:hover:bg-surface-2";
 
 interface ProjectsToolbarProps {
   searchQuery: string;
@@ -55,7 +56,7 @@ export function ProjectsToolbar({
         <div className="relative min-w-0 flex-1">
           <Search
             size={18}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-ink-faint"
           />
           <input
             ref={searchInputRef}
@@ -63,7 +64,7 @@ export function ProjectsToolbar({
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Поиск проектов..."
-            className="w-full rounded-2xl border border-gray-100 bg-white py-3 pl-11 pr-4 text-sm text-gray-700 shadow-sm placeholder:text-gray-400 focus:outline-none dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:placeholder:text-gray-500"
+            className="w-full rounded-2xl border border-gray-100 bg-white py-3 pl-11 pr-4 text-sm text-gray-700 shadow-sm dark:shadow-none placeholder:text-gray-400 focus:outline-none dark:border-white/8 dark:bg-surface dark:text-ink-dim dark:placeholder:text-ink-faint"
           />
         </div>
 
@@ -84,7 +85,7 @@ export function ProjectsToolbar({
             }))}
           />
 
-          <div className="flex items-center rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:shadow-none dark:border-white/8 dark:bg-surface">
             <button
               type="button"
               onClick={() => onViewModeChange("grid")}
@@ -93,8 +94,8 @@ export function ProjectsToolbar({
               className={cn(
                 "rounded-lg p-1.5 transition-colors",
                 viewMode === "grid"
-                  ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
-                  : "text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800",
+                  ? "bg-gray-100 text-gray-900 dark:bg-surface-2 dark:text-ink"
+                  : "text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2",
               )}
             >
               <LayoutGrid size={17} />
@@ -107,8 +108,8 @@ export function ProjectsToolbar({
               className={cn(
                 "rounded-lg p-1.5 transition-colors",
                 viewMode === "list"
-                  ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
-                  : "text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800",
+                  ? "bg-gray-100 text-gray-900 dark:bg-surface-2 dark:text-ink"
+                  : "text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2",
               )}
             >
               <List size={17} />
@@ -118,7 +119,7 @@ export function ProjectsToolbar({
           <button
             type="button"
             onClick={onNewProject}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+            className={cn(BUTTON_PRIMARY, "shrink-0 px-4 py-2.5")}
           >
             <Plus size={16} />
             Новый проект

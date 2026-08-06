@@ -9,7 +9,7 @@ import { formatHourLabel, minutesToOffsetPx, pxToMinutes, snapMinutes, minutesTo
 import { formatWeekdayShort, isSameDay, toISODate } from "@/lib/date-utils";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { cn } from "@/lib/utils";
-import { CheckSquare, Square } from "lucide-react";
+import { CheckSquare, Repeat, Square } from "lucide-react";
 
 const HOURS = Array.from({ length: DAY_END_HOUR - DAY_START_HOUR + 1 }, (_, index) => DAY_START_HOUR + index);
 
@@ -34,7 +34,7 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
 
   const columnRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [hoveredDropDate, setHoveredDropDate] = useState<string | null>(null);
-  const gridTemplate = `64px repeat(${days.length}, minmax(0, 1fr))`;
+  const gridTemplate = `48px repeat(${days.length}, minmax(0, 1fr))`;
 
   const entriesByDay = useMemo(() => {
     return days.map((day) => {
@@ -91,20 +91,22 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
   const nowOffsetPx = minutesToOffsetPx(nowMinutes);
 
   return (
-    <div className="flex flex-col">
-      <div className="grid border-b border-gray-100 dark:border-gray-800" style={{ gridTemplateColumns: gridTemplate }}>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="grid shrink-0 border-b border-gray-100 dark:border-white/[0.06]" style={{ gridTemplateColumns: gridTemplate }}>
         <div />
         {days.map((day) => {
           const isToday = isSameDay(day, today);
           return (
             <div key={day.toISOString()} className="flex flex-col items-center gap-1 py-3">
               {showWeekdayLabel && (
-                <span className="text-xs font-medium text-gray-400 dark:text-gray-500">{formatWeekdayShort(day)}</span>
+                <span className="text-xs font-medium text-gray-400 dark:text-ink-faint">{formatWeekdayShort(day)}</span>
               )}
               <span
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold",
-                  isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-gray-50",
+                  isToday
+                    ? "border border-blue-600 text-blue-600 dark:border-accent dark:bg-accent/10 dark:text-accent"
+                    : "text-gray-900 dark:text-ink",
                 )}
               >
                 {day.getDate()}
@@ -114,10 +116,15 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
         })}
       </div>
 
-      <div className="grid border-b border-gray-100 dark:border-gray-800" style={{ gridTemplateColumns: gridTemplate }}>
-        <div className="flex items-center justify-end px-2 py-2 text-xs text-gray-400 dark:text-gray-500">Весь день</div>
+      {/* "Весь день" is its own horizontal region — separated by background
+          tint, not treated as another row of the hour grid below it. */}
+      <div
+        className="grid shrink-0 border-b border-gray-100 bg-gray-50/60 dark:border-white/[0.06] dark:bg-white/[0.02]"
+        style={{ gridTemplateColumns: gridTemplate }}
+      >
+        <div className="flex items-center justify-end px-2 py-2 text-xs text-gray-400 dark:text-ink-faint">Весь день</div>
         {days.map((day, dayIndex) => (
-          <div key={day.toISOString()} className="flex flex-col gap-1 border-l border-gray-50 p-1 dark:border-gray-800">
+          <div key={day.toISOString()} className="flex flex-col gap-1 border-l border-gray-100 p-1 dark:border-white/[0.06]">
             {entriesByDay[dayIndex].allDay.map((entry) => {
               const styles = calendarColorStyles[entry.color];
               return (
@@ -129,10 +136,9 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
                     if (entry.kind === "event") openEntryEditor(entry);
                   }}
                   className={cn(
-                    "flex items-center gap-1.5 truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium",
-                    styles.block,
-                    styles.text,
-                    selectedEntryId === entry.id && `ring-1 ${styles.ring}`,
+                    "flex items-center gap-1.5 truncate rounded-md px-1.5 py-0.5 text-left text-[11px] font-medium",
+                    "bg-gray-50 text-gray-700 dark:bg-surface-2 dark:text-ink-dim",
+                    selectedEntryId === entry.id && "ring-1 ring-accent",
                   )}
                 >
                   {entry.kind === "task" ? (
@@ -151,6 +157,7 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
                     <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", styles.dot)} />
                   )}
                   <span className="truncate">{entry.title}</span>
+                  {entry.isRecurring && <Repeat size={9} className="ml-auto shrink-0 opacity-60" />}
                 </button>
               );
             })}
@@ -158,13 +165,18 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
         ))}
       </div>
 
-      <div className="max-h-[600px] overflow-y-auto">
+      {/* The one scrollable region in this view — bounded by the flex column
+          above (h-full min-h-0 on the root, flex-1 min-h-0 here) whenever an
+          ancestor actually constrains height (desktop, see calendar/page.tsx);
+          on narrower layouts with no such ancestor this just renders at its
+          natural height and the page scrolls normally, same as before. */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid" style={{ gridTemplateColumns: gridTemplate, height: gridHeight }}>
           <div className="relative">
             {HOURS.slice(0, -1).map((hour) => (
               <div
                 key={hour}
-                className="relative -top-2.5 pr-2 text-right text-xs text-gray-400 dark:text-gray-500"
+                className="relative -top-2.5 pr-2 text-right text-xs text-gray-400 dark:text-ink-faint"
                 style={{ height: HOUR_HEIGHT }}
               >
                 {formatHourLabel(hour)}
@@ -185,12 +197,13 @@ export function TimeGridView({ days, showWeekdayLabel = true }: TimeGridViewProp
                 onDoubleClick={(domEvent) => handleColumnDoubleClick(dayIndex, domEvent)}
                 onClick={() => selectEntry(null)}
                 className={cn(
-                  "relative border-l border-gray-50 transition-colors duration-100 dark:border-gray-800",
-                  isDropTarget && "bg-gray-100 dark:bg-gray-800",
+                  "relative border-l border-gray-50 transition-colors duration-100 dark:border-white/[0.06]",
+                  isToday && "dark:bg-accent/[0.03]",
+                  isDropTarget && "bg-gray-100 dark:bg-surface-2",
                 )}
               >
                 {HOURS.slice(0, -1).map((hour) => (
-                  <div key={hour} className="border-b border-gray-50 dark:border-gray-800" style={{ height: HOUR_HEIGHT }} />
+                  <div key={hour} className="border-b border-gray-50 dark:border-white/[0.06]" style={{ height: HOUR_HEIGHT }} />
                 ))}
 
                 {isToday && (

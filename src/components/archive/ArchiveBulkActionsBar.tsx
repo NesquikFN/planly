@@ -21,7 +21,7 @@ export function ArchiveBulkActionsBar({
 
   return (
     <section className={cn(settingsCard, "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between")}>
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-gray-500 dark:text-ink-faint">
         {hasSelection ? `Выбрано элементов: ${selectedCount}` : "Массовые действия — выберите элементы в таблице"}
       </p>
 
@@ -30,7 +30,7 @@ export function ArchiveBulkActionsBar({
           type="button"
           onClick={onRestoreSelected}
           disabled={!hasSelection}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
         >
           <RotateCcw size={14} />
           Восстановить
@@ -39,7 +39,7 @@ export function ArchiveBulkActionsBar({
           type="button"
           onClick={onExportSelected}
           disabled={!hasSelection}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
         >
           <Download size={14} />
           Экспортировать

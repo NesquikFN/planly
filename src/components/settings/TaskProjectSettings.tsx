@@ -82,7 +82,7 @@ export function TaskProjectSettings({ value, onChange }: TaskProjectSettingsProp
           </label>
         </div>
 
-        <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-4 divide-y divide-gray-100 dark:divide-white/8">
           <Switch checked={value.autoAddToToday} onChange={(c) => onChange({ autoAddToToday: c })} label="Автоматически добавлять созданные задачи в «Сегодня»" />
           <Switch checked={value.showCompletedTasks} onChange={(c) => onChange({ showCompletedTasks: c })} label="Показывать завершённые задачи" />
           <Switch checked={value.autoArchiveCompleted} onChange={(c) => onChange({ autoArchiveCompleted: c })} label="Автоматически архивировать завершённые задачи" />
@@ -96,7 +96,7 @@ export function TaskProjectSettings({ value, onChange }: TaskProjectSettingsProp
         <div className="mt-3 grid grid-cols-2 gap-4">
           <label className="block">
             <span className={settingsLabel}>Представление по умолчанию</span>
-            <div className="flex items-center rounded-lg border border-gray-200 p-1 dark:border-gray-700">
+            <div className="flex items-center rounded-lg border border-gray-200 p-1 dark:border-white/8">
               {(["grid", "list"] as const).map((mode) => (
                 <button
                   key={mode}
@@ -106,8 +106,8 @@ export function TaskProjectSettings({ value, onChange }: TaskProjectSettingsProp
                   className={cn(
                     "flex-1 rounded-md py-1.5 text-xs font-medium transition-colors",
                     value.projectDefaultView === mode
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                      : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                      ? "bg-accent/10 text-accent"
+                      : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2",
                   )}
                 >
                   {mode === "grid" ? "Сетка" : "Список"}
@@ -127,7 +127,7 @@ export function TaskProjectSettings({ value, onChange }: TaskProjectSettingsProp
           </label>
         </div>
 
-        <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-4 divide-y divide-gray-100 dark:divide-white/8">
           <Switch checked={value.showCompletedProjects} onChange={(c) => onChange({ showCompletedProjects: c })} label="Показывать завершённые проекты" />
           <Switch checked={value.autoCalculateProgress} onChange={(c) => onChange({ autoCalculateProgress: c })} label="Автоматически считать прогресс по задачам" />
           <Switch checked={value.showArchiveAtBottom} onChange={(c) => onChange({ showArchiveAtBottom: c })} label="Показывать архив внизу страницы" />
@@ -177,8 +177,8 @@ export function TaskProjectSettings({ value, onChange }: TaskProjectSettingsProp
                 className={cn(
                   "h-8 w-10 rounded-lg text-xs font-medium transition-colors",
                   value.workDays.includes(day.key)
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "bg-gray-50 text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700",
+                    ? "bg-accent/10 text-accent"
+                    : "bg-gray-50 text-gray-400 hover:bg-gray-100 dark:bg-surface-2 dark:hover:bg-surface-2",
                 )}
               >
                 {day.label}

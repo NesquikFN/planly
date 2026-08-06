@@ -8,8 +8,8 @@ export const calendarButtonBase =
   "hover:bg-gray-100 active:bg-gray-200 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-1 " +
   "disabled:pointer-events-none disabled:opacity-40 " +
-  "dark:text-gray-300 dark:hover:bg-gray-800 dark:active:bg-gray-700";
+  "dark:text-ink-dim dark:hover:bg-surface-2 dark:active:bg-surface";
 
-export const calendarButtonSelected = "border border-gray-200 bg-gray-100 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-50";
+export const calendarButtonSelected = "border border-gray-200 bg-gray-100 text-gray-900 dark:border-white/8 dark:bg-surface-2 dark:text-ink";
 export const calendarButtonIdle = "border border-transparent";
-export const calendarIconButton = `${calendarButtonBase} border border-transparent p-1.5 text-gray-400 dark:text-gray-500`;
+export const calendarIconButton = `${calendarButtonBase} border border-transparent p-1.5 text-gray-400 dark:text-ink-faint`;

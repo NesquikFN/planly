@@ -19,7 +19,7 @@ export function ProjectsStatsRow({
   onToggleFilter,
 }: ProjectsStatsRowProps) {
   const cards = [
-    { key: "all", label: "Всего проектов", value: total, valueSuffix: undefined, icon: Folder, tone: "blue" },
+    { key: "all", label: "Всего проектов", value: total, valueSuffix: undefined, icon: Folder, tone: "gray" },
     { key: "active", label: "Активные", value: active, valueSuffix: undefined, icon: Clock, tone: "amber" },
     { key: "completed", label: "Завершённые", value: completed, valueSuffix: undefined, icon: CheckCircle2, tone: "green" },
     { key: "overdue", label: "Просроченные", value: overdue, valueSuffix: undefined, icon: AlertTriangle, tone: "red" },

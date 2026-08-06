@@ -61,10 +61,10 @@ export function ReminderCard({
   return (
     <div
       className={cn(
-        "flex items-stretch overflow-visible rounded-2xl border shadow-sm transition-colors",
+        "flex items-stretch overflow-visible rounded-xl border transition-colors",
         reminder.completed
-          ? "border-gray-100 bg-gray-50/60 opacity-70 dark:border-gray-800 dark:bg-gray-900/40"
-          : "border-gray-100 bg-white hover:bg-gray-50/60 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/40",
+          ? "border-gray-100 bg-transparent opacity-60 dark:border-white/[0.06]"
+          : "border-gray-100 bg-transparent hover:bg-gray-50/70 dark:border-white/8 dark:hover:bg-surface-2/60",
       )}
     >
       <div
@@ -84,7 +84,7 @@ export function ReminderCard({
             "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
             reminder.completed
               ? "border-emerald-500 bg-emerald-500 text-white"
-              : "border-gray-300 text-transparent hover:border-blue-400 dark:border-gray-600",
+              : "border-gray-300 text-transparent hover:border-accent dark:border-white/20",
           )}
         >
           <CheckCircle2 size={13} strokeWidth={3} />
@@ -99,7 +99,7 @@ export function ReminderCard({
             <h3
               className={cn(
                 "truncate text-sm font-semibold",
-                reminder.completed ? "text-gray-400 line-through dark:text-gray-500" : "text-gray-900 dark:text-gray-50",
+                reminder.completed ? "text-gray-400 line-through dark:text-ink-faint" : "text-gray-900 dark:text-ink",
               )}
             >
               {reminder.title}
@@ -107,28 +107,28 @@ export function ReminderCard({
           </div>
 
           {reminder.description && !compact && (
-            <p className="mt-0.5 line-clamp-1 text-xs text-gray-400 dark:text-gray-500">{reminder.description}</p>
+            <p className="mt-0.5 line-clamp-1 text-xs text-gray-400 dark:text-ink-faint">{reminder.description}</p>
           )}
 
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-            <span className={overdue && !reminder.completed ? "font-medium text-red-500" : "text-gray-400 dark:text-gray-500"}>
+            <span className={overdue && !reminder.completed ? "font-medium text-red-500" : "text-gray-400 dark:text-ink-faint"}>
               {dateLabel}
             </span>
             <span className={cn("font-medium", styles.text)}>{category.label}</span>
             {reminder.repeat !== "none" && (
-              <span className="inline-flex items-center gap-1 text-gray-400 dark:text-gray-500">
+              <span className="inline-flex items-center gap-1 text-gray-400 dark:text-ink-faint">
                 <Repeat size={11} />
                 {repeatLabel}
               </span>
             )}
             {linkEntry && (
-              <span className="inline-flex items-center gap-1 text-gray-400 dark:text-gray-500">
+              <span className="inline-flex items-center gap-1 text-gray-400 dark:text-ink-faint">
                 <LinkIcon size={11} />
                 {linkEntry[1]}
               </span>
             )}
             {linkedNoteId && (
-              <button type="button" onClick={() => router.push(`/notes?note=${encodeURIComponent(linkedNoteId)}`)} className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400">
+              <button type="button" onClick={() => router.push(`/notes?note=${encodeURIComponent(linkedNoteId)}`)} className="inline-flex items-center gap-1 text-accent hover:underline">
                 <StickyNote size={11} />
                 {reminder.links?.noteLabel ?? "Открыть заметку"}
               </button>
@@ -166,13 +166,13 @@ export function ReminderCard({
               onClick={() => onToggleStar(reminder.id)}
               aria-pressed={reminder.starred}
               aria-label={reminder.starred ? "Убрать из избранного" : "Добавить в избранное"}
-              className="rounded-lg p-1 text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800"
+              className="rounded-lg p-1 text-gray-300 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
             >
               <Star size={15} className={reminder.starred ? "fill-amber-400 text-amber-400" : undefined} />
             </button>
             <DropdownMenu
               trigger={<MoreVertical size={15} />}
-              triggerClassName="rounded-lg p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800"
+              triggerClassName="rounded-lg p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-ink-faint dark:hover:bg-surface-2"
               triggerAriaLabel="Действия с напоминанием"
               items={[
                 { key: "edit", label: "Редактировать", onSelect: () => onEdit(reminder) },

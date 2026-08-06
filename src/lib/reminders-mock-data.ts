@@ -68,5 +68,5 @@ export const PRIORITY_OPTIONS: { key: ReminderPriority; label: string }[] = [
 export const PRIORITY_META: Record<ReminderPriority, { label: string; badge: string }> = {
   high: { label: "Высокий", badge: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400" },
   medium: { label: "Средний", badge: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" },
-  low: { label: "Низкий", badge: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" },
+  low: { label: "Низкий", badge: "bg-gray-100 text-gray-500 dark:bg-surface-2 dark:text-ink-faint" },
 };

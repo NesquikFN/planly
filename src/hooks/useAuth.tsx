@@ -58,7 +58,14 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 export function describeAuthError(error: unknown): string {
   console.error(error);
 
-  const message = error instanceof Error ? error.message : String(error);
+  // Supabase/PostgREST errors are often plain objects (`{ message, code,
+  // details, hint }`), not real `Error` instances — `instanceof Error` was
+  // false for them, so this fell through to `String(error)`, which stringifies
+  // any plain object as the literal text "[object Object]" instead of its
+  // actual message.
+  const hasStringMessage =
+    typeof error === "object" && error !== null && "message" in error && typeof (error as { message?: unknown }).message === "string";
+  const message = error instanceof Error || hasStringMessage ? (error as { message: string }).message : String(error);
   const code = typeof error === "object" && error !== null && "code" in error ? String((error as { code?: unknown }).code) : null;
 
   if (process.env.NODE_ENV !== "production") {

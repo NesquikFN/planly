@@ -46,16 +46,16 @@ export function NotesListPanel({
   const activeFolderDef = LIST_FOLDERS.find((folder) => folder.key === activeFolder) ?? LIST_FOLDERS[0];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 p-4 dark:border-gray-800">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:shadow-none dark:border-white/8 dark:bg-surface">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 p-4 dark:border-white/8">
         <DropdownMenu
           trigger={
             <>
               {activeFolderDef.label}
-              <span className="text-gray-400 dark:text-gray-500">▾</span>
+              <span className="text-gray-400 dark:text-ink-faint">▾</span>
             </>
           }
-          triggerClassName="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900 dark:text-gray-50"
+          triggerClassName="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900 dark:text-ink"
           align="left"
           items={LIST_FOLDERS.map((folder) => ({
             key: folder.key,
@@ -64,20 +64,20 @@ export function NotesListPanel({
             onSelect: () => onFolderChange(folder.key),
           }))}
         />
-        <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">{notes.length} заметок</span>
+        <span className="shrink-0 text-xs text-gray-400 dark:text-ink-faint">{notes.length} заметок</span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3" aria-busy={isLoading}>
         {isLoading ? (
           <div className="space-y-2" aria-label="Загрузка заметок">
             {[0, 1, 2, 3].map((item) => (
-              <div key={item} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+              <div key={item} className="animate-pulse rounded-2xl border border-gray-100 bg-white p-4 dark:border-white/8 dark:bg-surface">
                 <div className="flex items-start gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-gray-100 dark:bg-gray-800" />
+                  <div className="h-9 w-9 rounded-xl bg-gray-100 dark:bg-surface-2" />
                   <div className="min-w-0 flex-1 space-y-2 pt-0.5">
-                    <div className="h-3 w-3/4 rounded bg-gray-100 dark:bg-gray-800" />
-                    <div className="h-2.5 w-full rounded bg-gray-100 dark:bg-gray-800" />
-                    <div className="h-2.5 w-2/3 rounded bg-gray-100 dark:bg-gray-800" />
+                    <div className="h-3 w-3/4 rounded bg-gray-100 dark:bg-surface-2" />
+                    <div className="h-2.5 w-full rounded bg-gray-100 dark:bg-surface-2" />
+                    <div className="h-2.5 w-2/3 rounded bg-gray-100 dark:bg-surface-2" />
                   </div>
                 </div>
               </div>
@@ -85,16 +85,16 @@ export function NotesListPanel({
           </div>
         ) : notes.length === 0 ? (
           <div className="mx-auto flex max-w-[220px] flex-col items-center justify-center gap-2 py-16 text-center">
-            <div className="rounded-2xl bg-blue-50 p-3 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
+            <div className="rounded-2xl bg-gray-100 p-3 text-gray-400 dark:bg-surface-2 dark:text-ink-faint">
               <FileSearch size={22} />
             </div>
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            <p className="text-sm font-semibold text-gray-700 dark:text-ink-dim">
               {isFiltered ? "Ничего не найдено" : "Заметок пока нет"}
             </p>
             {isFiltered ? (
-              <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">Измените запрос или выберите другую папку.</p>
+              <p className="text-xs leading-relaxed text-gray-500 dark:text-ink-faint">Измените запрос или выберите другую папку.</p>
             ) : (
-              <button type="button" onClick={onCreate} disabled={!onCreate} className="mt-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:hidden">
+              <button type="button" onClick={onCreate} disabled={!onCreate} className="mt-2 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white hover:bg-accent/90 disabled:hidden">
                 Создать первую заметку
               </button>
             )}

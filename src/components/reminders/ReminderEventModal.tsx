@@ -9,6 +9,7 @@ import { calendarColorStyles } from "@/lib/calendar-colors";
 import { MIN_DURATION_MINUTES } from "@/lib/calendar-constants";
 import { minutesToTime, timeToMinutes } from "@/lib/calendar-time";
 import { getLocalDateKey } from "@/lib/date-utils";
+import { BUTTON_PRIMARY, INPUT, LABEL } from "@/lib/ui-tokens";
 import type { CalendarEventDraft } from "@/types/calendar";
 
 export interface ReminderEventDefaults {
@@ -24,9 +25,8 @@ interface ReminderEventModalProps {
   onCreated: (eventId: string) => void;
 }
 
-const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200";
-const labelClass = "mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400";
+const inputClass = INPUT;
+const labelClass = LABEL;
 
 function createEventId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
@@ -87,14 +87,14 @@ export function ReminderEventModal({ open, defaults, onClose, onCreated }: Remin
     <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-8">
       <div className="absolute inset-0 bg-black/20" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative w-full max-w-md rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="relative w-full max-w-md rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface dark:shadow-none">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50">Новое событие</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-ink">Новое событие</h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Закрыть"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2"
           >
             <X size={18} />
           </button>
@@ -137,10 +137,10 @@ export function ReminderEventModal({ open, defaults, onClose, onCreated }: Remin
           </label>
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800">
+            <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2">
               Отмена
             </button>
-            <button type="submit" disabled={calendars.length === 0} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="submit" disabled={calendars.length === 0} className={BUTTON_PRIMARY}>
               Создать событие
             </button>
           </div>

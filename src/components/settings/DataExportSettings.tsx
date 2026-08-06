@@ -50,8 +50,8 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
                 className={cn(
                   "rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors",
                   selectedTypes.includes(type)
-                    ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800",
+                    ? "border-accent/30 bg-accent/10 text-accent"
+                    : "border-gray-100 text-gray-500 hover:bg-gray-50 dark:border-white/8 dark:text-ink-faint dark:hover:bg-surface-2",
                 )}
               >
                 {type}
@@ -72,8 +72,8 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                   format === item
-                    ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
-                    : "bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700",
+                    ? "bg-gray-900 text-white dark:bg-ink dark:text-canvas"
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-surface-2 dark:text-ink-faint dark:hover:bg-surface-2",
                 )}
               >
                 {item}
@@ -83,12 +83,12 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-xs text-gray-400 dark:text-gray-500">Последний экспорт: 20 июля 2026</p>
+          <p className="text-xs text-gray-400 dark:text-ink-faint">Последний экспорт: 20 июля 2026</p>
           <button
             type="button"
             onClick={() => onCreateExport(selectedTypes, format)}
             disabled={selectedTypes.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Download size={14} />
             Создать экспорт
@@ -119,11 +119,11 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
           </label>
         </div>
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-xs text-gray-400 dark:text-gray-500">Последняя копия: {backup.lastBackupLabel}</p>
+          <p className="text-xs text-gray-400 dark:text-ink-faint">Последняя копия: {backup.lastBackupLabel}</p>
           <button
             type="button"
             onClick={onCreateBackupNow}
-            className="rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="rounded-lg border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-white/8 dark:text-ink-dim dark:hover:bg-surface-2"
           >
             Создать резервную копию сейчас
           </button>
@@ -132,14 +132,14 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
 
       <section className={settingsCard}>
         <h3 className={settingsSectionTitle}>Импорт</h3>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Импортировать данные из JSON или CSV</p>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-ink-faint">Импортировать данные из JSON или CSV</p>
         <div
           onClick={onImport}
-          className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 py-8 text-center hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 py-8 text-center hover:bg-gray-50 dark:border-white/8 dark:hover:bg-surface-2"
         >
-          <Upload size={22} className="text-gray-300 dark:text-gray-600" />
-          <p className="text-sm text-gray-500 dark:text-gray-400">Перетащите файл сюда или</p>
-          <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Выбрать файл</span>
+          <Upload size={22} className="text-gray-300 dark:text-ink-faint" />
+          <p className="text-sm text-gray-500 dark:text-ink-faint">Перетащите файл сюда или</p>
+          <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 dark:border-white/8 dark:text-ink-dim">Выбрать файл</span>
         </div>
       </section>
 
@@ -173,11 +173,11 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
       {confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/20" onClick={() => setConfirmAction(null)} aria-hidden="true" />
-          <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-50">{confirmAction.title}</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{confirmAction.message}</p>
+          <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-ink">{confirmAction.title}</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-ink-faint">{confirmAction.message}</p>
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => setConfirmAction(null)} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800">
+              <button type="button" onClick={() => setConfirmAction(null)} className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2">
                 Отмена
               </button>
               <button
@@ -205,7 +205,7 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
             }}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="relative w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-surface">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold text-red-500 dark:text-red-400">Удаление аккаунта</h3>
               <button
@@ -215,14 +215,14 @@ export function DataExportSettings({ backup, onBackupChange, onCreateExport, onC
                   setDeleteConfirmText("");
                 }}
                 aria-label="Закрыть"
-                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-2"
               >
                 <X size={18} />
               </button>
             </div>
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-sm text-gray-500 dark:text-ink-faint">
               Это действие необратимо. Все ваши проекты, задачи, заметки и напоминания будут удалены. Чтобы продолжить, введите слово{" "}
-              <span className="font-semibold text-gray-700 dark:text-gray-200">УДАЛИТЬ</span>.
+              <span className="font-semibold text-gray-700 dark:text-ink-dim">УДАЛИТЬ</span>.
             </p>
             <input
               type="text"

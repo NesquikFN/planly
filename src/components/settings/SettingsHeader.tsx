@@ -17,8 +17,8 @@ export function SettingsHeader({ title, description, isDirty, onCancel, onSave, 
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{title}</h2>
-        <p className="mt-0.5 text-sm text-gray-400 dark:text-gray-500">{description}</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-ink">{title}</h2>
+        <p className="mt-0.5 text-sm text-gray-400 dark:text-ink-faint">{description}</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -36,7 +36,7 @@ export function SettingsHeader({ title, description, isDirty, onCancel, onSave, 
           type="button"
           onClick={onCancel}
           disabled={!isDirty || isSaving}
-          className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-ink-faint dark:hover:bg-surface-2"
         >
           Отменить изменения
         </button>
@@ -44,7 +44,7 @@ export function SettingsHeader({ title, description, isDirty, onCancel, onSave, 
           type="button"
           onClick={onSave}
           disabled={!isDirty || isSaving}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-gray-800 dark:disabled:text-gray-600"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-surface-2 dark:disabled:text-ink-faint"
         >
           {isSaving && <Loader2 size={14} className="animate-spin" />}
           {isSaving ? "Сохранение…" : "Сохранить"}

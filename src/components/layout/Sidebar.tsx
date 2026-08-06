@@ -107,23 +107,23 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 z-50 flex w-64 flex-col border-r border-gray-100 bg-white px-4 py-6 transition-[left] duration-200 ease-out lg:left-0 dark:border-gray-800 dark:bg-gray-900",
+          "fixed inset-y-0 z-50 flex w-64 flex-col border-r border-gray-100 bg-white px-4 py-6 transition-[left] duration-200 ease-out lg:left-0 dark:border-white/8 dark:bg-panel",
           isOpen ? "left-0" : "left-[-16rem]",
         )}
       >
         <div className="flex items-center justify-between px-2">
-          <span className="text-lg font-semibold text-gray-900 dark:text-gray-50">Planly</span>
+          <span className="text-lg font-semibold text-accent">Planly</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Закрыть меню"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 lg:hidden dark:hover:bg-gray-800"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 lg:hidden dark:hover:bg-surface-2"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-8 flex-1 overflow-y-auto">
+        <div className="mt-10 flex-1 overflow-y-auto">
         <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -142,11 +142,11 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                      : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                      ? "bg-gray-100 text-gray-900 dark:bg-white/[0.06] dark:text-ink"
+                      : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2 dark:hover:text-ink-dim",
                   )}
                 >
-                  <Icon size={18} />
+                  <Icon size={18} className={isActive ? "text-accent" : undefined} />
                   {item.label}
                 </button>
               );
@@ -157,7 +157,7 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
                 key={item.label}
                 type="button"
                 onClick={() => setStubMessage(`Раздел «${item.label}» пока в разработке.`)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2 dark:hover:text-ink-dim"
               >
                 <Icon size={18} />
                 {item.label}
@@ -184,7 +184,7 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
 
         </div>
 
-        <div className="space-y-1 border-t border-gray-100 pt-4 dark:border-gray-800">
+        <div className="space-y-1 border-t border-gray-100 pt-4 dark:border-white/8">
           {secondaryItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.href ? pathname === item.href : false;
@@ -203,50 +203,49 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
-                    : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800",
+                    ? "bg-gray-100 text-gray-900 dark:bg-white/[0.06] dark:text-ink"
+                    : "text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2 dark:hover:text-ink-dim",
                 )}
               >
-                <Icon size={18} />
+                <Icon size={18} className={isActive ? "text-accent" : undefined} />
                 {item.label}
               </button>
             );
           })}
         </div>
 
-        <div className="mt-1 border-t border-gray-100 pt-4 dark:border-gray-800">
+        <div className="mt-1 border-t border-gray-100 pt-4 dark:border-white/8">
           <button
             type="button"
             onClick={toggleTheme}
             aria-pressed={theme === "dark"}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2 dark:hover:text-ink-dim"
           >
             {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
             <span className="flex-1 text-left">{theme === "dark" ? "Тёмная тема" : "Светлая тема"}</span>
-            <ChevronDown size={16} />
           </button>
         </div>
 
-        <div className="relative mt-4 border-t border-gray-100 pt-4 dark:border-gray-800" ref={userMenuRef}>
+        <div className="relative mt-4 border-t border-gray-100 pt-4 dark:border-white/8" ref={userMenuRef}>
           <button
             type="button"
             onClick={() => setUserMenuOpen((value) => !value)}
             aria-expanded={userMenuOpen}
-            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-gray-50 dark:hover:bg-surface-2"
           >
             <Avatar name={accountName} initials={getInitials(profile)} src={profile.avatarDataUrl} size={36} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{accountName}</p>
-              <p className="truncate text-xs text-gray-400 dark:text-gray-500">{accountEmail ?? "Бесплатный план"}</p>
+              <p className="truncate text-sm font-medium text-gray-900 dark:text-ink">{accountName}</p>
+              <p className="truncate text-xs text-gray-400 dark:text-ink-faint">{accountEmail ?? "Бесплатный план"}</p>
             </div>
             <ChevronDown
               size={16}
-              className={cn("shrink-0 text-gray-400 transition-transform", userMenuOpen && "rotate-180")}
+              className={cn("shrink-0 text-gray-400 transition-transform dark:text-ink-faint", userMenuOpen && "rotate-180")}
             />
           </button>
 
           {userMenuOpen && (
-            <div className="absolute inset-x-2 bottom-full z-20 mb-2 rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="absolute inset-x-2 bottom-full z-20 mb-2 rounded-xl border border-gray-100 bg-white p-1 shadow-sm dark:border-white/8 dark:bg-surface-2">
               {[
                 { key: "profile", label: "Профиль", icon: User },
                 { key: "plan", label: "Тариф", icon: Sparkles },
@@ -271,7 +270,7 @@ export function Sidebar({ isOpen, onClose, notesExtras }: SidebarProps) {
                     }
                     setStubMessage(`Раздел «${label}» пока в разработке.`);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-ink-dim dark:hover:bg-surface"
                 >
                   <Icon size={15} />
                   {label}

@@ -42,17 +42,17 @@ export function StreakCard() {
   const last7Days = Array.from({ length: 7 }, (_, index) => addDays(today, index - 6));
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/8 dark:bg-surface">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">Серия активности</h3>
-        <div className="flex items-center gap-1 text-xs font-medium text-gray-400 dark:text-gray-500">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Серия активности</h3>
+        <div className="flex items-center gap-1 text-xs font-medium text-gray-400 dark:text-ink-faint">
           <Trophy size={13} />
           Лучшая: {data.bestStreak}
         </div>
       </div>
 
-      <div className="mt-2 flex items-center gap-1.5 text-xl font-bold text-gray-900 dark:text-gray-50">
-        <Flame size={20} className={cn(data.currentStreak > 0 ? "text-orange-500" : "text-gray-300 dark:text-gray-700")} />
+      <div className="mt-2 flex items-center gap-1.5 text-xl font-bold text-gray-900 dark:text-ink">
+        <Flame size={20} className={cn(data.currentStreak > 0 ? "text-orange-500 dark:text-accent" : "text-gray-300 dark:text-white/10")} />
         {data.currentStreak} {data.currentStreak === 1 ? "день" : "дней"} подряд
       </div>
 
@@ -63,17 +63,17 @@ export function StreakCard() {
           const isToday = index === 6;
           return (
             <div key={key} className="flex flex-col items-center gap-1">
-              <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
+              <span className="text-[10px] font-medium text-gray-400 dark:text-ink-faint">
                 {WEEKDAY_LETTERS[day.getDay() === 0 ? 6 : day.getDay() - 1]}
               </span>
               <span
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded-full text-[11px]",
                   active
-                    ? "bg-orange-500 font-semibold text-white"
+                    ? "bg-orange-500 font-semibold text-white dark:bg-accent"
                     : isToday
-                      ? "border border-dashed border-gray-300 text-gray-400 dark:border-gray-600 dark:text-gray-500"
-                      : "bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600",
+                      ? "border border-dashed border-gray-300 text-gray-400 dark:border-white/20 dark:text-ink-faint"
+                      : "bg-gray-100 text-gray-300 dark:bg-surface-2 dark:text-ink-faint",
                 )}
               >
                 {day.getDate()}
@@ -83,7 +83,7 @@ export function StreakCard() {
         })}
       </div>
 
-      <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">{pickPhrase(data.currentStreak)}</p>
+      <p className="mt-3 text-xs text-gray-400 dark:text-ink-faint">{pickPhrase(data.currentStreak)}</p>
     </section>
   );
 }

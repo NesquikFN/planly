@@ -26,24 +26,35 @@ export interface CalendarEntry {
   important: boolean;
   /** Only meaningful for kind === "task" */
   completed?: boolean;
+  /** True for any occurrence of a recurring event series — display-only (which entries get a repeat icon), not part of the recurrence data model itself. */
+  isRecurring: boolean;
 }
 
 // Fixed accent for task-derived entries — visually distinct from the
 // calendar palette so they never get mistaken for a "calendar" color.
 export const TASK_ENTRY_COLOR: CalendarColor = "indigo";
 
-export function eventToEntry(event: CalendarEvent, color: CalendarColor): CalendarEntry {
+/**
+ * `occurrenceDate`, when given, renders one virtual occurrence of a
+ * recurring series on that date — `sourceId` still points at the series'
+ * real row (so complete/delete/edit act on the series, not a fake id), only
+ * `id`/`date` are occurrence-specific. Nothing here is ever persisted; the
+ * occurrence dates themselves come from lib/calendar-recurrence.ts.
+ */
+export function eventToEntry(event: CalendarEvent, color: CalendarColor, occurrenceDate?: string): CalendarEntry {
+  const date = occurrenceDate ?? event.date;
   return {
-    id: `event:${event.id}`,
+    id: occurrenceDate ? `event:${event.id}:${occurrenceDate}` : `event:${event.id}`,
     kind: "event",
     sourceId: event.id,
     title: event.title,
-    date: event.date,
+    date,
     startTime: event.startTime,
     endTime: event.endTime,
     allDay: false,
     color,
     important: event.important,
+    isRecurring: Boolean(event.recurrence && event.recurrence.rule !== "none"),
   };
 }
 
@@ -64,5 +75,6 @@ export function taskToEntry(task: Task): CalendarEntry | null {
     color: TASK_ENTRY_COLOR,
     important: task.important,
     completed: task.completed,
+    isRecurring: false,
   };
 }

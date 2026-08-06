@@ -40,7 +40,7 @@ export function ProjectCard({
 
   const progressBar = (
     <div className="flex-1">
-      <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+      <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-surface-2">
         <div className={cn("h-1.5 rounded-full", styles.swatch)} style={{ width: `${project.progress}%` }} />
       </div>
     </div>
@@ -55,7 +55,7 @@ export function ProjectCard({
       }}
       aria-pressed={project.starred}
       aria-label={project.starred ? "Убрать из избранного" : "Добавить в избранное"}
-      className="shrink-0 rounded-lg p-1 text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800"
+      className="shrink-0 rounded-lg p-1 text-gray-300 hover:bg-gray-50 dark:text-ink-faint dark:hover:bg-surface-2"
     >
       <Star size={16} className={project.starred ? "fill-amber-400 text-amber-400" : undefined} />
     </button>
@@ -65,7 +65,7 @@ export function ProjectCard({
     <div onClick={(event) => event.stopPropagation()}>
       <DropdownMenu
         trigger={<MoreVertical size={16} />}
-        triggerClassName="shrink-0 rounded-lg p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800"
+        triggerClassName="shrink-0 rounded-lg p-1 text-gray-300 hover:bg-gray-50 hover:text-gray-500 dark:text-ink-faint dark:hover:bg-surface-2"
         triggerAriaLabel="Действия с проектом"
         items={menuItems}
       />
@@ -87,12 +87,12 @@ export function ProjectCard({
   const memberStack = project.members.length > 0 && (
     <div className="flex -space-x-2">
       {project.members.slice(0, 3).map((member) => (
-        <div key={member.id} className="rounded-full ring-2 ring-white dark:ring-gray-900" title={member.name}>
+        <div key={member.id} className="rounded-full ring-2 ring-white dark:ring-surface" title={member.name}>
           <Avatar name={member.name} size={24} />
         </div>
       ))}
       {project.members.length > 3 && (
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] font-medium text-gray-500 ring-2 ring-white dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-900">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] font-medium text-gray-500 ring-2 ring-white dark:bg-surface-2 dark:text-ink-faint dark:ring-surface">
           +{project.members.length - 3}
         </div>
       )}
@@ -106,7 +106,7 @@ export function ProjectCard({
         tabIndex={0}
         onClick={() => onOpen(project)}
         onKeyDown={(event) => (event.key === "Enter" ? onOpen(project) : undefined)}
-        className="flex cursor-pointer items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-colors hover:border-gray-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
+        className="flex cursor-pointer items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:shadow-none transition-colors hover:border-gray-200 dark:border-white/8 dark:bg-surface dark:hover:border-white/10"
       >
         <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", styles.block)}>
           <Icon size={20} className={styles.text} />
@@ -114,27 +114,27 @@ export function ProjectCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{project.name}</p>
+            <p className="truncate text-sm font-semibold text-gray-900 dark:text-ink">{project.name}</p>
             {statusBadge}
           </div>
-          <p className="truncate text-xs text-gray-400 dark:text-gray-500">{project.description}</p>
+          <p className="truncate text-xs text-gray-400 dark:text-ink-faint">{project.description}</p>
         </div>
 
         <div className="hidden shrink-0 sm:block">{priorityBadge}</div>
 
         <div className="hidden w-40 shrink-0 items-center gap-2 sm:flex">
           {progressBar}
-          <span className="w-9 shrink-0 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="w-9 shrink-0 text-right text-xs font-medium text-gray-500 dark:text-ink-faint">
             {project.progress}%
           </span>
         </div>
 
-        <div className="hidden shrink-0 items-center gap-1 text-xs text-gray-400 md:flex dark:text-gray-500">
+        <div className="hidden shrink-0 items-center gap-1 text-xs text-gray-400 md:flex dark:text-ink-faint">
           <ListChecks size={14} />
           {project.tasksDone}/{project.tasksTotal}
         </div>
 
-        <div className="hidden shrink-0 items-center gap-1 text-xs text-gray-400 lg:flex dark:text-gray-500">
+        <div className="hidden shrink-0 items-center gap-1 text-xs text-gray-400 lg:flex dark:text-ink-faint">
           <CalendarDays size={14} />
           {project.deadlineLabel}
         </div>
@@ -153,7 +153,7 @@ export function ProjectCard({
       tabIndex={0}
       onClick={() => onOpen(project)}
       onKeyDown={(event) => (event.key === "Enter" ? onOpen(project) : undefined)}
-      className="flex cursor-pointer flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-colors hover:border-gray-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
+      className="flex cursor-pointer flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:shadow-none transition-colors hover:border-gray-200 dark:border-white/8 dark:bg-surface dark:hover:border-white/10"
     >
       <div className="flex items-start justify-between">
         <div className={cn("flex h-11 w-11 items-center justify-center rounded-xl", styles.block)}>
@@ -170,17 +170,17 @@ export function ProjectCard({
         {priorityBadge}
       </div>
 
-      <h3 className="mt-2 truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{project.name}</h3>
-      <p className="mt-1 line-clamp-2 text-xs text-gray-400 dark:text-gray-500">{project.description}</p>
+      <h3 className="mt-2 truncate text-sm font-semibold text-gray-900 dark:text-ink">{project.name}</h3>
+      <p className="mt-1 line-clamp-2 text-xs text-gray-400 dark:text-ink-faint">{project.description}</p>
 
       <div className="mt-4 flex items-center gap-2">
         {progressBar}
-        <span className="w-9 shrink-0 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+        <span className="w-9 shrink-0 text-right text-xs font-medium text-gray-500 dark:text-ink-faint">
           {project.progress}%
         </span>
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
+      <div className="mt-4 flex items-center justify-between text-xs text-gray-400 dark:text-ink-faint">
         <span className="inline-flex items-center gap-1">
           <ListChecks size={14} />
           {project.tasksDone}/{project.tasksTotal} задач

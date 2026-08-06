@@ -5,13 +5,13 @@ import { PlanlyDatePicker } from "@/components/ui/PlanlyDatePicker";
 import { calendarColorStyles } from "@/lib/calendar-colors";
 import { CALENDAR_COLORS } from "@/lib/calendar-constants";
 import { PROJECT_PRIORITY_LABELS, PROJECT_STATUS_LABELS, projectCard, projectSectionTitle } from "@/lib/projects";
+import { BUTTON_PRIMARY, INPUT, LABEL } from "@/lib/ui-tokens";
 import { cn } from "@/lib/utils";
 import type { CalendarColor } from "@/types/calendar";
 import type { Project, ProjectFormValues, ProjectPriority, ProjectStatus } from "@/types/project";
 
-const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200";
-const labelClass = "mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400";
+const inputClass = INPUT;
+const labelClass = LABEL;
 
 function valuesFromProject(project: Project): ProjectFormValues {
   return {
@@ -90,7 +90,7 @@ export function ProjectSettingsTab({ project, onSave, onDeleteRequest }: Project
                   className={cn(
                     "h-6 w-6 rounded-full transition-shadow",
                     calendarColorStyles[color].swatch,
-                    values.color === color && "ring-2 ring-gray-400 ring-offset-2 dark:ring-gray-500 dark:ring-offset-gray-900",
+                    values.color === color && "ring-2 ring-gray-400 ring-offset-2 dark:ring-white/20 dark:ring-offset-surface",
                   )}
                 />
               ))}
@@ -137,20 +137,20 @@ export function ProjectSettingsTab({ project, onSave, onDeleteRequest }: Project
 
           <div className="flex items-center justify-end gap-3 pt-1">
             {saved && <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Сохранено</span>}
-            <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+            <button type="submit" className={cn(BUTTON_PRIMARY, "px-4 py-2")}>
               Сохранить
             </button>
           </div>
         </form>
       </section>
 
-      <section className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm dark:border-red-500/20 dark:bg-gray-900">
+      <section className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm dark:shadow-none dark:border-red-500/20 dark:bg-surface">
         <h3 className="text-sm font-semibold text-red-500 dark:text-red-400">Опасная зона</h3>
-        <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
           <div className="flex items-center justify-between gap-4 py-2.5">
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Удалить проект</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Безвозвратно удаляет проект и все его данные.</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-ink-dim">Удалить проект</p>
+              <p className="text-xs text-gray-400 dark:text-ink-faint">Безвозвратно удаляет проект и все его данные.</p>
             </div>
             <button
               type="button"

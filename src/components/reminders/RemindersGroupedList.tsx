@@ -34,10 +34,10 @@ export function RemindersGroupedList({
 }: RemindersGroupedListProps) {
   if (groups.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-gray-800 dark:bg-gray-900">
-        <ListChecks size={28} className="text-gray-300 dark:text-gray-600" />
-        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">Ничего не найдено</p>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Попробуйте изменить фильтры или запрос поиска</p>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center dark:border-white/8 dark:bg-surface">
+        <ListChecks size={28} className="text-gray-300 dark:text-ink-faint" />
+        <p className="mt-3 text-sm font-medium text-gray-500 dark:text-ink-faint">Ничего не найдено</p>
+        <p className="mt-1 text-sm text-gray-400 dark:text-ink-faint">Попробуйте изменить фильтры или запрос поиска</p>
       </div>
     );
   }
@@ -55,10 +55,10 @@ export function RemindersGroupedList({
             >
               <ChevronDown
                 size={15}
-                className={cn("text-gray-400 transition-transform dark:text-gray-500", collapsed && "-rotate-90")}
+                className={cn("text-gray-400 transition-transform dark:text-ink-faint", collapsed && "-rotate-90")}
               />
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-50">{group.label}</h2>
-              <span className="text-xs text-gray-400 dark:text-gray-500">{group.reminders.length}</span>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-ink">{group.label}</h2>
+              <span className="text-xs text-gray-400 dark:text-ink-faint">{group.reminders.length}</span>
             </button>
 
             {!collapsed && (

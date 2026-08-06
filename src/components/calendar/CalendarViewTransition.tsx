@@ -16,7 +16,10 @@ export function CalendarViewTransition({ children }: CalendarViewTransitionProps
   const { navCounter, direction } = useCalendarStore();
 
   return (
-    <div key={navCounter} className={direction === "forward" ? "calendar-slide-forward" : "calendar-slide-backward"}>
+    <div
+      key={navCounter}
+      className={`flex min-h-0 flex-1 flex-col ${direction === "forward" ? "calendar-slide-forward" : "calendar-slide-backward"}`}
+    >
       {children}
     </div>
   );

@@ -28,17 +28,17 @@ export function HelpSupportContacts({ channels, statusItems }: HelpSupportContac
     <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className={settingsCard}>
         <h3 className={settingsSectionTitle}>Контакты поддержки</h3>
-        <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
           {channels.map(({ key, label, value, href, icon: Icon }) => (
             <a
               key={key}
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 py-2.5 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-50"
+              className="flex items-center gap-2.5 py-2.5 text-sm text-gray-600 hover:text-gray-900 dark:text-ink-dim dark:hover:text-ink"
             >
-              <Icon size={15} className="shrink-0 text-gray-400 dark:text-gray-500" />
-              <span className="w-20 shrink-0 text-xs font-medium text-gray-400 dark:text-gray-500">{label}</span>
+              <Icon size={15} className="shrink-0 text-gray-400 dark:text-ink-faint" />
+              <span className="w-20 shrink-0 text-xs font-medium text-gray-400 dark:text-ink-faint">{label}</span>
               <span className="truncate">{value}</span>
             </a>
           ))}
@@ -59,14 +59,14 @@ export function HelpSupportContacts({ channels, statusItems }: HelpSupportContac
             {allOperational ? "Все системы работают" : "Есть неполадки"}
           </span>
         </div>
-        <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="mt-2 divide-y divide-gray-100 dark:divide-white/8">
           {statusItems.map((item) => (
-            <div key={item.key} className="flex items-center justify-between py-2.5 text-sm text-gray-600 dark:text-gray-300">
+            <div key={item.key} className="flex items-center justify-between py-2.5 text-sm text-gray-600 dark:text-ink-dim">
               <span className="inline-flex items-center gap-2">
                 <span className={cn("h-2 w-2 rounded-full", statusDot[item.status])} aria-hidden="true" />
                 {item.label}
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">{statusLabel[item.status]}</span>
+              <span className="text-xs text-gray-400 dark:text-ink-faint">{statusLabel[item.status]}</span>
             </div>
           ))}
         </div>

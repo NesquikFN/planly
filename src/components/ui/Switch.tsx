@@ -20,7 +20,7 @@ export function Switch({ checked, onChange, label, description, disabled }: Swit
       onClick={() => onChange(!checked)}
       className={cn(
         "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-        checked ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700",
+        checked ? "bg-accent" : "bg-gray-200 dark:bg-white/10",
       )}
     >
       <span
@@ -37,8 +37,8 @@ export function Switch({ checked, onChange, label, description, disabled }: Swit
   return (
     <label className="flex items-center justify-between gap-3 py-1.5">
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-gray-700 dark:text-gray-200">{label}</span>
-        {description && <span className="block text-xs text-gray-400 dark:text-gray-500">{description}</span>}
+        <span className="block text-sm font-medium text-gray-700 dark:text-ink-dim">{label}</span>
+        {description && <span className="block text-xs text-gray-400 dark:text-ink-faint">{description}</span>}
       </span>
       {control}
     </label>

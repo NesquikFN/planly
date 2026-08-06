@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -24,6 +25,7 @@ import { readStorage, writeStorage } from "@/lib/storage";
 import { createDefaultFilters, matchesEventFilters } from "@/lib/calendar-filters";
 import { UPCOMING_PREVIEW_COUNT } from "@/lib/calendar-constants";
 import { type CalendarEntry, eventToEntry, taskToEntry } from "@/lib/calendar-entries";
+import { expandSeriesDates } from "@/lib/calendar-recurrence";
 import { useTasksStore } from "@/hooks/useTasksStore";
 import { useClock } from "@/hooks/useClock";
 import { useArchiveStore } from "@/hooks/useArchiveStore";
@@ -58,6 +60,8 @@ export interface CalendarDeleteRequest {
 }
 
 interface UpcomingEntry {
+  /** Unique per occurrence — event.id alone collides across a recurring series' multiple upcoming dates. */
+  entryId: string;
   event: CalendarEvent;
   dateLabel: string;
 }
@@ -145,6 +149,12 @@ interface CalendarStoreValue {
   updateEvent: (id: string, changes: Partial<CalendarEventDraft>) => void;
   deleteEvent: (id: string) => void;
   restoreDeletedEvent: (event: CalendarEvent) => void;
+  /**
+   * Excludes one occurrence date from a series' generated occurrences —
+   * covers both "skip this one" and "delete this one occurrence" (see
+   * CalendarEvent.skippedDates). Never creates or removes a row.
+   */
+  skipOccurrence: (seriesId: string, date: string) => void;
 
   calendarFormState: CalendarFormState;
   openCreateCalendarForm: () => void;
@@ -186,6 +196,10 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const [calendarFormState, setCalendarFormState] = useState<CalendarFormState>(null);
   const [calendarDeleteRequest, setCalendarDeleteRequest] = useState<CalendarDeleteRequest | null>(null);
+
+  // Blocks a second update/delete/skip on the same event id while one is
+  // still in flight — same guard shape as tasks' pendingTaskIdsRef.
+  const pendingEventIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const storedCalendars = readStorage<CalendarDefinition[] | null>(CALENDARS_STORAGE_KEY, null);
@@ -300,12 +314,52 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     });
   }, [events, calendars, calendarById, filters]);
 
+  // Generous, fixed rendering window for recurring series — covers the
+  // month grid plus a few months of lookahead for the "upcoming" widgets,
+  // without generating occurrences forever. Tied to `today`, not to
+  // whatever the Calendar page's view currently is, so Dashboard's "today"
+  // lookups stay correct even before the Calendar page has ever mounted.
+  const occurrenceRangeStart = useMemo(() => addDays(today, -60), [today]);
+  const occurrenceRangeEnd = useMemo(() => {
+    const monthGridEnd = monthGrid[monthGrid.length - 1];
+    const upcomingHorizon = addDays(today, 120);
+    return monthGridEnd.getTime() > upcomingHorizon.getTime() ? monthGridEnd : upcomingHorizon;
+  }, [monthGrid, today]);
+
+  // Series id -> set of dates that have their own override row (see
+  // CalendarEvent.seriesId) — expansion skips generating a virtual
+  // occurrence wherever a real row already stands in for that date.
+  const overrideDatesBySeriesId = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const event of events) {
+      if (!event.seriesId) continue;
+      const set = map.get(event.seriesId) ?? new Set<string>();
+      set.add(event.date);
+      map.set(event.seriesId, set);
+    }
+    return map;
+  }, [events]);
+
   // Single merged view of real calendar events + date-bearing tasks — the
-  // shared source every grid/month/agenda component renders from.
+  // shared source every grid/month/agenda component renders from. Recurring
+  // series are expanded into one entry per occurrence date here — nothing
+  // about a series is ever stored per-occurrence.
   const visibleEntries = useMemo<CalendarEntry[]>(() => {
-    const eventEntries = filters.onlyTasks
-      ? []
-      : visibleEvents.map((event) => eventToEntry(event, calendarById.get(event.calendarId)?.color ?? "blue"));
+    const eventEntries: CalendarEntry[] = [];
+    if (!filters.onlyTasks) {
+      for (const event of visibleEvents) {
+        const color = calendarById.get(event.calendarId)?.color ?? "blue";
+        if (event.recurrence && event.recurrence.rule !== "none") {
+          const overrides = overrideDatesBySeriesId.get(event.id);
+          for (const date of expandSeriesDates(event, occurrenceRangeStart, occurrenceRangeEnd)) {
+            if (overrides?.has(date)) continue;
+            eventEntries.push(eventToEntry(event, color, date));
+          }
+        } else {
+          eventEntries.push(eventToEntry(event, color));
+        }
+      }
+    }
 
     const taskEntries = filters.onlyEvents
       ? []
@@ -316,7 +370,15 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
           .filter((entry): entry is CalendarEntry => entry !== null);
 
     return [...eventEntries, ...taskEntries];
-  }, [visibleEvents, calendarById, filters, tasksStore.tasks]);
+  }, [
+    visibleEvents,
+    calendarById,
+    filters,
+    tasksStore.tasks,
+    overrideDatesBySeriesId,
+    occurrenceRangeStart,
+    occurrenceRangeEnd,
+  ]);
 
   const entriesByDate = useMemo(() => {
     const map = new Map<string, CalendarEntry[]>();
@@ -338,19 +400,33 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     const todayIso = toISODate(today);
     const tomorrowIso = toISODate(addDays(today, 1));
 
-    return [...visibleEvents]
-      .filter((event) => event.date >= todayIso)
+    const dated: { event: CalendarEvent; date: string }[] = [];
+    for (const event of visibleEvents) {
+      if (event.recurrence && event.recurrence.rule !== "none") {
+        const overrides = overrideDatesBySeriesId.get(event.id);
+        for (const date of expandSeriesDates(event, today, occurrenceRangeEnd)) {
+          if (overrides?.has(date)) continue;
+          dated.push({ event, date });
+        }
+      } else if (event.date >= todayIso) {
+        dated.push({ event, date: event.date });
+      }
+    }
+
+    return dated
       .sort((a, b) =>
-        a.date === b.date ? timeToMinutes(a.startTime) - timeToMinutes(b.startTime) : a.date.localeCompare(b.date),
+        a.date === b.date
+          ? timeToMinutes(a.event.startTime) - timeToMinutes(b.event.startTime)
+          : a.date.localeCompare(b.date),
       )
-      .map((event) => {
+      .map(({ event, date }) => {
         let dateLabel: string;
-        if (event.date === todayIso) dateLabel = `Сегодня, ${event.startTime} – ${event.endTime}`;
-        else if (event.date === tomorrowIso) dateLabel = `Завтра, ${event.startTime} – ${event.endTime}`;
-        else dateLabel = `${formatFullDateLabel(fromISODate(event.date))}, ${event.startTime} – ${event.endTime}`;
-        return { event, dateLabel };
+        if (date === todayIso) dateLabel = `Сегодня, ${event.startTime} – ${event.endTime}`;
+        else if (date === tomorrowIso) dateLabel = `Завтра, ${event.startTime} – ${event.endTime}`;
+        else dateLabel = `${formatFullDateLabel(fromISODate(date))}, ${event.startTime} – ${event.endTime}`;
+        return { entryId: `${event.id}:${date}`, event, dateLabel };
       });
-  }, [visibleEvents, today]);
+  }, [visibleEvents, today, overrideDatesBySeriesId, occurrenceRangeEnd]);
 
   const upcomingEvents = upcomingExpanded ? sortedUpcoming : sortedUpcoming.slice(0, UPCOMING_PREVIEW_COUNT);
 
@@ -397,7 +473,12 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
           originalData: event,
         });
       }
-      setEvents((prev) => prev.filter((item) => item.id !== id));
+      // Deleting a whole series also drops its per-occurrence override rows
+      // (see CalendarEvent.seriesId) — they exist only to stand in for one
+      // date of this series, so there's nothing left for them to override
+      // once it's gone. They aren't archived separately: the series' own
+      // archive entry (above) already covers "this series was deleted".
+      setEvents((prev) => prev.filter((item) => item.id !== id && item.seriesId !== id));
     },
     [events, archiveStore],
   );
@@ -452,17 +533,39 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateEvent = useCallback((id: string, changes: Partial<CalendarEventDraft>) => {
+    if (pendingEventIdsRef.current.has(id)) return;
+    pendingEventIdsRef.current.add(id);
     setEvents((prev) => prev.map((event) => (event.id === id ? { ...event, ...changes } : event)));
+    // Local-only store, no network round trip — release on the next tick so
+    // a genuine same-tick double-submit is still blocked.
+    requestAnimationFrame(() => pendingEventIdsRef.current.delete(id));
   }, []);
 
   const deleteEvent = useCallback(
     (id: string) => {
+      if (pendingEventIdsRef.current.has(id)) return;
+      pendingEventIdsRef.current.add(id);
       archiveAndRemoveEvent(id);
       setSelectedEntryId((current) => (current === `event:${id}` ? null : current));
       setModalState((current) => (current?.mode === "edit" && current.eventId === id ? null : current));
+      requestAnimationFrame(() => pendingEventIdsRef.current.delete(id));
     },
     [archiveAndRemoveEvent],
   );
+
+  const skipOccurrence = useCallback((seriesId: string, date: string) => {
+    const guardKey = `${seriesId}:${date}`;
+    if (pendingEventIdsRef.current.has(guardKey)) return;
+    pendingEventIdsRef.current.add(guardKey);
+    setEvents((prev) =>
+      prev.map((event) =>
+        event.id === seriesId
+          ? { ...event, skippedDates: event.skippedDates?.includes(date) ? event.skippedDates : [...(event.skippedDates ?? []), date] }
+          : event,
+      ),
+    );
+    requestAnimationFrame(() => pendingEventIdsRef.current.delete(guardKey));
+  }, []);
 
   /** Reinserts a full event snapshot — used only by the Archive restore pipeline. */
   const restoreDeletedEvent = useCallback((event: CalendarEvent) => {
@@ -601,6 +704,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     updateEvent,
     deleteEvent,
     restoreDeletedEvent,
+    skipOccurrence,
 
     calendarFormState,
     openCreateCalendarForm,
