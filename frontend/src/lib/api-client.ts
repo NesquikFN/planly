@@ -7,12 +7,14 @@ import type { CalendarEvent } from "@/types/calendar";
 // which derives the owner from the session cookie. Nothing here ever
 // sends a user id; passing one would be meaningless, since the server
 // ignores anything but the session.
-
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
-
-export function getApiUrl(): string {
-  return API_URL;
-}
+//
+// Requests go through a relative /api path, not the backend's own origin
+// — next.config.mjs rewrites /api/* to the backend server-side. From the
+// browser's point of view this is a same-origin request, which is what
+// keeps the session cookie same-site: without it, Safari's Intelligent
+// Tracking Prevention refuses to persist a cookie set from a cross-site
+// fetch(), and login would appear to succeed while every request after
+// it came back unauthenticated.
 
 export class NetworkError extends Error {
   constructor(message = "Не удалось подключиться к серверу.") {
@@ -65,7 +67,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
 
   try {
-    response = await fetch(`${API_URL}/api${path}`, {
+    response = await fetch(`/api${path}`, {
       ...init,
       // The session lives in an httpOnly cookie on the backend's domain,
       // so every request has to opt into sending it — on Railway the two

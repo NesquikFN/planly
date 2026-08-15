@@ -14,6 +14,19 @@ const nextConfig = {
   output: "standalone",
   outputFileTracingRoot: workspaceRoot,
   turbopack: { root: workspaceRoot },
+
+  // Proxies /api/* to the backend server-side, so the browser only ever
+  // talks to this one origin. Without this, the session cookie is
+  // cross-site (frontend and backend are different Railway subdomains),
+  // and Safari's Intelligent Tracking Prevention refuses to store a
+  // cookie set from a fetch() in that situation — login appears to
+  // succeed, but the very next request comes back unauthenticated.
+  // Baked in at build time from the same env var the Dockerfile already
+  // passes as a build ARG.
+  async rewrites() {
+    const backendUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+    return [{ source: "/api/:path*", destination: `${backendUrl}/api/:path*` }];
+  },
 };
 
 export default nextConfig;
