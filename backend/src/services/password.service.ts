@@ -1,5 +1,6 @@
 import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
+import bcrypt from 'bcryptjs'
 
 const scrypt = promisify(scryptCallback) as (
   password: string,
@@ -20,6 +21,14 @@ const scrypt = promisify(scryptCallback) as (
  * Формат строки: scrypt$N$r$p$<salt base64>$<hash base64>. Параметры
  * лежат внутри самой строки, поэтому их можно поднять позже, не ломая
  * уже сохранённые хеши — старые проверятся по своим значениям.
+ *
+ * Отдельно поддерживается bcrypt ($2a$/$2b$/$2y$) — в этом формате
+ * Supabase Auth хранил пароли в auth.users.encrypted_password. Иначе
+ * перенос данных означал бы, что все пользователи теряют пароли, а
+ * восстановить их было бы нечем: отправка писем пока не настроена.
+ * Через bcryptjs, а не через нативный bcrypt: тот пришлось бы собирать
+ * под alpine, ровно та же причина, по которой основной алгоритм —
+ * встроенный scrypt.
  */
 
 const N = 16384 // 2^14 — рекомендованный минимум для интерактивного входа
@@ -37,7 +46,31 @@ export async function hashPassword(password: string): Promise<string> {
   return ['scrypt', N, R, P, salt.toString('base64'), hash.toString('base64')].join('$')
 }
 
+/** Пароли, перенесённые из Supabase. Проверять их мы умеем, но хранить
+ * дальше в чужом формате незачем — см. needsRehash. */
+function isBcryptHash(stored: string): boolean {
+  return /^\$2[aby]\$\d{2}\$/.test(stored)
+}
+
+/**
+ * Нужно ли пересчитать хеш после успешного входа. Так перенесённые из
+ * Supabase bcrypt-пароли по одному переезжают на scrypt — молча, ровно в
+ * тот момент, когда пароль в открытом виде и так есть в памяти. Когда
+ * последний пользователь войдёт, ветку bcrypt можно будет удалить.
+ */
+export function needsRehash(stored: string): boolean {
+  return isBcryptHash(stored)
+}
+
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  if (isBcryptHash(stored)) {
+    try {
+      return await bcrypt.compare(password, stored)
+    } catch {
+      return false
+    }
+  }
+
   const parts = stored.split('$')
   if (parts.length !== 6 || parts[0] !== 'scrypt') return false
 

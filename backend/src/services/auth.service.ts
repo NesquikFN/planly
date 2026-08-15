@@ -5,7 +5,7 @@ import { authTokensRepository } from '../repositories/auth-tokens.repository'
 import { profilesRepository } from '../repositories/profiles.repository'
 import { toAuthUser, usersRepository } from '../repositories/users.repository'
 import { AppError } from '../utils/AppError'
-import { hashPassword, verifyPassword } from './password.service'
+import { hashPassword, needsRehash, verifyPassword } from './password.service'
 import { sendPasswordResetEmail, sendVerificationEmail } from './mailer.service'
 import { signSession } from './session.service'
 import type { AuthTokenPurpose, AuthUser, Profile } from '../types/user'
@@ -83,6 +83,18 @@ export async function login(input: { email: string; password: string }): Promise
       'EMAIL_NOT_VERIFIED',
       'Подтвердите email — мы отправили письмо со ссылкой.',
     )
+  }
+
+  // Пароль верный и он ещё в старом формате (bcrypt из Supabase) —
+  // тихо переводим на scrypt. Единственный момент, когда открытый пароль
+  // вообще доступен. Сбой здесь не должен ломать вход: хеш остаётся
+  // прежним, попробуем при следующем.
+  if (needsRehash(row.password_hash)) {
+    try {
+      await usersRepository.updatePasswordHash(row.id, await hashPassword(input.password))
+    } catch (error) {
+      console.error('Не удалось пересчитать хеш пароля:', error)
+    }
   }
 
   const user = toAuthUser(row)

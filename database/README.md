@@ -34,6 +34,42 @@ exists` перед `create trigger`), так что повторный запу�
 | --- | --- |
 | `migrations/0001_init_schema.sql` | Начальная схема: `users`, `profiles`, `auth_tokens`, `tasks`, `calendar_events`, `rate_limit_hits` |
 
+## Перенос данных из Supabase
+
+Разовый скрипт `backend/src/scripts/migrate-from-supabase.ts`. Нужны две
+строки подключения: источник — Supabase → Project Settings → Database →
+Connection string (именно Postgres, а не anon-ключ: пароли лежат в схеме
+`auth`, которую REST API не отдаёт), приёмник — публичный `DATABASE_URL`
+базы Railway.
+
+Сначала сухой прогон — он только считает строки и ничего не пишет:
+
+```bash
+SUPABASE_DATABASE_URL='...' TARGET_DATABASE_URL='...' npx tsx backend/src/scripts/migrate-from-supabase.ts
+```
+
+Потом сам перенос:
+
+```bash
+SUPABASE_DATABASE_URL='...' TARGET_DATABASE_URL='...' npx tsx backend/src/scripts/migrate-from-supabase.ts --apply
+```
+
+Что важно знать:
+
+- **Пароли сохраняются.** Хеши переезжают из `auth.users` как есть, в
+  формате bcrypt; backend умеет их проверять и при первом успешном входе
+  молча пересчитывает в scrypt (см. `needsRehash` в `password.service`).
+  Никому не придётся восстанавливать пароль.
+- **Скрипт ничего не удаляет** — ни в Supabase, ни в приёмнике. Все
+  вставки идут через `on conflict do nothing`, id сохраняются, поэтому
+  повторный запуск безопасен и не задваивает данные.
+- **Пропускаются**: удалённые аккаунты (`deleted_at`), аккаунты без
+  пароля (вход через OAuth-провайдера — переносить в схему с обязательным
+  `password_hash` нечем) и строки, чей владелец не попал в перенос.
+  Все пропуски видны в итоговом отчёте.
+- Приоритеты задач вне списка `TaskPriority` приводятся к `none`: в
+  Supabase колонка принимала любой текст, в новой схеме есть check.
+
 ## legacy-supabase/
 
 Прежние миграции Supabase — только для справки и переноса данных.

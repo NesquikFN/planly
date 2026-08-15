@@ -1,5 +1,6 @@
 import pg from 'pg'
 import { env } from './env'
+import { sslConfig } from '../utils/postgresSsl'
 
 // Остальной код (типы, Zod-схемы, JSON-ответы и фронтенд) ожидает
 // timestamp-колонки строками ISO 8601 — ровно в том виде, в каком их
@@ -17,31 +18,9 @@ pg.types.setTypeParser(1184, (value) => new Date(value).toISOString())
 // времени, и Date для него бессмысленен.
 pg.types.setTypeParser(1083, (value) => value)
 
-/**
- * TLS нужен только когда соединение реально уходит наружу.
- *
- * Внутренняя сеть Railway (*.railway.internal) и локальная база на
- * localhost его не поддерживают — и с включённым ssl node-postgres падает
- * с «The server does not support SSL connections» ещё до первого запроса.
- * Для всего остального (публичный прокси Railway, любой внешний хост) TLS
- * обязателен; rejectUnauthorized: false избавляет от необходимости
- * подключать CA-бандл Railway.
- */
-function needsSsl(connectionString: string): boolean {
-  if (connectionString.includes('railway.internal')) return false
-  try {
-    const { hostname } = new URL(connectionString)
-    return hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '::1'
-  } catch {
-    // Строка не разобралась как URL — не гадаем и оставляем TLS
-    // включённым: небезопасный дефолт хуже непонятной ошибки.
-    return true
-  }
-}
-
 export const pool = new pg.Pool({
   connectionString: env.DATABASE_URL,
-  ssl: needsSsl(env.DATABASE_URL) ? { rejectUnauthorized: false } : false,
+  ssl: sslConfig(env.DATABASE_URL),
 })
 
 export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(

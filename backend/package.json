@@ -13,6 +13,7 @@
     "test:security": "tsx --test \"src/__security__/*.test.ts\""
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",

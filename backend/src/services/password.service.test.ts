@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { hashPassword, verifyPassword } from './password.service'
+import bcrypt from 'bcryptjs'
+import { hashPassword, needsRehash, verifyPassword } from './password.service'
 
 test('верный пароль подтверждается, неверный — нет', async () => {
   const stored = await hashPassword('correct horse battery staple')
@@ -26,8 +27,23 @@ test('в хеше нет самого пароля', async () => {
   assert.equal(stored.startsWith('scrypt$'), true)
 })
 
+test('bcrypt-хеш из Supabase проверяется и помечается на пересчёт', async () => {
+  // Ровно тот формат, в котором Supabase Auth хранил
+  // auth.users.encrypted_password.
+  const fromSupabase = bcrypt.hashSync('password-set-in-supabase', 10)
+
+  assert.equal(await verifyPassword('password-set-in-supabase', fromSupabase), true)
+  assert.equal(await verifyPassword('not-that-one', fromSupabase), false)
+  assert.equal(needsRehash(fromSupabase), true)
+})
+
+test('свежий scrypt-хеш пересчитывать не нужно', async () => {
+  assert.equal(needsRehash(await hashPassword('whatever')), false)
+})
+
 test('битая строка хеша — это «не подошёл», а не исключение', async () => {
-  for (const broken of ['', 'nonsense', 'scrypt$', 'bcrypt$16384$8$1$c2FsdA==$aGFzaA==', 'scrypt$x$y$z$c2FsdA==$aGFzaA==']) {
+  const cases = ['', 'nonsense', 'scrypt$', 'bcrypt$16384$8$1$c2FsdA==$aGFzaA==', 'scrypt$x$y$z$c2FsdA==$aGFzaA==', '$2b$10$too-short']
+  for (const broken of cases) {
     assert.equal(await verifyPassword('anything', broken), false, `не отклонён: ${JSON.stringify(broken)}`)
   }
 })
