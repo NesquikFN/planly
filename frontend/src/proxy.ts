@@ -67,5 +67,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // api/ excluded: those paths are the rewrite proxy to the backend
+  // (next.config.mjs), not pages — this middleware gating them as if
+  // they were protected pages would redirect every fetch("/api/...")
+  // to /login before the rewrite ever runs, since middleware executes
+  // before rewrites in Next's request pipeline. The backend enforces
+  // its own auth on every route regardless.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };
