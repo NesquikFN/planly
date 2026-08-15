@@ -8,16 +8,24 @@
 
 ## 1. Что такое Planly сейчас
 
-Прототип персонального AI-планировщика на Next.js 16 (App Router) + React 19 + TypeScript +
-Tailwind v4. Данные — `localStorage` и/или локальный `useState`, в зависимости от модуля (см.
-таблицу ниже). Бэкенда, БД, реальной авторизации и реального AI нет.
+Персональный AI-планировщик. Монорепо на npm workspaces: `frontend/` (Next.js 16 + React 19 +
+TypeScript + Tailwind v4), `backend/` (Express 5 + TypeScript + Postgres через `pg`, без ORM),
+`database/` (SQL-миграции).
+
+Профиль, задачи и события календаря живут в облаке через собственный API; `localStorage` для них
+теперь только кэш. Остальные модули по-прежнему на `localStorage` и/или локальном `useState` (см.
+таблицу ниже). Авторизация своя: email + пароль, сессия подписанным токеном в httpOnly-куке.
+Реального AI нет.
+
+Supabase удалён целиком — см. §3. Прежние миграции лежат в `database/legacy-supabase/` только для
+справки и переноса данных.
 
 ## 2. Статус разделов
 
 | Раздел | Маршрут | Данные | Статус |
 |---|---|---|---|
-| Dashboard | `/` | `useTasksStore` + `localStorage` | Полностью рабочий |
-| Calendar | `/calendar` | `useCalendarStore` + `localStorage` | Полностью рабочий |
+| Dashboard | `/` | `useTasksStore` → API `/api/tasks` (+ `localStorage` как кэш) | Полностью рабочий |
+| Calendar | `/calendar` | `useCalendarStore` → API `/api/calendar-events` (+ кэш) | Полностью рабочий |
 | Projects | `/projects` | локальный `useState` + mock, **без** `localStorage` | UI-скелет, интерактивный |
 | Notes | `/notes` | локальный `useState` + mock, **без** `localStorage` | UI-скелет, интерактивный (редактор, чек-листы, вложения) |
 | Reminders | `/reminders` | локальный `useState` + mock (даты относительно реального `now`), **без** `localStorage` | UI-скелет, интерактивный (группировка, snooze, модалка создания) |
@@ -29,6 +37,17 @@ Tailwind v4. Данные — `localStorage` и/или локальный `useSt
 
 ## 3. Последние изменения (эта сессия, по порядку)
 
+0. **Свой бэкенд вместо Supabase** (последняя сессия — крупнее всего остального ниже).
+   Репозиторий стал монорепо: прежний Next.js уехал в `frontend/`, добавились `backend/` и
+   `database/`. Бэкенд повторяет архитектуру DormHub: `routes → controllers → services →
+   repositories`, валидация Zod, `AppError` + общий `errorHandler`, конфиг через Zod-схему env,
+   лимиты запросов, заголовки безопасности, Dockerfile под Railway. Авторизация своя:
+   пароли на встроенном `scrypt`, сессия — HMAC-подписанный токен в httpOnly-куке,
+   подтверждение почты и сброс пароля через одноразовые токены в `auth_tokens`.
+   На фронтенде `lib/supabase/*` заменён на `lib/api-client.ts`; `useAuth`, `useProfileStore`,
+   `tasks-repository`, `useCalendarStore` и `proxy.ts` переписаны под API. Календарь впервые
+   стал облачным (раньше только `localStorage`). Подробности — [docs/BACKEND.md](docs/BACKEND.md)
+   и [database/README.md](database/README.md).
 1. **Projects** (`/projects`) — сетка/список карточек проектов, статистика, боковая панель с
    мини-календарём и ближайшими задачами (переиспользует `useCalendarStore`/`useTasksStore` для
    чтения), архивный блок. Новые файлы: `types/project.ts`, `lib/projects-mock-data.ts`,
@@ -66,8 +85,34 @@ Tailwind v4. Данные — `localStorage` и/или локальный `useSt
 
 Ни один из этих файлов не закоммичен — весь список см. в `git status`.
 
-## 4. Незавершённые задачи
+## 4. Развёрнутое окружение
 
+Railway, проект `planly` (отдельный от `intuitive-charm`, где живёт DormHub):
+
+| Сервис | Адрес | Как собирается |
+|---|---|---|
+| frontend | https://frontend-production-18e7.up.railway.app | `frontend/Dockerfile`, `RAILWAY_DOCKERFILE_PATH` |
+| backend | https://backend-production-3e3c.up.railway.app | `backend/Dockerfile`, `RAILWAY_DOCKERFILE_PATH` |
+| Postgres | внутренний `postgres.railway.internal` + публичный TCP-прокси | шаблон Railway |
+
+Оба сервиса пока собираются из ветки `backend-rewrite` — после мерджа PR их нужно переключить
+на `main`.
+
+Домены разные, значит связка кросс-доменная: кука сессии уходит с `Secure; SameSite=None`, CORS
+разрешает ровно один origin. `NEXT_PUBLIC_*` вшиваются в бандл при сборке, поэтому смена домена
+бэкенда требует пересборки фронтенда, а не только перезапуска.
+
+## 5. Незавершённые задачи
+
+- **Отправка писем не настроена.** Без `RESEND_API_KEY` ссылки подтверждения и восстановления
+  только пишутся в лог бэкенда. Пока ключа нет, `REQUIRE_EMAIL_VERIFICATION` должен оставаться
+  `false`, иначе после регистрации никто не сможет войти.
+- **Данные из Supabase не перенесены.** Новая схема пустая; старые `profiles`/`tasks` остались в
+  проекте Supabase. Перенос — отдельная задача (см. `docs/supabase-data-migration-plan.md` и
+  `database/legacy-supabase/`).
+- **Тесты бэкенда не ходят в базу.** Покрыты сессии, пароли, схемы валидации и то, что решается
+  до Postgres (401/400/404, заголовки). Сами SQL-запросы проверены только вручную, интеграционных
+  тестов с реальной базой нет.
 - **`docs/ARCHITECTURE.md` и `docs/MODULES.md` устарели** — до сих пор написано «Notes /
   Reminders / Analytics / Settings — не реализованы». Не обновлял в рамках этой сессии (не
   входило в текущий запрос). Требуют ревизии в следующей сессии.
@@ -89,8 +134,11 @@ Tailwind v4. Данные — `localStorage` и/или локальный `useSt
   при первом рендере) — не влияет на работу страницы, но при желании можно вынести вычисление
   моковых времён строго на клиент.
 
-## 5. Следующие 5 логических задач
+## 6. Следующие логические задачи
 
+0. **Подключить отправку писем** — завести `RESEND_API_KEY` и подтверждённый домен отправителя,
+   после этого можно включать `REQUIRE_EMAIL_VERIFICATION=true`. До тех пор восстановление пароля
+   работает только по ссылке из лога бэкенда.
 1. **Обновить `docs/ARCHITECTURE.md` и `docs/MODULES.md`** под фактическое состояние кода
    (добавить Notes/Reminders/Analytics/Settings как реализованные модули, описать их файлы и
    зависимости по образцу уже описанных Dashboard/Calendar/Projects).

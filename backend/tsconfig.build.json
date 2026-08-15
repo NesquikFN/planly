@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  // scripts/ — разовые утилиты, запускаемые через tsx с машины
+  // разработчика. В образ сервиса им незачем.
+  "exclude": ["src/**/*.test.ts", "src/__tests__", "src/__security__", "src/test-utils", "src/scripts"]
+}
