@@ -45,6 +45,15 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Defense in depth: the matcher below already excludes API routes, but
+  // never let an auth-page redirect intercept the same-origin API proxy if
+  // matcher handling changes between Next.js builds or deployment targets.
+  // The backend is the source of truth for API authorization and returns
+  // JSON errors, while this proxy only protects rendered pages.
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   // Skip the round trip entirely on public pages that don't care either
   // way — everything except /login and /register, which need to know so
   // they can bounce an already-signed-in user to the dashboard.
