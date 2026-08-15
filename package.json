@@ -1,45 +1,17 @@
 {
   "name": "planly",
-  "version": "0.1.0",
   "private": true,
-  "type": "module",
+  "version": "0.1.0",
   "description": "Planly — самый простой AI-планировщик",
   "directories": {
     "doc": "docs"
   },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/NesquikFN/my-life.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/NesquikFN/my-life/issues"
-  },
-  "homepage": "https://github.com/NesquikFN/my-life#readme",
-  "dependencies": {
-    "@supabase/ssr": "^0.12.3",
-    "@supabase/supabase-js": "^2.110.9",
-    "lucide-react": "^1.25.0",
-    "next": "^16.2.11",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^26.1.1",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "autoprefixer": "^10.5.4",
-    "postcss": "^8.5.22",
-    "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3"
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend"
   }
 }
